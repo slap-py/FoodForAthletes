@@ -13,3 +13,11 @@ The app focuses on meal timing, meal gaps, hydration, and neutral carbohydrate/p
 - Offline retry, editable review cards, repeat meals, and configurable water amounts
 
 Training plans, exercise integration, coaching, nutrition targets, medication, and weight-loss features are intentionally deferred.
+
+## Repository contents
+
+- `Food Logging/` — the SwiftUI iPhone app source and Xcode project
+- `plans/` — product and implementation plans
+- `README.md` — project overview and current scope
+
+Open `Food Logging/Food Logging.xcodeproj` in Xcode to build and run the app. The project targets iOS 17 or later.
