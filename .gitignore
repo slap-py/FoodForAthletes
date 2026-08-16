@@ -1,0 +1,8 @@
+# Local Xcode project (kept outside this plans repository)
+Food Logging/
+
+# Xcode user and build artifacts
+xcuserdata/
+DerivedData/
+*.xcuserstate
+
