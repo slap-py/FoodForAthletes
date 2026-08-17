@@ -12,6 +12,12 @@ final class MealLog {
     var protein: Double = 0
     var fat: Double = 0
     var fiber: Double = 0
+    var calcium: Double = 0
+    var iron: Double = 0
+    var magnesium: Double = 0
+    var potassium: Double = 0
+    var sodium: Double = 0
+    var vitaminD: Double = 0
     var assumptions: String = ""
     var sourceMealID: UUID?
 
@@ -27,6 +33,12 @@ final class MealLog {
         protein: Double,
         fat: Double,
         fiber: Double,
+        calcium: Double = 0,
+        iron: Double = 0,
+        magnesium: Double = 0,
+        potassium: Double = 0,
+        sodium: Double = 0,
+        vitaminD: Double = 0,
         assumptions: String,
         sourceMealID: UUID? = nil,
         items: [MealItem] = []
@@ -39,6 +51,12 @@ final class MealLog {
         self.protein = protein
         self.fat = fat
         self.fiber = fiber
+        self.calcium = calcium
+        self.iron = iron
+        self.magnesium = magnesium
+        self.potassium = potassium
+        self.sodium = sodium
+        self.vitaminD = vitaminD
         self.assumptions = assumptions
         self.sourceMealID = sourceMealID
         self.items = items
@@ -87,34 +105,30 @@ struct MealDraft: Equatable {
     var protein: Double
     var fat: Double
     var fiber: Double
+    var calcium: Double = 0
+    var iron: Double = 0
+    var magnesium: Double = 0
+    var potassium: Double = 0
+    var sodium: Double = 0
+    var vitaminD: Double = 0
     var assumptions: String
     var foods: [(name: String, portion: String)]
+    var analysisVersion: String = "local-catalog-v1"
+    var catalogVersion: String = "USDA Foundation Foods + FNDDS fallback v1"
 
     static func == (lhs: MealDraft, rhs: MealDraft) -> Bool {
-        lhs.title == rhs.title && lhs.calories == rhs.calories
-    }
-}
-
-enum PlaceholderMealAnalysis {
-    /// UI-only fixture. No image or meal text leaves the device.
-    static func draft(for description: String) -> MealDraft {
-        let cleaned = description.trimmingCharacters(in: .whitespacesAndNewlines)
-        let words = cleaned.split(separator: " ").prefix(6).joined(separator: " ")
-        let title = words.isEmpty ? "Meal preview" : words.capitalized
-
-        return MealDraft(
-            title: title,
-            calories: 640,
-            carbohydrates: 78,
-            protein: 34,
-            fat: 22,
-            fiber: 9,
-            assumptions: "Illustrative values only. The food analysis service is not connected in this version.",
-            foods: [
-                ("Example carbohydrate", "about 1½ cups"),
-                ("Example protein", "about one palm-sized portion"),
-                ("Example vegetables", "about 1 cup")
-            ]
-        )
+        lhs.title == rhs.title &&
+        lhs.calories == rhs.calories &&
+        lhs.carbohydrates == rhs.carbohydrates &&
+        lhs.protein == rhs.protein &&
+        lhs.fat == rhs.fat &&
+        lhs.fiber == rhs.fiber &&
+        lhs.calcium == rhs.calcium &&
+        lhs.iron == rhs.iron &&
+        lhs.magnesium == rhs.magnesium &&
+        lhs.potassium == rhs.potassium &&
+        lhs.sodium == rhs.sodium &&
+        lhs.vitaminD == rhs.vitaminD &&
+        lhs.foods.elementsEqual(rhs.foods, by: { $0.name == $1.name && $0.portion == $1.portion })
     }
 }

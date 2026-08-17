@@ -12,17 +12,24 @@ struct MealCaptureView: View {
     @Query(sort: \MealLog.timestamp, order: .reverse) private var previousMeals: [MealLog]
     @State private var step: Step = .capture
     @State private var descriptionText = ""
-    @State private var selectedPhoto: PhotosPickerItem?
-    @State private var photoData: Data?
-    @State private var photoImage: UIImage?
+    @State private var selectedMealPhoto: PhotosPickerItem?
+    @State private var selectedLabelPhoto: PhotosPickerItem?
+    @State private var mealPhotoData: Data?
+    @State private var labelPhotoData: Data?
+    @State private var mealPhotoImage: UIImage?
+    @State private var labelPhotoImage: UIImage?
     @State private var draft: MealDraft?
     @State private var isPreparingPreview = false
     @State private var showsCamera = false
     @State private var showsCameraDenied = false
+    @State private var cameraTarget: PhotoTarget = .meal
+    @State private var analysisError: String?
     @FocusState private var descriptionFocused: Bool
 
+    private enum PhotoTarget { case meal, nutritionLabel }
+
     private var canAnalyze: Bool {
-        !descriptionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && photoImage != nil && !isPreparingPreview
+        (!descriptionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || mealPhotoImage != nil || labelPhotoImage != nil) && !isPreparingPreview
     }
 
     private var usualMeals: [MealLog] {
@@ -54,26 +61,31 @@ struct MealCaptureView: View {
             }
         }
         .fullScreenCover(isPresented: $showsCamera) {
-            CameraPicker(image: $photoImage)
+            CameraPicker(image: cameraTarget == .meal ? $mealPhotoImage : $labelPhotoImage)
                 .ignoresSafeArea()
         }
-        .onChange(of: photoImage) { _, image in
-            if let image { photoData = image.jpegData(compressionQuality: 0.82) }
+        .onChange(of: mealPhotoImage) { _, image in
+            if let image { mealPhotoData = image.analysisJPEGData() }
         }
-        .onChange(of: selectedPhoto) { _, item in
-            guard let item else { return }
-            Task {
-                if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) {
-                    photoData = data
-                    photoImage = image
-                }
-            }
+        .onChange(of: labelPhotoImage) { _, image in
+            if let image { labelPhotoData = image.analysisJPEGData() }
+        }
+        .onChange(of: selectedMealPhoto) { _, item in
+            load(item, as: .meal)
+        }
+        .onChange(of: selectedLabelPhoto) { _, item in
+            load(item, as: .nutritionLabel)
         }
         .alert("Camera access is off", isPresented: $showsCameraDenied) {
             Button("Open Settings") { openSystemSettings() }
             Button("Not now", role: .cancel) {}
         } message: {
             Text("Allow camera access in Settings, or choose a photo from your library.")
+        }
+        .alert("Couldn’t analyze this meal", isPresented: Binding(get: { analysisError != nil }, set: { if !$0 { analysisError = nil } })) {
+            Button("OK", role: .cancel) { analysisError = nil }
+        } message: {
+            Text(analysisError ?? "Please try again.")
         }
     }
 
@@ -83,9 +95,15 @@ struct MealCaptureView: View {
                 if !usualMeals.isEmpty { usualRow }
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Describe what you ate")
+                    HStack {
+                        Text("Describe what you ate")
+                        Text("Optional")
+                            .font(.caption.bold())
+                            .padding(.horizontal, 8).padding(.vertical, 4)
+                            .background(JournalTheme.sage.opacity(0.38), in: Capsule())
+                    }
                         .font(.title2.bold())
-                    Text("A short sentence is enough. Include sauces, drinks, or portions when useful.")
+                    Text("A short sentence improves the estimate. Include sauces, drinks, or portions when useful.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     TextField("Rice bowl with chicken, avocado, and salsa", text: $descriptionText, axis: .vertical)
@@ -97,55 +115,28 @@ struct MealCaptureView: View {
                         .submitLabel(.done)
                 }
 
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Text("Add a meal photo").font(.title2.bold())
-                        Text("Required")
-                            .font(.caption.bold())
-                            .padding(.horizontal, 8).padding(.vertical, 4)
-                            .background(JournalTheme.oat.opacity(0.32), in: Capsule())
-                    }
-                    if let photoImage {
-                        Image(uiImage: photoImage)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 230)
-                            .clipShape(RoundedRectangle(cornerRadius: 20))
-                            .overlay(alignment: .topTrailing) {
-                                Button { clearPhoto() } label: {
-                                    Image(systemName: "xmark").font(.headline)
-                                        .frame(width: 44, height: 44)
-                                        .background(.ultraThinMaterial, in: Circle())
-                                }
-                                .padding(10)
-                                .accessibilityLabel("Remove meal photo")
-                            }
-                    } else {
-                        HStack(spacing: 12) {
-                            Button(action: requestCamera) {
-                                photoButtonLabel("Take photo", icon: "camera.fill")
-                            }
-                            PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                                photoButtonLabel("Choose photo", icon: "photo.on.rectangle")
-                            }
-                        }
-                    }
-                    Label("Used for the current preview only; never saved with your meal.", systemImage: "lock.fill")
-                        .font(.caption)
-                        .foregroundStyle(JournalTheme.ink.opacity(0.58))
-                }
+                photoSection(
+                    title: "Meal photo",
+                    detail: "Optional · shows ingredients and visible portions",
+                    image: mealPhotoImage,
+                    picker: $selectedMealPhoto,
+                    target: .meal
+                )
 
-                JournalCard {
-                    HStack(alignment: .top, spacing: 11) {
-                        Image(systemName: "sparkles").foregroundStyle(JournalTheme.clay)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("AI analysis is not connected yet").font(.subheadline.bold())
-                            Text("Analyze meal opens an illustrative review card. Nothing is uploaded and the nutrient values are placeholders.")
-                                .font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                }
+                photoSection(
+                    title: "Nutrition-label photo",
+                    detail: "Optional · helps use the packaged serving values",
+                    image: labelPhotoImage,
+                    picker: $selectedLabelPhoto,
+                    target: .nutritionLabel
+                )
+
+                Label("Add text or either photo to continue. You can include at most two photos.", systemImage: "checkmark.circle.fill")
+                    .font(.caption)
+                    .foregroundStyle(JournalTheme.ink.opacity(0.65))
+                Label("Photos are used only for this estimate and are never saved to your meal history or camera roll.", systemImage: "lock.fill")
+                    .font(.caption)
+                    .foregroundStyle(JournalTheme.ink.opacity(0.58))
 
                 Button(action: preparePreview) {
                     HStack {
@@ -157,7 +148,7 @@ struct MealCaptureView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .disabled(!canAnalyze)
-                .accessibilityHint(canAnalyze ? "Opens an illustrative meal review" : "Enter a description and add a photo first")
+                .accessibilityHint(canAnalyze ? "Creates an approximate nutrition review" : "Add a description, a meal photo, or a nutrition-label photo first")
             }
             .padding(18)
             .padding(.bottom, 20)
@@ -195,7 +186,7 @@ struct MealCaptureView: View {
                 VStack(alignment: .leading, spacing: 18) {
                     HStack(alignment: .top, spacing: 10) {
                         Image(systemName: "sparkles").foregroundStyle(JournalTheme.clay)
-                        Text("Illustrative preview — AI food analysis is not connected")
+                        Text("Approximate AI nutrition estimate")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(JournalTheme.clay)
                     }
@@ -247,7 +238,7 @@ struct MealCaptureView: View {
                         .buttonStyle(.borderedProminent)
                         .controlSize(.large)
                         .frame(maxWidth: .infinity)
-                        .accessibilityHint("Saves the text and illustrative nutrient snapshot, then discards the photo")
+                        .accessibilityHint("Saves the nutrient snapshot, then permanently discards both temporary photos")
                 }
                 .padding(18)
             }
@@ -278,7 +269,49 @@ struct MealCaptureView: View {
         .overlay { RoundedRectangle(cornerRadius: 18).stroke(style: StrokeStyle(lineWidth: 1, dash: [5])).foregroundStyle(JournalTheme.moss.opacity(0.35)) }
     }
 
-    private func requestCamera() {
+    private func photoSection(
+        title: String,
+        detail: String,
+        image: UIImage?,
+        picker: Binding<PhotosPickerItem?>,
+        target: PhotoTarget
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.title3.bold())
+                Text(detail).font(.caption).foregroundStyle(.secondary)
+            }
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 170)
+                    .clipShape(RoundedRectangle(cornerRadius: 18))
+                    .overlay(alignment: .topTrailing) {
+                        Button { clearPhoto(target) } label: {
+                            Image(systemName: "xmark").font(.headline)
+                                .frame(width: 44, height: 44)
+                                .background(.ultraThinMaterial, in: Circle())
+                        }
+                        .padding(10)
+                        .accessibilityLabel("Remove \(title.lowercased())")
+                    }
+            } else {
+                HStack(spacing: 12) {
+                    Button { requestCamera(for: target) } label: {
+                        photoButtonLabel("Take photo", icon: "camera.fill")
+                    }
+                    PhotosPicker(selection: picker, matching: .images) {
+                        photoButtonLabel("Choose photo", icon: "photo.on.rectangle")
+                    }
+                }
+            }
+        }
+    }
+
+    private func requestCamera(for target: PhotoTarget) {
+        cameraTarget = target
         guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
             showsCameraDenied = true
             return
@@ -301,10 +334,21 @@ struct MealCaptureView: View {
         descriptionFocused = false
         isPreparingPreview = true
         Task {
-            try? await Task.sleep(for: .milliseconds(550))
-            draft = PlaceholderMealAnalysis.draft(for: descriptionText)
-            isPreparingPreview = false
-            step = .review
+            defer { isPreparingPreview = false }
+            do {
+                let result = try await MealAnalysisService.shared.analyze(
+                    MealAnalysisInput(
+                        description: descriptionText,
+                        mealPhotoData: mealPhotoData,
+                        nutritionLabelPhotoData: labelPhotoData
+                    )
+                )
+                guard !Task.isCancelled else { return }
+                draft = result
+                step = .review
+            } catch {
+                analysisError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            }
         }
     }
 
@@ -318,12 +362,18 @@ struct MealCaptureView: View {
             protein: draft.protein,
             fat: draft.fat,
             fiber: draft.fiber,
+            calcium: draft.calcium,
+            iron: draft.iron,
+            magnesium: draft.magnesium,
+            potassium: draft.potassium,
+            sodium: draft.sodium,
+            vitaminD: draft.vitaminD,
             assumptions: draft.assumptions,
             items: items
         )
         modelContext.insert(meal)
         try? modelContext.save()
-        clearPhoto()
+        clearPhotos()
         dismiss()
     }
 
@@ -337,6 +387,12 @@ struct MealCaptureView: View {
             protein: source.protein,
             fat: source.fat,
             fiber: source.fiber,
+            calcium: source.calcium,
+            iron: source.iron,
+            magnesium: source.magnesium,
+            potassium: source.potassium,
+            sodium: source.sodium,
+            vitaminD: source.vitaminD,
             assumptions: source.assumptions,
             sourceMealID: source.id,
             items: items
@@ -346,10 +402,38 @@ struct MealCaptureView: View {
         dismiss()
     }
 
-    private func clearPhoto() {
-        selectedPhoto = nil
-        photoData = nil
-        photoImage = nil
+    private func load(_ item: PhotosPickerItem?, as target: PhotoTarget) {
+        guard let item else { return }
+        Task {
+            if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) {
+                switch target {
+                case .meal:
+                    mealPhotoData = data
+                    mealPhotoImage = image
+                case .nutritionLabel:
+                    labelPhotoData = data
+                    labelPhotoImage = image
+                }
+            }
+        }
+    }
+
+    private func clearPhoto(_ target: PhotoTarget) {
+        switch target {
+        case .meal:
+            selectedMealPhoto = nil
+            mealPhotoData = nil
+            mealPhotoImage = nil
+        case .nutritionLabel:
+            selectedLabelPhoto = nil
+            labelPhotoData = nil
+            labelPhotoImage = nil
+        }
+    }
+
+    private func clearPhotos() {
+        clearPhoto(.meal)
+        clearPhoto(.nutritionLabel)
     }
 
     private func openSystemSettings() {
@@ -386,5 +470,18 @@ private struct CameraPicker: UIViewControllerRepresentable {
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
             parent.dismiss()
         }
+    }
+}
+
+private extension UIImage {
+    /// Keeps temporary AI payloads fast to upload without creating a file or photo-library asset.
+    func analysisJPEGData(maximumDimension: CGFloat = 1_600) -> Data? {
+        let largestDimension = max(size.width, size.height)
+        guard largestDimension > maximumDimension else { return jpegData(compressionQuality: 0.82) }
+        let scale = maximumDimension / largestDimension
+        let targetSize = CGSize(width: size.width * scale, height: size.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        return renderer.image { _ in draw(in: CGRect(origin: .zero, size: targetSize)) }
+            .jpegData(compressionQuality: 0.82)
     }
 }

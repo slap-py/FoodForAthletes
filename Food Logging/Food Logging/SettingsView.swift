@@ -11,6 +11,10 @@ struct SettingsView: View {
     @State private var showsPrivacy = false
     @State private var showsDeleteConfirmation = false
     @State private var showsExport = false
+    @State private var openAIKey = ""
+    @State private var foodDataKey = ""
+    @State private var credentialsSaved = APIKeyStore.hasCredentials
+    @State private var credentialError: String?
 
     var body: some View {
         NavigationStack {
@@ -53,6 +57,36 @@ struct SettingsView: View {
                         Button("How your meal data is handled") { showsPrivacy = true }
                     }
 
+                    SettingsSection("Direct AI analysis") {
+                        Text("This personal app sends meal inputs directly from your iPhone to OpenAI and USDA FoodData Central. Your keys are stored only in the device Keychain and are never synced with meal data.")
+                            .font(.caption)
+                            .foregroundStyle(JournalTheme.ink.opacity(0.62))
+                        SecureField("OpenAI API key", text: $openAIKey)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .textContentType(.password)
+                            .padding(12)
+                            .background(JournalTheme.paper, in: RoundedRectangle(cornerRadius: 12))
+                        SecureField("USDA FoodData Central API key", text: $foodDataKey)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .textContentType(.password)
+                            .padding(12)
+                            .background(JournalTheme.paper, in: RoundedRectangle(cornerRadius: 12))
+                        HStack {
+                            Text(credentialsSaved ? "Keys saved on this iPhone" : "Add both keys to enable photo analysis")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(credentialsSaved ? JournalTheme.moss : .secondary)
+                            Spacer()
+                            Button("Save keys", action: saveKeys)
+                                .buttonStyle(.bordered)
+                        }
+                        if credentialsSaved {
+                            Button("Remove saved keys", role: .destructive, action: removeKeys)
+                                .font(.caption)
+                        }
+                    }
+
                     SettingsSection("Your data") {
                         Button("Export data") { showsExport = true }
                         Divider()
@@ -87,6 +121,11 @@ struct SettingsView: View {
             } message: {
                 Text("This cannot be undone.")
             }
+            .alert("Couldn’t save keys", isPresented: Binding(get: { credentialError != nil }, set: { if !$0 { credentialError = nil } })) {
+                Button("OK", role: .cancel) { credentialError = nil }
+            } message: {
+                Text(credentialError ?? "Please try again.")
+            }
         }
     }
 
@@ -99,12 +138,12 @@ struct SettingsView: View {
                         .foregroundStyle(JournalTheme.ink.opacity(0.72))
                     privacyRow(
                         title: "Photos are temporary",
-                        message: "Your selected photo is used only to identify foods and create your meal review. It is never saved to your meal history or retained after analysis.",
+                        message: "You can add a meal photo and a nutrition-label photo. Each is sent directly from this iPhone for the current AI review, is never written to your camera roll, and is never saved with your meal history.",
                         icon: "camera.fill"
                     )
                     privacyRow(
                         title: "Private storage",
-                        message: "Your saved meal details live in your private app store and can sync with your private iCloud account.",
+                        message: "Your saved meal details live in your private app store and can sync with your private iCloud account. Personal API keys stay only in this iPhone's Keychain.",
                         icon: "lock.icloud.fill"
                     )
                 }
@@ -153,6 +192,31 @@ struct SettingsView: View {
         meals.forEach(modelContext.delete)
         water.forEach(modelContext.delete)
         try? modelContext.save()
+    }
+
+    private func saveKeys() {
+        do {
+            if !openAIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                try APIKeyStore.save(openAIKey.trimmingCharacters(in: .whitespacesAndNewlines), for: .openAI)
+                openAIKey = ""
+            }
+            if !foodDataKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                try APIKeyStore.save(foodDataKey.trimmingCharacters(in: .whitespacesAndNewlines), for: .foodDataCentral)
+                foodDataKey = ""
+            }
+            credentialsSaved = APIKeyStore.hasCredentials
+            if !credentialsSaved { credentialError = "Add both an OpenAI API key and a USDA FoodData Central API key." }
+        } catch {
+            credentialError = error.localizedDescription
+        }
+    }
+
+    private func removeKeys() {
+        APIKeyStore.delete(.openAI)
+        APIKeyStore.delete(.foodDataCentral)
+        credentialsSaved = false
+        openAIKey = ""
+        foodDataKey = ""
     }
 }
 

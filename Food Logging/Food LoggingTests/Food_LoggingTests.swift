@@ -10,14 +10,21 @@ import Testing
 
 struct Food_LoggingTests {
 
-    @Test func placeholderAnalysisIsClearlyApproximateAndDeterministic() {
-        let draft = PlaceholderMealAnalysis.draft(for: "rice bowl with chicken and avocado")
+    @Test func localAnalysisUsesMatchedFoodsAndCalculatedMacros() async throws {
+        let draft = try await MealAnalysisService.shared.analyze(
+            MealAnalysisInput(
+                description: "rice bowl with chicken and avocado",
+                mealPhotoData: nil,
+                nutritionLabelPhotoData: nil
+            )
+        )
 
         #expect(draft.title == "Rice Bowl With Chicken And Avocado")
-        #expect(draft.carbohydrates == 78)
-        #expect(draft.protein == 34)
-        #expect(draft.assumptions.contains("not connected"))
-        #expect(draft.foods.count == 3)
+        #expect(draft.calories == 453)
+        #expect(draft.carbohydrates == 51.4)
+        #expect(draft.protein == 31.8)
+        #expect(draft.foods.map(\.name) == ["Chicken breast", "Rice", "Avocado"])
+        #expect(draft.assumptions.contains("USDA-derived"))
     }
 
     @Test func mealModelsDoNotContainPhotoStorage() {

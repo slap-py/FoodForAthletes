@@ -87,6 +87,15 @@ struct TodayView: View {
                         Text("\(Int(calories.rounded())) kcal").fontWeight(.semibold)
                     }
                     .padding(.top, 10)
+                    if hasMicronutrients {
+                        Divider().padding(.vertical, 6)
+                        micronutrientRow("Sodium", value: meals.reduce(0) { $0 + $1.sodium }, unit: "mg")
+                        micronutrientRow("Potassium", value: meals.reduce(0) { $0 + $1.potassium }, unit: "mg")
+                        micronutrientRow("Calcium", value: meals.reduce(0) { $0 + $1.calcium }, unit: "mg")
+                        micronutrientRow("Iron", value: meals.reduce(0) { $0 + $1.iron }, unit: "mg")
+                        micronutrientRow("Magnesium", value: meals.reduce(0) { $0 + $1.magnesium }, unit: "mg")
+                        micronutrientRow("Vitamin D", value: meals.reduce(0) { $0 + $1.vitaminD }, unit: "mcg")
+                    }
                 }
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(JournalTheme.ink.opacity(0.72))
@@ -127,6 +136,18 @@ struct TodayView: View {
     private func addWater() {
         modelContext.insert(WaterLog(milliliters: defaultWaterML))
         try? modelContext.save()
+    }
+
+    private var hasMicronutrients: Bool {
+        meals.contains { $0.sodium > 0 || $0.potassium > 0 || $0.calcium > 0 || $0.iron > 0 || $0.magnesium > 0 || $0.vitaminD > 0 }
+    }
+
+    private func micronutrientRow(_ name: String, value: Double, unit: String) -> some View {
+        HStack {
+            Text(name)
+            Spacer()
+            Text("\(Int(value.rounded())) \(unit)").fontWeight(.semibold)
+        }
     }
 }
 
@@ -233,6 +254,14 @@ struct MealCard: View {
                         detail("Fat", meal.fat)
                         detail("Fiber", meal.fiber)
                     }
+                    if meal.sodium > 0 || meal.potassium > 0 || meal.calcium > 0 || meal.iron > 0 || meal.magnesium > 0 || meal.vitaminD > 0 {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("Micronutrients").font(.subheadline.bold())
+                            Text(micronutrientSummary)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                     if let items = meal.items, !items.isEmpty {
                         VStack(alignment: .leading, spacing: 7) {
                             Text("Foods & portions").font(.subheadline.bold())
@@ -260,5 +289,18 @@ struct MealCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(label), \(Int(value)) grams")
+    }
+
+    private var micronutrientSummary: String {
+        [
+            meal.sodium > 0 ? "Sodium \(Int(meal.sodium.rounded())) mg" : nil,
+            meal.potassium > 0 ? "Potassium \(Int(meal.potassium.rounded())) mg" : nil,
+            meal.calcium > 0 ? "Calcium \(Int(meal.calcium.rounded())) mg" : nil,
+            meal.iron > 0 ? "Iron \(Int(meal.iron.rounded())) mg" : nil,
+            meal.magnesium > 0 ? "Magnesium \(Int(meal.magnesium.rounded())) mg" : nil,
+            meal.vitaminD > 0 ? "Vitamin D \(Int(meal.vitaminD.rounded())) mcg" : nil
+        ]
+        .compactMap { $0 }
+        .joined(separator: " · ")
     }
 }
