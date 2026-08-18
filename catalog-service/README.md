@@ -2,7 +2,7 @@
 
 This service exposes `GET /v1/catalog`, `GET /v1/foods/search?q=…`, `GET /v1/foods/:id`, and `POST /v1/meal-analysis`.
 
-`GET /v1/foods/search` queries FatSecret first and then appends USDA FoodData Central results. It deliberately does not deduplicate results. `POST /v1/meal-analysis` sends the user’s text to FatSecret NLP, then provides that returned reference data, the original text, and the optional meal and nutrition-label images together in the OpenAI Responses API request. It does not call FatSecret barcode, autocomplete, image-recognition, or recipe APIs.
+`GET /v1/foods/search` queries FatSecret’s standard food-search endpoint first and then appends USDA FoodData Central results. It deliberately does not deduplicate results. `POST /v1/meal-analysis` sends the original text and optional meal and nutrition-label images to OpenAI; it does not call FatSecret NLP or any other paid FatSecret add-on. FatSecret barcode, autocomplete, image-recognition, and recipe APIs are also not used.
 
 ## Configuration
 

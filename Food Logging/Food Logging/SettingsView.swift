@@ -85,7 +85,7 @@ struct SettingsView: View {
                     }
 
                     SettingsSection("Food & AI service") {
-                        Text("Food search uses FatSecret as the primary source and USDA FoodData Central as a supplement. Meal analysis sends the description and any photos you choose to Dayplate, which passes FatSecret NLP reference data together with your inputs to OpenAI. Provider keys stay on the service and are never stored in this app.")
+                        Text("Food search uses FatSecret’s standard search endpoint as the primary source and USDA FoodData Central as a supplement. Meal analysis sends the description and any photos you choose to Dayplate, which passes your inputs to OpenAI. Provider keys stay on the service and are never stored in this app.")
                             .font(.caption)
                             .foregroundStyle(JournalTheme.ink.opacity(0.62))
                         if offlineMealQueue.pendingCount > 0 {

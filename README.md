@@ -11,7 +11,7 @@ The app focuses on meal timing, meal gaps, hydration, and neutral carbohydrate/p
 - Versioned Dayplate catalog records with normalized names, brands, servings, nutrients, and USDA provenance
 - FatSecret-first food search with USDA FoodData Central supplemental results (no deduplication yet)
 - Optional food and macro interpretation from text, a meal photo, and/or a nutrition-label photo
-- Service-backed OpenAI vision analysis, receiving the description, meal photo, label photo, and FatSecret NLP output together
+- Service-backed OpenAI vision analysis, receiving the description and optional meal and label photos
 - Offline AI retry, locally available repeat meals, App Shortcut routing, and configurable water amounts
 
 Training plans, exercise integration, coaching, nutrition targets, medication, and weight-loss features are intentionally deferred.
@@ -29,4 +29,4 @@ Open `Food Logging/Food Logging.xcodeproj` in Xcode to build and run the app. Th
 
 Catalog search and AI estimate are independent. Catalog search calls the Dayplate service, which queries FatSecret first and appends USDA FoodData Central results without deduplication. The service owns the FatSecret, OpenAI, and USDA credentials; no provider keys are stored in the iPhone app.
 
-When the user analyzes a meal, the app sends the description plus both optional images to the Dayplate service. The service calls FatSecret NLP with the text, then supplies that output, the original text, and both optional images in one OpenAI Responses API request. Images are transient request data and are never saved with a meal; when a meal is queued offline, they are held only in protected device storage until analysis succeeds, then deleted.
+When the user analyzes a meal, the app sends the description plus both optional images to the Dayplate service, which forwards them to OpenAI. FatSecret is used only for the standard food-search endpoint. Images are transient request data and are never saved with a meal; when a meal is queued offline, they are held only in protected device storage until analysis succeeds, then deleted.

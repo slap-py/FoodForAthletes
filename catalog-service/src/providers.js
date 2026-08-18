@@ -51,17 +51,6 @@ export async function searchUSDAFoods(query, credentials, request = fetch) {
   return asArray(payload?.foods).map(usdaFood).filter(Boolean);
 }
 
-export async function naturalLanguageFoods(userInput, credentials, request = fetch) {
-  if (!userInput.trim()) return null;
-  const token = await fatSecretToken(credentials, request);
-  const response = await request(`${FATSECRET_API_URL}/natural-language-processing/v1`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
-    body: JSON.stringify({ user_input: userInput.slice(0, 1000), include_food_data: true, region: "US", language: "en" })
-  });
-  return responseJSON(response, "fatsecret_nlp_failed");
-}
-
 export async function fatSecretToken(credentials, request = fetch) {
   if (cachedFatSecretToken && cachedFatSecretToken.expiresAt > Date.now() + 60_000) return cachedFatSecretToken.value;
   requireCredential(credentials.fatSecretClientID, "FATSECRET_CLIENT_ID");
@@ -70,8 +59,7 @@ export async function fatSecretToken(credentials, request = fetch) {
   const response = await request(FATSECRET_TOKEN_URL, {
     method: "POST",
     headers: { Authorization: `Basic ${basic}`, "content-type": "application/x-www-form-urlencoded" },
-    // "nlp" is the only add-on scope requested. Food search remains basic.
-    body: new URLSearchParams({ grant_type: "client_credentials", scope: "basic nlp" }).toString()
+    body: new URLSearchParams({ grant_type: "client_credentials", scope: "basic" }).toString()
   });
   const payload = await responseJSON(response, "fatsecret_token_failed");
   if (!payload?.access_token) throw new ProviderError("fatsecret_token_failed");
