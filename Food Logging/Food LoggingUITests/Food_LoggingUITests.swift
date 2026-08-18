@@ -32,9 +32,10 @@ final class Food_LoggingUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["No meals logged today"].exists)
 
         app.buttons["Log meal"].firstMatch.tap()
-        XCTAssertTrue(app.navigationBars["Log a meal"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.staticTexts["AI analysis is not connected yet"].exists)
-        XCTAssertFalse(app.buttons["Analyze meal"].isEnabled)
+        XCTAssertTrue(app.navigationBars["Log food"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Search foods"].exists)
+        XCTAssertTrue(app.buttons["AI estimate"].exists)
+        XCTAssertTrue(app.staticTexts["REPEAT A MEAL"].exists)
     }
 
     @MainActor

@@ -9,6 +9,8 @@ struct MealCaptureView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var offlineMealQueue: OfflineMealQueueStore
+    @EnvironmentObject private var networkMonitor: NetworkMonitor
     @Query(sort: \MealLog.timestamp, order: .reverse) private var previousMeals: [MealLog]
     @State private var step: Step = .capture
     @State private var descriptionText = ""
@@ -24,7 +26,13 @@ struct MealCaptureView: View {
     @State private var showsCameraDenied = false
     @State private var cameraTarget: PhotoTarget = .meal
     @State private var analysisError: String?
+    @State private var showsOfflineQueuedConfirmation = false
     @FocusState private var descriptionFocused: Bool
+    let onCompleted: () -> Void
+
+    init(onCompleted: @escaping () -> Void = {}) {
+        self.onCompleted = onCompleted
+    }
 
     private enum PhotoTarget { case meal, nutritionLabel }
 
@@ -86,6 +94,11 @@ struct MealCaptureView: View {
             Button("OK", role: .cancel) { analysisError = nil }
         } message: {
             Text(analysisError ?? "Please try again.")
+        }
+        .alert("Meal queued", isPresented: $showsOfflineQueuedConfirmation) {
+            Button("Done") { dismiss() }
+        } message: {
+            Text("Your meal and photos are saved securely on this iPhone. They’ll be analyzed automatically when your connection returns.")
         }
     }
 
@@ -332,6 +345,10 @@ struct MealCaptureView: View {
     private func preparePreview() {
         guard canAnalyze else { return }
         descriptionFocused = false
+        guard networkMonitor.isConnected else {
+            queueCurrentMealForLater()
+            return
+        }
         isPreparingPreview = true
         Task {
             defer { isPreparingPreview = false }
@@ -347,9 +364,43 @@ struct MealCaptureView: View {
                 draft = result
                 step = .review
             } catch {
-                analysisError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                if shouldQueue(error) {
+                    queueCurrentMealForLater()
+                } else {
+                    analysisError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                }
             }
         }
+    }
+
+    private func queueCurrentMealForLater() {
+        do {
+            try offlineMealQueue.enqueue(
+                description: descriptionText,
+                mealPhotoData: mealPhotoData,
+                nutritionLabelPhotoData: labelPhotoData
+            )
+            clearPhotos()
+            showsOfflineQueuedConfirmation = true
+        } catch {
+            analysisError = "Couldn’t save this meal for offline analysis: \(error.localizedDescription)"
+        }
+    }
+
+    private func shouldQueue(_ error: Error) -> Bool {
+        guard !networkMonitor.isConnected else {
+            let nsError = error as NSError
+            guard nsError.domain == NSURLErrorDomain else { return false }
+            return [
+                URLError.notConnectedToInternet,
+                .networkConnectionLost,
+                .timedOut,
+                .cannotConnectToHost,
+                .cannotFindHost,
+                .dnsLookupFailed
+            ].contains(URLError.Code(rawValue: nsError.code))
+        }
+        return true
     }
 
     private func saveMeal(_ draft: MealDraft) {
@@ -369,16 +420,19 @@ struct MealCaptureView: View {
             sodium: draft.sodium,
             vitaminD: draft.vitaminD,
             assumptions: draft.assumptions,
+            loggingMethod: .ai,
+            catalogVersion: draft.catalogVersion,
             items: items
         )
         modelContext.insert(meal)
         try? modelContext.save()
         clearPhotos()
+        onCompleted()
         dismiss()
     }
 
     private func repeatMeal(_ source: MealLog) {
-        let items = (source.items ?? []).map { MealItem(canonicalName: $0.canonicalName, portion: $0.portion) }
+        let items = (source.items ?? []).map { MealItem(canonicalName: $0.canonicalName, portion: $0.portion, quantity: $0.quantity, catalogFoodID: $0.catalogFoodID, sourceRecordIDs: $0.sourceRecordIDs, brandName: $0.brandName, sourceName: $0.sourceName) }
         let meal = MealLog(
             title: source.title,
             descriptionText: source.descriptionText,
@@ -395,10 +449,13 @@ struct MealCaptureView: View {
             vitaminD: source.vitaminD,
             assumptions: source.assumptions,
             sourceMealID: source.id,
+            loggingMethod: .repeatMeal,
+            catalogVersion: source.catalogVersion,
             items: items
         )
         modelContext.insert(meal)
         try? modelContext.save()
+        onCompleted()
         dismiss()
     }
 

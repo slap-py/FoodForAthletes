@@ -20,6 +20,10 @@ final class MealLog {
     var vitaminD: Double = 0
     var assumptions: String = ""
     var sourceMealID: UUID?
+    /// Added in Dayplate 1.3 with a default so existing snapshots migrate in place.
+    /// Historical totals remain authoritative and are never recalculated.
+    var loggingMethodRaw: String = LoggingMethod.ai.rawValue
+    var catalogVersion: String?
 
     @Relationship(deleteRule: .cascade, inverse: \MealItem.meal)
     var items: [MealItem]? = []
@@ -41,6 +45,8 @@ final class MealLog {
         vitaminD: Double = 0,
         assumptions: String,
         sourceMealID: UUID? = nil,
+        loggingMethod: LoggingMethod = .ai,
+        catalogVersion: String? = nil,
         items: [MealItem] = []
     ) {
         self.timestamp = timestamp
@@ -59,8 +65,19 @@ final class MealLog {
         self.vitaminD = vitaminD
         self.assumptions = assumptions
         self.sourceMealID = sourceMealID
+        self.loggingMethodRaw = loggingMethod.rawValue
+        self.catalogVersion = catalogVersion
         self.items = items
     }
+
+    var loggingMethod: LoggingMethod {
+        get { LoggingMethod(rawValue: loggingMethodRaw) ?? .ai }
+        set { loggingMethodRaw = newValue.rawValue }
+    }
+}
+
+enum LoggingMethod: String, Codable, CaseIterable {
+    case search, ai, repeatMeal = "repeat"
 }
 
 @Model
@@ -68,11 +85,29 @@ final class MealItem {
     var id: UUID = UUID()
     var canonicalName: String = ""
     var portion: String = ""
+    var quantity: Double = 1
+    var catalogFoodID: String?
+    var sourceRecordIDs: [String] = []
+    var brandName: String?
+    var sourceName: String?
     var meal: MealLog?
 
-    init(canonicalName: String, portion: String) {
+    init(
+        canonicalName: String,
+        portion: String,
+        quantity: Double = 1,
+        catalogFoodID: String? = nil,
+        sourceRecordIDs: [String] = [],
+        brandName: String? = nil,
+        sourceName: String? = nil
+    ) {
         self.canonicalName = canonicalName
         self.portion = portion
+        self.quantity = quantity
+        self.catalogFoodID = catalogFoodID
+        self.sourceRecordIDs = sourceRecordIDs
+        self.brandName = brandName
+        self.sourceName = sourceName
     }
 }
 
@@ -85,6 +120,32 @@ final class WaterLog {
     init(timestamp: Date = .now, milliliters: Double) {
         self.timestamp = timestamp
         self.milliliters = milliliters
+    }
+}
+
+/// Kept in a separate, device-local SwiftData store. Photo bytes stay in the
+/// app's protected Application Support directory and are deleted after analysis.
+@Model
+final class QueuedMeal {
+    @Attribute(.unique) var id: UUID = UUID()
+    var capturedAt: Date = Date()
+    var descriptionText: String = ""
+    var mealPhotoPath: String?
+    var nutritionLabelPhotoPath: String?
+    var lastError: String?
+
+    init(
+        id: UUID = UUID(),
+        capturedAt: Date = .now,
+        descriptionText: String,
+        mealPhotoPath: String? = nil,
+        nutritionLabelPhotoPath: String? = nil
+    ) {
+        self.id = id
+        self.capturedAt = capturedAt
+        self.descriptionText = descriptionText
+        self.mealPhotoPath = mealPhotoPath
+        self.nutritionLabelPhotoPath = nutritionLabelPhotoPath
     }
 }
 
@@ -113,6 +174,8 @@ struct MealDraft: Equatable {
     var vitaminD: Double = 0
     var assumptions: String
     var foods: [(name: String, portion: String)]
+    var loggingMethod: LoggingMethod = .ai
+    var catalogItems: [CatalogMealItem] = []
     var analysisVersion: String = "local-catalog-v1"
     var catalogVersion: String = "USDA Foundation Foods + FNDDS fallback v1"
 
@@ -131,4 +194,15 @@ struct MealDraft: Equatable {
         lhs.vitaminD == rhs.vitaminD &&
         lhs.foods.elementsEqual(rhs.foods, by: { $0.name == $1.name && $0.portion == $1.portion })
     }
+}
+
+struct CatalogMealItem: Equatable, Codable, Identifiable {
+    var id: UUID = UUID()
+    var food: CatalogFood
+    var servingIndex: Int = 0
+    var quantity: Double = 1
+
+    var serving: CatalogServing { food.servings[min(max(servingIndex, 0), food.servings.count - 1)] }
+    var displayPortion: String { quantity == 1 ? serving.label : "\(quantity.formatted(.number.precision(.fractionLength(0...2)))) × \(serving.label)" }
+    var nutrients: CatalogNutrients { serving.nutrients.scaled(by: quantity) }
 }

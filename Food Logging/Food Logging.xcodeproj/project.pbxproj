@@ -6,7 +6,18 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		DA7A00010000000000000001 /* DayplateControls.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DA7A00020000000000000002 /* DayplateControls.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
+		DA7A00030000000000000003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 88EBAC823032112A00FB5B08 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DA7A00040000000000000004;
+			remoteInfo = DayplateControls;
+		};
 		88EBAC9D3032112D00FB5B08 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 88EBAC823032112A00FB5B08 /* Project object */;
@@ -23,15 +34,58 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		DA7A00050000000000000005 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				DA7A00010000000000000001 /* DayplateControls.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		88EBAC8A3032112A00FB5B08 /* Food Logging.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Food Logging.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		DA7A00020000000000000002 /* DayplateControls.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DayplateControls.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		88EBAC8A3032112A00FB5B08 /* Dayplate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dayplate.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		88EBAC9C3032112D00FB5B08 /* Food LoggingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Food LoggingTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		88EBACA63032112D00FB5B08 /* Food LoggingUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Food LoggingUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		DA7A000F000000000000000F /* Exceptions for "Food Logging" folder in "Food Logging" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 88EBAC893032112A00FB5B08 /* Food Logging */;
+		};
+		DA7A00100000000000000010 /* Exceptions for "DayplateControls" folder in "DayplateControls" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = DA7A00040000000000000004 /* DayplateControls */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		DA7A00060000000000000006 /* DayplateControls */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DA7A00100000000000000010 /* Exceptions for "DayplateControls" folder in "DayplateControls" target */,
+			);
+			path = DayplateControls;
+			sourceTree = "<group>";
+		};
 		88EBAC8C3032112A00FB5B08 /* Food Logging */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DA7A000F000000000000000F /* Exceptions for "Food Logging" folder in "Food Logging" target */,
+			);
 			path = "Food Logging";
 			sourceTree = "<group>";
 		};
@@ -48,6 +102,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		DA7A00070000000000000007 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		88EBAC873032112A00FB5B08 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -76,6 +137,7 @@
 			isa = PBXGroup;
 			children = (
 				88EBAC8C3032112A00FB5B08 /* Food Logging */,
+				DA7A00060000000000000006 /* DayplateControls */,
 				88EBAC9F3032112D00FB5B08 /* Food LoggingTests */,
 				88EBACA93032112D00FB5B08 /* Food LoggingUITests */,
 				88EBAC8B3032112A00FB5B08 /* Products */,
@@ -85,7 +147,8 @@
 		88EBAC8B3032112A00FB5B08 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				88EBAC8A3032112A00FB5B08 /* Food Logging.app */,
+				88EBAC8A3032112A00FB5B08 /* Dayplate.app */,
+				DA7A00020000000000000002 /* DayplateControls.appex */,
 				88EBAC9C3032112D00FB5B08 /* Food LoggingTests.xctest */,
 				88EBACA63032112D00FB5B08 /* Food LoggingUITests.xctest */,
 			);
@@ -102,10 +165,12 @@
 				88EBAC863032112A00FB5B08 /* Sources */,
 				88EBAC873032112A00FB5B08 /* Frameworks */,
 				88EBAC883032112A00FB5B08 /* Resources */,
+				DA7A00050000000000000005 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				DA7A000B000000000000000B /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				88EBAC8C3032112A00FB5B08 /* Food Logging */,
@@ -114,8 +179,30 @@
 			packageProductDependencies = (
 			);
 			productName = "Food Logging";
-			productReference = 88EBAC8A3032112A00FB5B08 /* Food Logging.app */;
+			productReference = 88EBAC8A3032112A00FB5B08 /* Dayplate.app */;
 			productType = "com.apple.product-type.application";
+		};
+		DA7A00040000000000000004 /* DayplateControls */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DA7A000E000000000000000E /* Build configuration list for PBXNativeTarget "DayplateControls" */;
+			buildPhases = (
+				DA7A00080000000000000008 /* Sources */,
+				DA7A00070000000000000007 /* Frameworks */,
+				DA7A00090000000000000009 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				DA7A00060000000000000006 /* DayplateControls */,
+			);
+			name = DayplateControls;
+			packageProductDependencies = (
+			);
+			productName = DayplateControls;
+			productReference = DA7A00020000000000000002 /* DayplateControls.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		88EBAC9B3032112D00FB5B08 /* Food LoggingTests */ = {
 			isa = PBXNativeTarget;
@@ -173,9 +260,15 @@
 				LastSwiftUpdateCheck = 2640;
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
+					DA7A00040000000000000004 = {
+						CreatedOnToolsVersion = 26.4.1;
+					};
 					88EBAC893032112A00FB5B08 = {
 						CreatedOnToolsVersion = 26.4.1;
 						SystemCapabilities = {
+							com.apple.HealthKit = {
+								enabled = 1;
+							};
 							com.apple.iCloud = {
 								enabled = 1;
 							};
@@ -206,6 +299,7 @@
 			projectRoot = "";
 			targets = (
 				88EBAC893032112A00FB5B08 /* Food Logging */,
+				DA7A00040000000000000004 /* DayplateControls */,
 				88EBAC9B3032112D00FB5B08 /* Food LoggingTests */,
 				88EBACA53032112D00FB5B08 /* Food LoggingUITests */,
 			);
@@ -213,6 +307,13 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		DA7A00090000000000000009 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		88EBAC883032112A00FB5B08 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -237,6 +338,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		DA7A00080000000000000008 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		88EBAC863032112A00FB5B08 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -261,6 +369,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		DA7A000B000000000000000B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DA7A00040000000000000004 /* DayplateControls */;
+			targetProxy = DA7A00030000000000000003 /* PBXContainerItemProxy */;
+		};
 		88EBAC9E3032112D00FB5B08 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 88EBAC893032112A00FB5B08 /* Food Logging */;
@@ -274,6 +387,52 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		DA7A000C000000000000000C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = 4KX3TW8N6M;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DayplateControls/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks", );
+				MARKETING_VERSION = 1.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "kaibergman.Food-Logging.DayplateControls";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		DA7A000D000000000000000D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = 4KX3TW8N6M;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DayplateControls/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@executable_path/../../Frameworks", );
+				MARKETING_VERSION = 1.3;
+				PRODUCT_BUNDLE_IDENTIFIER = "kaibergman.Food-Logging.DayplateControls";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 		88EBACAE3032112D00FB5B08 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -402,11 +561,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Food Logging/Food_Logging.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 4KX3TW8N6M;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Food Logging/Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Take a temporary meal photo for review. Meal photos are not saved.";
+				INFOPLIST_KEY_CFBundleDisplayName = Dayplate;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Dayplate reads today’s workouts and active calories to place activity in your meal rhythm.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Choose a temporary meal photo for review. Meal photos are not saved.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -418,9 +580,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "kaibergman.Food-Logging";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = Food_Logging;
+				PRODUCT_NAME = Dayplate;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -438,11 +601,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Food Logging/Food_Logging.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 4KX3TW8N6M;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Food Logging/Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Take a temporary meal photo for review. Meal photos are not saved.";
+				INFOPLIST_KEY_CFBundleDisplayName = Dayplate;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Dayplate reads today’s workouts and active calories to place activity in your meal rhythm.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Choose a temporary meal photo for review. Meal photos are not saved.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -454,9 +620,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "kaibergman.Food-Logging";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = Food_Logging;
+				PRODUCT_NAME = Dayplate;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -485,7 +652,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Food Logging.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Food Logging";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Dayplate.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Dayplate";
 			};
 			name = Debug;
 		};
@@ -507,7 +674,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Food Logging.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Food Logging";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Dayplate.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Dayplate";
 			};
 			name = Release;
 		};
@@ -554,6 +721,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		DA7A000E000000000000000E /* Build configuration list for PBXNativeTarget "DayplateControls" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DA7A000C000000000000000C /* Debug */,
+				DA7A000D000000000000000D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		88EBAC853032112A00FB5B08 /* Build configuration list for PBXProject "Food Logging" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

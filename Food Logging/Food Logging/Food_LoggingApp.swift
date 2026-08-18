@@ -10,6 +10,9 @@ import SwiftData
 
 @main
 struct Food_LoggingApp: App {
+    @StateObject private var healthStore = HealthKitStore()
+    @StateObject private var offlineMealQueue = OfflineMealQueueStore()
+    @StateObject private var networkMonitor = NetworkMonitor()
     private let modelContainer: ModelContainer = {
         let schema = Schema([MealLog.self, MealItem.self, WaterLog.self, AppPreference.self])
         if ProcessInfo.processInfo.arguments.contains("-ui-testing") ||
@@ -44,6 +47,9 @@ struct Food_LoggingApp: App {
         WindowGroup {
             ContentView()
                 .tint(JournalTheme.moss)
+                .environmentObject(healthStore)
+                .environmentObject(offlineMealQueue)
+                .environmentObject(networkMonitor)
                 .environment(\.colorScheme, .light)
                 .preferredColorScheme(.light)
         }

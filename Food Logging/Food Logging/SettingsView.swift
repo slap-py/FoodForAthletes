@@ -4,6 +4,9 @@ import CloudKit
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var healthStore: HealthKitStore
+    @EnvironmentObject private var offlineMealQueue: OfflineMealQueueStore
+    @EnvironmentObject private var networkMonitor: NetworkMonitor
     @Query private var meals: [MealLog]
     @Query private var water: [WaterLog]
     @AppStorage("unitSystem") private var unitSystem = "us"
@@ -48,9 +51,37 @@ struct SettingsView: View {
                     SettingsSection("Sync") {
                         ICloudStatusRow()
                         Divider()
-                        Text("Your device store is ready for private iCloud sync. No separate Food for Athletes account is needed.")
+                        Text("Your device store is ready for private iCloud sync. No separate Dayplate account is needed.")
                             .font(.caption)
                             .foregroundStyle(JournalTheme.ink.opacity(0.62))
+                    }
+
+                    SettingsSection("Apple Health") {
+                        HStack(alignment: .center, spacing: 12) {
+                            Image(systemName: "heart.fill")
+                                .foregroundStyle(.red)
+                                .frame(width: 34, height: 34)
+                                .background(.red.opacity(0.1), in: Circle())
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(healthStore.connectionState.label)
+                                    .font(.headline)
+                                Text("Reads today’s workouts and active calories. Health data is never written by this app.")
+                                    .font(.caption)
+                                    .foregroundStyle(JournalTheme.ink.opacity(0.62))
+                            }
+                        }
+                        Divider()
+                        Button(healthButtonTitle) {
+                            Task {
+                                if case .connected = healthStore.connectionState {
+                                    await healthStore.refreshToday()
+                                } else {
+                                    await healthStore.requestAuthorization()
+                                }
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(healthStore.connectionState == .loading || healthStore.connectionState == .unavailable)
                     }
 
                     SettingsSection("Privacy") {
@@ -58,7 +89,7 @@ struct SettingsView: View {
                     }
 
                     SettingsSection("Direct AI analysis") {
-                        Text("This personal app sends meal inputs directly from your iPhone to OpenAI and USDA FoodData Central. Your keys are stored only in the device Keychain and are never synced with meal data.")
+                        Text("AI estimate is optional and sends only the meal inputs you choose directly from your iPhone to OpenAI and USDA FoodData Central. Search foods does not call OpenAI. Keys stay in this iPhone’s Keychain.")
                             .font(.caption)
                             .foregroundStyle(JournalTheme.ink.opacity(0.62))
                         SecureField("OpenAI API key", text: $openAIKey)
@@ -85,6 +116,20 @@ struct SettingsView: View {
                             Button("Remove saved keys", role: .destructive, action: removeKeys)
                                 .font(.caption)
                         }
+                        if offlineMealQueue.pendingCount > 0 {
+                            Divider()
+                            HStack {
+                                Label("\(offlineMealQueue.pendingCount) meal\(offlineMealQueue.pendingCount == 1 ? "" : "s") queued for analysis", systemImage: "tray.full.fill")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(JournalTheme.moss)
+                                Spacer()
+                                Button("Retry") {
+                                    Task { await offlineMealQueue.processPending(into: modelContext) }
+                                }
+                                .buttonStyle(.bordered)
+                                .disabled(!networkMonitor.isConnected || offlineMealQueue.isProcessing)
+                            }
+                        }
                     }
 
                     SettingsSection("Your data") {
@@ -94,9 +139,13 @@ struct SettingsView: View {
                             .foregroundStyle(.red)
                     }
 
-                    Text("Food for Athletes estimates are approximate and are designed to reveal meal timing and nutrient distribution—not to prescribe targets.")
+                    Text("Dayplate estimates are approximate and are designed to reveal meal timing and nutrient distribution—not to prescribe targets.")
                         .font(.footnote)
                         .foregroundStyle(JournalTheme.ink.opacity(0.58))
+                    Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.3")")
+                        .font(.caption)
+                        .foregroundStyle(JournalTheme.ink.opacity(0.45))
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
                 .padding(.horizontal, 18)
                 .padding(.top, 18)
@@ -137,14 +186,19 @@ struct SettingsView: View {
                         .font(.body)
                         .foregroundStyle(JournalTheme.ink.opacity(0.72))
                     privacyRow(
-                        title: "Photos are temporary",
-                        message: "You can add a meal photo and a nutrition-label photo. Each is sent directly from this iPhone for the current AI review, is never written to your camera roll, and is never saved with your meal history.",
+                        title: "Photos are temporary unless queued",
+                        message: "Photos are sent directly from this iPhone for the current AI review and are never saved with meal history. If you choose to log offline, photos are held only in protected device storage until analysis succeeds, then deleted.",
                         icon: "camera.fill"
                     )
                     privacyRow(
                         title: "Private storage",
                         message: "Your saved meal details live in your private app store and can sync with your private iCloud account. Personal API keys stay only in this iPhone's Keychain.",
                         icon: "lock.icloud.fill"
+                    )
+                    privacyRow(
+                        title: "Catalog search is separate from AI",
+                        message: "Food search uses Dayplate’s versioned USDA-derived catalog and never sends a request to OpenAI. Saved catalog IDs, brand details, portions, and source provenance remain attached to the meal for traceability.",
+                        icon: "magnifyingglass"
                     )
                 }
                 .padding(22)
@@ -178,10 +232,15 @@ struct SettingsView: View {
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(JournalTheme.ink)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.84)
                 Text(description)
                     .font(.caption)
                     .foregroundStyle(JournalTheme.ink.opacity(0.58))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
+            .layoutPriority(1)
             Spacer(minLength: 8)
             picker()
                 .foregroundStyle(JournalTheme.moss)
@@ -191,6 +250,7 @@ struct SettingsView: View {
     private func deleteAllData() {
         meals.forEach(modelContext.delete)
         water.forEach(modelContext.delete)
+        offlineMealQueue.deleteAll()
         try? modelContext.save()
     }
 
@@ -217,6 +277,15 @@ struct SettingsView: View {
         credentialsSaved = false
         openAIKey = ""
         foodDataKey = ""
+    }
+
+    private var healthButtonTitle: String {
+        switch healthStore.connectionState {
+        case .connected: "Refresh Health data"
+        case .loading: "Connecting…"
+        case .unavailable: "Apple Health unavailable"
+        case .notRequested, .failed: "Connect Apple Health"
+        }
     }
 }
 

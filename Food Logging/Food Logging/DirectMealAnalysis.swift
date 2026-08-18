@@ -90,14 +90,10 @@ struct DirectMealAnalysis {
     }
 
     private func searchCatalog(_ query: String) async throws -> [CatalogMatch] {
-        var request = URLRequest(url: URL(string: "https://api.nal.usda.gov/fdc/v1/foods/search?api_key=\(foodDataKey.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? foodDataKey)")!)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONSerialization.data(withJSONObject: ["query": query, "dataType": ["Foundation", "Survey (FNDDS)"], "pageSize": 8])
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else { throw URLError(.badServerResponse) }
-        let results = try JSONDecoder().decode(FoodSearchResponse.self, from: data)
-        return results.foods.prefix(8).map { CatalogMatch(fdcId: $0.fdcId, name: $0.description, category: $0.foodCategory ?? $0.dataType ?? "USDA food") }
+        DayplateCatalog.search(query).prefix(8).compactMap { food in
+            guard let sourceID = food.provenance.first?.sourceID, let fdcID = Int(sourceID) else { return nil }
+            return CatalogMatch(fdcId: fdcID, name: food.canonicalName, category: food.sourceSummary)
+        }
     }
 
     private func foodDetail(_ fdcID: Int) async throws -> FDCFood {
@@ -137,6 +133,7 @@ struct DirectMealAnalysis {
     private static let instructions = """
     Analyze one meal using the user's description plus the optional meal photograph and Nutrition Facts photograph. Use both supplied images as evidence for the same meal. The meal photo identifies foods, preparation, and portions. The nutrition-label photo is read visually by you; accurately copy every Nutrition Facts value, especially Calories.
     Call search_catalog for every food or common dish before choosing an fdcId. Never invent an fdcId. For labelNutrition, provide the label's values per listed serving and a servingMultiplier for the amount actually eaten. If no label photo exists, return labelNutrition as null. Do not calculate totals for non-label foods; the app calculates them from the selected USDA records.
+    Set title to a concise, properly capitalized meal name, ideally no more than six words. Preserve a stated quantity for a single item (for example, "1 Uncrustable"). For a complete meal, name the meal naturally and briefly. Do not add labels such as "Meal:" or explanation to title.
     """
 
     private static let catalogTool: [String: Any] = ["type": "function", "name": "search_catalog", "description": "Search USDA FoodData Central for a food or common dish before selecting an fdcId.", "strict": true, "parameters": ["type": "object", "additionalProperties": false, "properties": ["query": ["type": "string"]], "required": ["query"]]]
@@ -145,7 +142,6 @@ struct DirectMealAnalysis {
 
 private struct CatalogQuery: Decodable { let query: String }
 private struct CatalogMatch: Codable { let fdcId: Int; let name: String; let category: String }
-private struct FoodSearchResponse: Decodable { let foods: [FoodSearchItem]; struct FoodSearchItem: Decodable { let fdcId: Int; let description: String; let dataType: String?; let foodCategory: String? } }
 private struct FDCFood: Decodable {
     let description: String?
     let foodNutrients: [FDCNutrient]?
