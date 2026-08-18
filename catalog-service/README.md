@@ -10,4 +10,10 @@ Copy [`.env.example`](.env.example) into your deployment’s secret manager and 
 
 Set the iOS `DAYPLATE_SERVICE_URL` build setting to this service’s public HTTPS URL before shipping the app. That URL is configuration only; it is not a credential.
 
+## Cloudflare Workers
+
+The service is configured for Workers. There is no build command: it is plain JavaScript. From this directory, use `npm run dev` for local Workers development and `npm run deploy` to deploy. The deploy command is `npx wrangler deploy`; Cloudflare reads `wrangler.jsonc` in this folder, so configure `catalog-service` as the working directory in Cloudflare Workers Builds or GitHub Actions.
+
+For local Workers secrets, create a non-committed `.dev.vars` file with the same four variable names. In Cloudflare, add those values as Worker Secrets—not plaintext Variables—before deploying. `dayplate-food-api` is the default Worker name and can be changed in `wrangler.jsonc` before the first deployment.
+
 Ingestion groups deterministic exact keys first. `duplicateCandidates` creates only plausible later-stage candidates. An agent may return the documented structured merge/keep decision, but `applyAgentDecision` accepts an automatic merge only at high confidence when normalized identity, serving weight, and key nutrients agree. Conflicts remain separate for review, while all original records and import timestamps remain in `sourceRecords` for auditability.

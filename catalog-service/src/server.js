@@ -2,10 +2,9 @@ import http from "node:http";
 import { catalogVersion, foodDetail, search } from "./catalog.js";
 import { credentialsFromEnvironment, naturalLanguageFoods, ProviderError, searchFoods } from "./providers.js";
 
-const port = Number(process.env.PORT ?? 8787);
 const credentials = credentialsFromEnvironment();
 
-http.createServer(async (request, response) => {
+export const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host ?? "localhost"}`);
     response.setHeader("content-type", "application/json; charset=utf-8");
@@ -33,7 +32,7 @@ http.createServer(async (request, response) => {
     const status = error instanceof ProviderError && error.code === "service_not_configured" ? 503 : 502;
     return json(response, status, { error: error instanceof ProviderError ? error.code : "service_request_failed" });
   }
-}).listen(port, () => console.log(`Dayplate catalog ${catalogVersion} listening on ${port}`));
+});
 
 async function analyzeMeal(input) {
   if (!credentials.openAIKey) throw new ProviderError("service_not_configured", "OPENAI_API_KEY is not configured on the service.");
