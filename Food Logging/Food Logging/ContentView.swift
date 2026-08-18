@@ -6,26 +6,57 @@ enum AppTab: Hashable {
 }
 
 struct ContentView: View {
+    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var offlineMealQueue: OfflineMealQueueStore
+    @EnvironmentObject private var networkMonitor: NetworkMonitor
     @State private var selectedTab: AppTab = .today
-    @State private var showsMealCapture = false
+    @State private var showsLogFood = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
             Group {
                 switch selectedTab {
-                case .today: TodayView(onLogMeal: { showsMealCapture = true })
+                case .today: TodayView(onLogMeal: { showsLogFood = true })
                 case .history: HistoryView()
                 case .settings: SettingsView()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            BottomBar(selection: $selectedTab, onLogMeal: { showsMealCapture = true })
+            BottomBar(selection: $selectedTab, onLogMeal: { showsLogFood = true })
         }
         .background(JournalTheme.paper.ignoresSafeArea())
         .preferredColorScheme(.light)
-        .fullScreenCover(isPresented: $showsMealCapture) {
-            MealCaptureView()
+        .task {
+            if UserDefaults.standard.bool(forKey: "dayplate.openLogFood") {
+                UserDefaults.standard.removeObject(forKey: "dayplate.openLogFood")
+                showsLogFood = true
+            }
+            guard networkMonitor.isConnected else { return }
+            await offlineMealQueue.processPending(into: modelContext)
+        }
+        .task(id: offlineMealQueue.pendingCount) {
+            guard offlineMealQueue.pendingCount > 0 else { return }
+            while !Task.isCancelled && offlineMealQueue.pendingCount > 0 {
+                if networkMonitor.isConnected {
+                    await offlineMealQueue.processPending(into: modelContext)
+                }
+                try? await Task.sleep(nanoseconds: 60_000_000_000)
+            }
+        }
+        .onChange(of: networkMonitor.isConnected) { _, isConnected in
+            guard isConnected else { return }
+            Task { await offlineMealQueue.processPending(into: modelContext) }
+        }
+        .fullScreenCover(isPresented: $showsLogFood) {
+            LogFoodView()
+        }
+        .onOpenURL { url in
+            guard url.scheme == "dayplate", url.host == "log" else { return }
+            showsLogFood = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .dayplateLogFood)) { _ in
+            showsLogFood = true
         }
     }
 }
@@ -60,7 +91,7 @@ private struct BottomBar: View {
                 .shadow(color: JournalTheme.ink.opacity(0.2), radius: 10, y: 4)
             }
             .offset(y: -58)
-            .accessibilityHint("Opens meal description and photo capture")
+            .accessibilityHint("Choose Search foods, AI estimate, or Repeat a meal")
         }
     }
 
@@ -80,7 +111,14 @@ private struct BottomBar: View {
     }
 }
 
+extension Notification.Name {
+    static let dayplateLogFood = Notification.Name("dayplate.logFood")
+}
+
 #Preview {
     ContentView()
         .modelContainer(for: [MealLog.self, MealItem.self, WaterLog.self, AppPreference.self], inMemory: true)
+        .environmentObject(HealthKitStore())
+        .environmentObject(OfflineMealQueueStore())
+        .environmentObject(NetworkMonitor())
 }
