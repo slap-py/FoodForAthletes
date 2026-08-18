@@ -1,6 +1,28 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { fatSecretFood, usdaFood } from "../src/providers.js";
+import { fatSecretFood, searchFatSecretFoods, usdaFood } from "../src/providers.js";
+
+test("FatSecret v5 search returns the API's full serving list directly", async () => {
+  const calls = [];
+  const request = async (url, options = {}) => {
+    calls.push({ url, options });
+    if (url.includes("oauth.fatsecret.com")) return jsonResponse({ access_token: "token", expires_in: 3600 });
+    return jsonResponse({ foods_search: { results: { food: {
+      food_id: "123", food_name: "Uncrustables", brand_name: "Smucker's",
+      servings: { serving: [
+        { serving_id: "1", serving_description: "100 g", calories: "400" },
+        { serving_id: "2", serving_description: "1 sandwich", calories: "230", is_default: "1" }
+      ] }
+    } } } });
+  };
+
+  const foods = await searchFatSecretFoods("uncrustables", { fatSecretClientID: "id", fatSecretClientSecret: "secret" }, request);
+  assert.equal(calls.length, 2);
+  assert.match(calls[0].options.body, /scope=premier/);
+  assert.match(calls[1].url, /\/foods\/search\/v5\?/);
+  assert.equal(foods[0].servings[0].label, "1 sandwich");
+  assert.deepEqual(foods[0].servings.map(serving => serving.label), ["1 sandwich", "100 g"]);
+});
 
 test("FatSecret food details preserve the API's editable standard servings", () => {
   const food = fatSecretFood({
@@ -57,3 +79,5 @@ test("USDA search records remain supplemental catalog foods", () => {
   assert.equal(food.servings[0].nutrients.calories, 89);
   assert.equal(food.provenance[0].source, "USDA FoodData Central");
 });
+
+function jsonResponse(value) { return { ok: true, json: async () => value }; }

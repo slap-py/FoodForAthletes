@@ -31,34 +31,17 @@ export async function searchFatSecretFoods(query, credentials, request = fetch) 
   const parameters = new URLSearchParams({
     search_expression: query,
     max_results: "12",
+    flag_default_serving: "true",
     format: "json"
   });
-  const response = await request(`${FATSECRET_API_URL}/foods/search/v1?${parameters}`, {
+  const response = await request(`${FATSECRET_API_URL}/foods/search/v5?${parameters}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   const payload = await responseJSON(response, "fatsecret_food_search_failed");
-  const results = asArray(payload?.foods?.food);
-  // Search only provides one nominated serving. Fetch each food's detail so the
-  // app can offer FatSecret's own standard portions (for example, "1 sandwich")
-  // rather than inventing a 100 g serving.
-  return Promise.all(results.map(async result => {
-    try {
-      return await fatSecretFoodDetails(result, token, request);
-    } catch {
-      // A detail lookup should not make an otherwise useful search result vanish.
-      return fatSecretFood(result);
-    }
-  })).then(foods => foods.filter(Boolean));
-}
-
-async function fatSecretFoodDetails(searchResult, token, request) {
-  if (!searchResult?.food_id) return null;
-  const parameters = new URLSearchParams({ food_id: String(searchResult.food_id), format: "json" });
-  const response = await request(`${FATSECRET_API_URL}/food/v5?${parameters}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  const payload = await responseJSON(response, "fatsecret_food_get_failed");
-  return fatSecretFood(payload?.food, searchResult);
+  const results = asArray(payload?.foods_search?.results?.food);
+  // v5 Search includes every API-defined serving and the nutrients for each of
+  // them, so it avoids both an invented 100 g portion and a follow-up request.
+  return results.map(fatSecretFood).filter(Boolean);
 }
 
 export async function searchUSDAFoods(query, credentials, request = fetch) {
@@ -77,7 +60,7 @@ export async function fatSecretToken(credentials, request = fetch) {
   const response = await request(FATSECRET_TOKEN_URL, {
     method: "POST",
     headers: { Authorization: `Basic ${basic}`, "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ grant_type: "client_credentials", scope: "basic" }).toString()
+    body: new URLSearchParams({ grant_type: "client_credentials", scope: "premier" }).toString()
   });
   const payload = await responseJSON(response, "fatsecret_token_failed");
   if (!payload?.access_token) throw new ProviderError("fatsecret_token_failed");
@@ -109,7 +92,7 @@ export function fatSecretFood(food, searchResult = null) {
 }
 
 function fatSecretServings(value) {
-  return asArray(value).map((serving, index) => {
+  return preferAPIDefaultServing(asArray(value)).map((serving, index) => {
     const label = String(serving?.serving_description ?? "").trim();
     if (!label) return null;
     return {
@@ -146,6 +129,12 @@ function preferSelectedServing(servings, selectedLabel, fallback) {
   if (!selectedLabel || isWeightServing(selectedLabel)) return servings;
   const selected = normalizeServingLabel(selectedLabel);
   const index = servings.findIndex(serving => normalizeServingLabel(serving.label) === selected);
+  if (index <= 0) return servings;
+  return [servings[index], ...servings.slice(0, index), ...servings.slice(index + 1)];
+}
+
+function preferAPIDefaultServing(servings) {
+  const index = servings.findIndex(serving => Number(serving?.is_default) === 1);
   if (index <= 0) return servings;
   return [servings[index], ...servings.slice(0, index), ...servings.slice(index + 1)];
 }

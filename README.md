@@ -9,7 +9,7 @@ The app focuses on meal timing, meal gaps, hydration, and neutral carbohydrate/p
 - SwiftUI for iOS 17+
 - SwiftData with private iCloud/CloudKit sync
 - Versioned Dayplate catalog records with normalized names, brands, servings, nutrients, and USDA provenance
-- FatSecret-first food search with USDA FoodData Central supplemental results (no deduplication yet)
+- FatSecret v5 food search with API-defined servings and USDA FoodData Central supplemental results (no deduplication yet)
 - Optional food and macro interpretation from text, a meal photo, and/or a nutrition-label photo
 - Service-backed OpenAI vision analysis, receiving the description and optional meal and label photos
 - Offline AI retry, locally available repeat meals, App Shortcut routing, and configurable water amounts
@@ -27,6 +27,6 @@ Open `Food Logging/Food Logging.xcodeproj` in Xcode to build and run the app. Th
 
 ## Direct meal analysis
 
-Catalog search and AI estimate are independent. Catalog search calls the Dayplate service, which queries FatSecret first and appends USDA FoodData Central results without deduplication. The service owns the FatSecret, OpenAI, and USDA credentials; no provider keys are stored in the iPhone app.
+Catalog search and AI estimate are independent. Catalog search calls the Dayplate service, which queries FatSecret v5 first and appends USDA FoodData Central results without deduplication. FatSecret v5 requires the `premier` OAuth scope and supplies its standard serving choices (such as `1 sandwich`) with nutrients for each serving. The service owns the FatSecret, OpenAI, and USDA credentials; no provider keys are stored in the iPhone app.
 
 When the user analyzes a meal, the app sends the description plus both optional images to the Dayplate service, which forwards them to OpenAI. FatSecret is used only for the standard food-search endpoint. Images are transient request data and are never saved with a meal; when a meal is queued offline, they are held only in protected device storage until analysis succeeds, then deleted.
