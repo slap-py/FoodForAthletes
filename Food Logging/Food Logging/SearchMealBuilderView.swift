@@ -13,11 +13,17 @@ struct SearchMealBuilderView: View {
     @State private var selections: [CatalogMealItem] = []
     @State private var title = "Meal"
     @State private var showsConnectivityMessage = false
+    @State private var searchError: String?
+    @State private var isSearching = false
     let onCompleted: () -> Void
 
     init(onCompleted: @escaping () -> Void = {}) { self.onCompleted = onCompleted }
 
     private var draft: MealDraft { DayplateCatalog.draft(items: selections, title: title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Meal" : title) }
+    private var selectedCatalogVersion: String {
+        let versions = Array(Set(selections.map(\.food.catalogVersion))).sorted()
+        return versions.isEmpty ? DayplateCatalog.version : versions.joined(separator: " + ")
+    }
 
     var body: some View {
         NavigationStack {
@@ -41,6 +47,11 @@ struct SearchMealBuilderView: View {
         } message: {
             Text("New catalog searches need internet access. You can still repeat a recent meal from the method picker.")
         }
+        .alert("Couldn’t search foods", isPresented: Binding(get: { searchError != nil }, set: { if !$0 { searchError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(searchError ?? "Please try again.")
+        }
     }
 
     private var buildStep: some View {
@@ -53,8 +64,9 @@ struct SearchMealBuilderView: View {
                     .overlay { RoundedRectangle(cornerRadius: 14).stroke(JournalTheme.ink.opacity(0.1)) }
                     .submitLabel(.search).onSubmit(performSearch)
                     .accessibilityHint("New searches require an internet connection")
-                Button("Search catalog", action: performSearch)
+                Button(isSearching ? "Searching…" : "Search foods", action: performSearch)
                     .buttonStyle(.borderedProminent).frame(maxWidth: .infinity, alignment: .trailing)
+                    .disabled(isSearching || query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
             .padding(18)
 
@@ -65,7 +77,7 @@ struct SearchMealBuilderView: View {
                         Text("RESULTS").font(.caption.bold()).tracking(1.2).foregroundStyle(JournalTheme.moss)
                         ForEach(results) { food in resultRow(food) }
                     } else if query.isEmpty && selections.isEmpty {
-                        ContentUnavailableView("Find a food", systemImage: "fork.knife", description: Text("Search Dayplate’s versioned USDA generic and branded catalog."))
+                        ContentUnavailableView("Find a food", systemImage: "fork.knife", description: Text("Search FatSecret first, with USDA FoodData Central supplemental results."))
                             .padding(.top, 46)
                     }
                 }
@@ -136,7 +148,7 @@ struct SearchMealBuilderView: View {
             VStack(alignment: .leading, spacing: 18) {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.seal.fill").foregroundStyle(JournalTheme.moss)
-                    Text("Calculated from Dayplate catalog \(DayplateCatalog.version)").font(.caption.weight(.semibold)).foregroundStyle(JournalTheme.moss)
+                    Text("Calculated from \(selectedCatalogVersion)").font(.caption.weight(.semibold)).foregroundStyle(JournalTheme.moss)
                 }
                 TextField("Meal name", text: $title).font(.title.bold()).padding(14).background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 16))
                 JournalCard {
@@ -174,7 +186,17 @@ struct SearchMealBuilderView: View {
 
     private func performSearch() {
         guard networkMonitor.isConnected else { showsConnectivityMessage = true; return }
-        results = DayplateCatalog.search(query)
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedQuery.isEmpty else { return }
+        isSearching = true
+        Task {
+            defer { isSearching = false }
+            do {
+                results = try await DayplateService.shared.searchFoods(query: trimmedQuery)
+            } catch {
+                searchError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            }
+        }
     }
 
     private func add(_ food: CatalogFood) {
@@ -187,7 +209,7 @@ struct SearchMealBuilderView: View {
         let items = selections.map { selection in
             MealItem(canonicalName: selection.food.canonicalName, portion: selection.displayPortion, quantity: selection.quantity, catalogFoodID: selection.food.id, sourceRecordIDs: selection.food.provenance.map(\.sourceID), brandName: selection.food.brandName, sourceName: selection.food.provenance.map(\.source).joined(separator: ", "))
         }
-        let meal = MealLog(title: current.title, descriptionText: "", calories: current.calories, carbohydrates: current.carbohydrates, protein: current.protein, fat: current.fat, fiber: current.fiber, calcium: current.calcium, iron: current.iron, magnesium: current.magnesium, potassium: current.potassium, sodium: current.sodium, vitaminD: current.vitaminD, assumptions: current.assumptions, loggingMethod: .search, catalogVersion: DayplateCatalog.version, items: items)
+        let meal = MealLog(title: current.title, descriptionText: "", calories: current.calories, carbohydrates: current.carbohydrates, protein: current.protein, fat: current.fat, fiber: current.fiber, calcium: current.calcium, iron: current.iron, magnesium: current.magnesium, potassium: current.potassium, sodium: current.sodium, vitaminD: current.vitaminD, assumptions: current.assumptions, loggingMethod: .search, catalogVersion: selectedCatalogVersion, items: items)
         modelContext.insert(meal)
         try? modelContext.save()
         onCompleted()

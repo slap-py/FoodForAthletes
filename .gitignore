@@ -3,3 +3,6 @@ xcuserdata/
 DerivedData/
 *.xcuserstate
 node_modules/
+.env
+.env.*
+!.env.example

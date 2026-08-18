@@ -9,10 +9,9 @@ The app focuses on meal timing, meal gaps, hydration, and neutral carbohydrate/p
 - SwiftUI for iOS 17+
 - SwiftData with private iCloud/CloudKit sync
 - Versioned Dayplate catalog records with normalized names, brands, servings, nutrients, and USDA provenance
-- Search-led multi-item meal building with deterministic nutrient calculation and no OpenAI dependency
+- FatSecret-first food search with USDA FoodData Central supplemental results (no deduplication yet)
 - Optional food and macro interpretation from text, a meal photo, and/or a nutrition-label photo
-- Direct OpenAI vision analysis from the iPhone, receiving the description, meal photo, and label photo together
-- Direct USDA FoodData Central Foundation Foods/FNDDS lookup and deterministic nutrient calculation for non-label foods
+- Service-backed OpenAI vision analysis, receiving the description, meal photo, label photo, and FatSecret NLP output together
 - Offline AI retry, locally available repeat meals, App Shortcut routing, and configurable water amounts
 
 Training plans, exercise integration, coaching, nutrition targets, medication, and weight-loss features are intentionally deferred.
@@ -28,6 +27,6 @@ Open `Food Logging/Food Logging.xcodeproj` in Xcode to build and run the app. Th
 
 ## Direct meal analysis
 
-Catalog search and AI estimate are independent. Catalog search never calls OpenAI. In Settings, users who want AI estimates can add personal OpenAI and USDA FoodData Central API keys; they are saved in the current iPhone's Keychain with device-only accessibility and are never included in meal history or iCloud sync.
+Catalog search and AI estimate are independent. Catalog search calls the Dayplate service, which queries FatSecret first and appends USDA FoodData Central results without deduplication. The service owns the FatSecret, OpenAI, and USDA credentials; no provider keys are stored in the iPhone app.
 
-When the user analyzes a meal, the app sends the description plus both optional images in one OpenAI Responses API request. The model visually reads the Nutrition Facts label—there is no client-side OCR—and calls a local USDA catalog-search tool for food IDs. The iPhone then fetches USDA nutrient records and calculates the final totals. Images are transient request data and are never saved with a meal; when a meal is queued offline, they are held only in protected device storage until analysis succeeds, then deleted.
+When the user analyzes a meal, the app sends the description plus both optional images to the Dayplate service. The service calls FatSecret NLP with the text, then supplies that output, the original text, and both optional images in one OpenAI Responses API request. Images are transient request data and are never saved with a meal; when a meal is queued offline, they are held only in protected device storage until analysis succeeds, then deleted.

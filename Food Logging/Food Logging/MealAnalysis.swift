@@ -21,7 +21,6 @@ struct MealAnalysisInput {
 
 enum MealAnalysisError: LocalizedError {
     case needsTextOrPhoto
-    case directAnalysisKeysRequired
     case noRecognizedFood
     case malformedServiceResponse
 
@@ -29,8 +28,6 @@ enum MealAnalysisError: LocalizedError {
         switch self {
         case .needsTextOrPhoto:
             return "Add a description, a meal photo, or a nutrition-label photo to analyze a meal."
-        case .directAnalysisKeysRequired:
-            return "Add your OpenAI and USDA FoodData Central API keys in Settings to analyze photos directly from this iPhone."
         case .noRecognizedFood:
             return "I couldn’t match foods from that description. Try naming the main foods and portions, or add the nutrition-label photo."
         case .malformedServiceResponse:
@@ -39,8 +36,7 @@ enum MealAnalysisError: LocalizedError {
     }
 }
 
-/// Coordinates direct, on-device-originated analysis. The iPhone sends inputs to
-/// OpenAI and USDA itself; keys stay in this device's Keychain.
+/// Coordinates service-backed analysis. Provider credentials never ship in the app.
 struct MealAnalysisService {
     static let shared = MealAnalysisService()
 
@@ -50,11 +46,6 @@ struct MealAnalysisService {
             throw MealAnalysisError.needsTextOrPhoto
         }
 
-        if let openAIKey = APIKeyStore.value(for: .openAI),
-           let foodDataKey = APIKeyStore.value(for: .foodDataCentral),
-           !openAIKey.isEmpty, !foodDataKey.isEmpty {
-            return try await DirectMealAnalysis(openAIKey: openAIKey, foodDataKey: foodDataKey).analyze(input)
-        }
-        throw MealAnalysisError.directAnalysisKeysRequired
+        return try await DayplateService.shared.analyze(input)
     }
 }
