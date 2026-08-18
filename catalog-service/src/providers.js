@@ -38,9 +38,27 @@ export async function searchFatSecretFoods(query, credentials, request = fetch) 
   });
   const payload = await responseJSON(response, "fatsecret_food_search_failed");
   const results = asArray(payload?.foods?.food);
-  // Search v1 intentionally keeps this integration in the standard food-search
-  // scope; its result contains the selected serving's macro values.
-  return results.map(fatSecretFood).filter(Boolean);
+  // Search only provides one nominated serving. Fetch each food's detail so the
+  // app can offer FatSecret's own standard portions (for example, "1 sandwich")
+  // rather than inventing a 100 g serving.
+  return Promise.all(results.map(async result => {
+    try {
+      return await fatSecretFoodDetails(result, token, request);
+    } catch {
+      // A detail lookup should not make an otherwise useful search result vanish.
+      return fatSecretFood(result);
+    }
+  })).then(foods => foods.filter(Boolean));
+}
+
+async function fatSecretFoodDetails(searchResult, token, request) {
+  if (!searchResult?.food_id) return null;
+  const parameters = new URLSearchParams({ food_id: String(searchResult.food_id), format: "json" });
+  const response = await request(`${FATSECRET_API_URL}/food/v5?${parameters}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const payload = await responseJSON(response, "fatsecret_food_get_failed");
+  return fatSecretFood(payload?.food, searchResult);
 }
 
 export async function searchUSDAFoods(query, credentials, request = fetch) {
@@ -67,21 +85,73 @@ export async function fatSecretToken(credentials, request = fetch) {
   return cachedFatSecretToken.value;
 }
 
-export function fatSecretFood(food) {
+export function fatSecretFood(food, searchResult = null) {
   const description = String(food?.food_description ?? "");
   const nutrients = nutrientsFromDescription(description);
   if (!food?.food_id || !food?.food_name) return null;
-  const servingLabel = description.match(/Per\s+(.+?)\s+-\s+Calories/i)?.[1] ?? "1 serving";
+  const selectedServing = String(searchResult?.food_description ?? description).match(/Per\s+(.+?)\s+-\s+Calories/i)?.[1];
+  const servings = fatSecretServings(food?.servings?.serving);
+  const fallbackServing = {
+    id: "default",
+    label: selectedServing ?? "1 serving",
+    gramWeight: 0,
+    nutrients
+  };
   return {
     id: `fatsecret:${food.food_id}`,
     canonicalName: food.food_name,
     brandName: food.brand_name ?? null,
     searchAliases: [],
-    servings: [{ id: "default", label: servingLabel, gramWeight: 100, nutrients }],
+    servings: preferSelectedServing(servings, selectedServing, fallbackServing),
     provenance: [provenance("FatSecret", String(food.food_id), food.food_name)],
     catalogVersion: "fatsecret-usda-live-v1"
   };
 }
+
+function fatSecretServings(value) {
+  return asArray(value).map((serving, index) => {
+    const label = String(serving?.serving_description ?? "").trim();
+    if (!label) return null;
+    return {
+      id: String(serving?.serving_id ?? `serving-${index}`),
+      label,
+      gramWeight: metricWeight(serving),
+      nutrients: {
+        calories: number(serving?.calories),
+        carbohydrates: number(serving?.carbohydrate),
+        protein: number(serving?.protein),
+        fat: number(serving?.fat),
+        fiber: number(serving?.fiber),
+        calcium: number(serving?.calcium),
+        iron: number(serving?.iron),
+        magnesium: 0,
+        potassium: number(serving?.potassium),
+        sodium: number(serving?.sodium),
+        vitaminD: number(serving?.vitamin_d)
+      }
+    };
+  }).filter(Boolean);
+}
+
+function metricWeight(serving) {
+  const amount = number(serving?.metric_serving_amount);
+  const unit = String(serving?.metric_serving_unit ?? "").toLowerCase();
+  if (unit === "g") return amount;
+  if (unit === "oz") return amount * 28.3495;
+  return 0;
+}
+
+function preferSelectedServing(servings, selectedLabel, fallback) {
+  if (!servings.length) return [fallback];
+  if (!selectedLabel || isWeightServing(selectedLabel)) return servings;
+  const selected = normalizeServingLabel(selectedLabel);
+  const index = servings.findIndex(serving => normalizeServingLabel(serving.label) === selected);
+  if (index <= 0) return servings;
+  return [servings[index], ...servings.slice(0, index), ...servings.slice(index + 1)];
+}
+
+function normalizeServingLabel(value) { return String(value).toLowerCase().replace(/\s+/g, " ").trim(); }
+function isWeightServing(value) { return /^\s*[\d.]+\s*(g|gram|grams|ml|oz)\b/i.test(String(value)); }
 
 export function usdaFood(food) {
   if (!food?.fdcId || !food?.description) return null;

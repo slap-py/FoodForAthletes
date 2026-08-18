@@ -109,6 +109,7 @@ struct SearchMealBuilderView: View {
                             .accessibilityLabel("Remove \(item.food.canonicalName)")
                     }
                     HStack {
+                        Text("Serving").font(.caption.weight(.medium)).foregroundStyle(.secondary)
                         Picker("Serving", selection: $item.servingIndex) {
                             ForEach(Array(item.food.servings.enumerated()), id: \.offset) { index, serving in Text(serving.label).tag(index) }
                         }

@@ -24,13 +24,15 @@
 			<key>CFBundleURLName</key>
 			<string>com.dayplate.log</string>
 			<key>CFBundleURLSchemes</key>
-			<array><string>dayplate</string></array>
+			<array>
+				<string>dayplate</string>
+			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>DayplateServiceURL</key>
-	<string>$(DAYPLATE_SERVICE_URL)</string>
+	<string>https://foodforathletes.kaibergman22.workers.dev</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
@@ -41,11 +43,16 @@
 	<string>Choose a temporary meal photo for review. Meal photos are not saved.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
-		<key>UIApplicationSupportsMultipleScenes</key><false/>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
 	</dict>
-	<key>UILaunchScreen</key><dict/>
-	<key>UIRequiresFullScreen</key><true/>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<key>UISupportedInterfaceOrientations</key>
-	<array><string>UIInterfaceOrientationPortrait</string></array>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
 </dict>
 </plist>
