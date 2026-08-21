@@ -1,17 +1,48 @@
 import SwiftUI
+import UIKit
 
 enum JournalTheme {
-    // Shared cream-and-green palette, derived from the app mark.
-    static let paper = Color(red: 0.965, green: 0.945, blue: 0.89)
-    static let card = Color(red: 1.0, green: 0.99, blue: 0.96)
-    static let ink = Color(red: 0.10, green: 0.18, blue: 0.12)
-    static let forest = Color(red: 0.10, green: 0.31, blue: 0.18)
-    static let moss = Color(red: 0.18, green: 0.35, blue: 0.23)
-    static let sage = Color(red: 0.62, green: 0.72, blue: 0.54)
-    static let mint = Color(red: 0.87, green: 0.92, blue: 0.84)
+    private static func adaptive(_ light: UIColor, _ dark: UIColor) -> Color {
+        Color(uiColor: UIColor { traits in traits.userInterfaceStyle == .dark ? dark : light })
+    }
+
+    // Shared cream-and-green palette, with deliberately matched dark surfaces.
+    static let paper = adaptive(UIColor(red: 0.965, green: 0.945, blue: 0.89, alpha: 1), UIColor(red: 0.055, green: 0.075, blue: 0.06, alpha: 1))
+    static let card = adaptive(UIColor(red: 1.0, green: 0.99, blue: 0.96, alpha: 1), UIColor(red: 0.105, green: 0.135, blue: 0.11, alpha: 1))
+    static let ink = adaptive(UIColor(red: 0.10, green: 0.18, blue: 0.12, alpha: 1), UIColor(red: 0.91, green: 0.95, blue: 0.88, alpha: 1))
+    static let forest = adaptive(UIColor(red: 0.10, green: 0.31, blue: 0.18, alpha: 1), UIColor(red: 0.55, green: 0.75, blue: 0.55, alpha: 1))
+    static let moss = adaptive(UIColor(red: 0.18, green: 0.35, blue: 0.23, alpha: 1), UIColor(red: 0.50, green: 0.71, blue: 0.49, alpha: 1))
+    static let sage = adaptive(UIColor(red: 0.62, green: 0.72, blue: 0.54, alpha: 1), UIColor(red: 0.31, green: 0.43, blue: 0.31, alpha: 1))
+    static let mint = adaptive(UIColor(red: 0.87, green: 0.92, blue: 0.84, alpha: 1), UIColor(red: 0.16, green: 0.23, blue: 0.17, alpha: 1))
     static let oat = Color(red: 0.84, green: 0.73, blue: 0.51)
     static let clay = Color(red: 0.69, green: 0.43, blue: 0.30)
     static let blue = Color(red: 0.35, green: 0.56, blue: 0.61)
+}
+
+enum PortionDisplay {
+    static func text(_ raw: String, unitSystem: String) -> String {
+        let pattern = #"([0-9]+(?:\.[0-9]+)?)\s*g\b"#
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.matches(in: raw, range: NSRange(raw.startIndex..., in: raw)).last,
+              let amountRange = Range(match.range(at: 1), in: raw),
+              let grams = Double(raw[amountRange]) else { return raw }
+
+        let matchStart = Range(match.range, in: raw)?.lowerBound ?? raw.endIndex
+        let beforeAmount = String(raw[..<matchStart])
+        let label: String
+        if let parenthesis = beforeAmount.firstIndex(of: "(") {
+            label = String(beforeAmount[..<parenthesis]).trimmingCharacters(in: .whitespacesAndNewlines)
+        } else {
+            label = beforeAmount.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        let amount: String
+        if unitSystem == "us" {
+            amount = "\((grams / 28.3495).formatted(.number.precision(.fractionLength(0...1)))) oz"
+        } else {
+            amount = "\(Int(grams.rounded())) g"
+        }
+        return label.isEmpty ? amount : "\(label) (\(amount))"
+    }
 }
 
 enum WaterDisplay {

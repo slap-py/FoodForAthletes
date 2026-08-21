@@ -50,8 +50,6 @@ struct Food_LoggingApp: App {
                 .environmentObject(healthStore)
                 .environmentObject(offlineMealQueue)
                 .environmentObject(networkMonitor)
-                .environment(\.colorScheme, .light)
-                .preferredColorScheme(.light)
         }
         .modelContainer(modelContainer)
     }

@@ -39,6 +39,8 @@
 	<string>Take a temporary meal photo for review. Meal photos are not saved.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Dayplate reads today’s workouts and active calories to place activity in your meal rhythm.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Speak your meal description to fill in the meal text.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose a temporary meal photo for review. Meal photos are not saved.</string>
 	<key>UIApplicationSceneManifest</key>

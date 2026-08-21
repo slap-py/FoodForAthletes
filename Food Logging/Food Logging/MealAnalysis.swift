@@ -1,19 +1,17 @@
 import Foundation
 
-/// A transient request. Neither image is written to SwiftData or the photo library.
+/// A transient request. Photos are never written to the meal history or photo library.
 struct MealAnalysisInput {
     let description: String
-    let mealPhotoData: Data?
-    let nutritionLabelPhotoData: Data?
+    let photoData: [Data]
     let capturedAt: Date
     let timeZoneIdentifier: String
 
     init(
-        description: String, mealPhotoData: Data?, nutritionLabelPhotoData: Data?, capturedAt: Date = .now, timeZoneIdentifier: String = TimeZone.current.identifier
+        description: String, photoData: [Data], capturedAt: Date = .now, timeZoneIdentifier: String = TimeZone.current.identifier
     ) {
         self.description = description
-        self.mealPhotoData = mealPhotoData
-        self.nutritionLabelPhotoData = nutritionLabelPhotoData
+        self.photoData = Array(photoData.prefix(3))
         self.capturedAt = capturedAt
         self.timeZoneIdentifier = timeZoneIdentifier
     }
@@ -42,7 +40,7 @@ struct MealAnalysisService {
 
     func analyze(_ input: MealAnalysisInput) async throws -> MealDraft {
         let trimmedDescription = input.description.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedDescription.isEmpty || input.mealPhotoData != nil || input.nutritionLabelPhotoData != nil else {
+        guard !trimmedDescription.isEmpty || !input.photoData.isEmpty else {
             throw MealAnalysisError.needsTextOrPhoto
         }
 

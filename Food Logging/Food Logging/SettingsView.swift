@@ -10,8 +10,11 @@ struct SettingsView: View {
     @Query private var meals: [MealLog]
     @Query private var water: [WaterLog]
     @AppStorage("unitSystem") private var unitSystem = "us"
+    @AppStorage("appearance") private var appearance = "system"
+    @AppStorage("appLanguage") private var appLanguage = "system"
     @AppStorage("defaultWaterML") private var defaultWaterML = 240.0
     @State private var showsPrivacy = false
+    @State private var showsHowItWorks = false
     @State private var showsDeleteConfirmation = false
     @State private var showsExport = false
 
@@ -28,6 +31,27 @@ struct SettingsView: View {
                             Picker("Units", selection: $unitSystem) {
                                 Text("U.S.").tag("us")
                                 Text("Metric").tag("metric")
+                            }
+                            .labelsHidden()
+                            .pickerStyle(.menu)
+                        }
+                        Divider()
+                        preferencePicker(title: "Appearance", description: "Use the system look, light, or dark") {
+                            Picker("Appearance", selection: $appearance) {
+                                Text("System").tag("system")
+                                Text("Light").tag("light")
+                                Text("Dark").tag("dark")
+                            }
+                            .labelsHidden()
+                            .pickerStyle(.menu)
+                        }
+                        Divider()
+                        preferencePicker(title: "Language", description: "Choose the language used for dates") {
+                            Picker("Language", selection: $appLanguage) {
+                                Text("System").tag("system")
+                                Text("English").tag("en_US")
+                                Text("Spanish").tag("es_ES")
+                                Text("French").tag("fr_FR")
                             }
                             .labelsHidden()
                             .pickerStyle(.menu)
@@ -85,9 +109,24 @@ struct SettingsView: View {
                     }
 
                     SettingsSection("Food & AI service") {
-                        Text("Food search uses FatSecret’s standard search endpoint as the primary source and USDA FoodData Central as a supplement. Meal analysis sends the description and any photos you choose to Dayplate, which passes your inputs to OpenAI. Provider keys stay on the service and are never stored in this app.")
+                        Text("Meal analysis separates the meal into recognizable ingredients, sources nutrition from USDA FoodData Central and Open Food Facts when appropriate, and checks the result before you save. Photos and audio are sent only for the estimate. Provider keys stay on the service and are never stored in this app.")
                             .font(.caption)
                             .foregroundStyle(JournalTheme.ink.opacity(0.62))
+                        Divider()
+                        Button {
+                            showsHowItWorks = true
+                        } label: {
+                            HStack {
+                                Label("How it works", systemImage: "questionmark.circle")
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.bold))
+                                    .foregroundStyle(JournalTheme.ink.opacity(0.45))
+                            }
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(JournalTheme.moss)
+                        }
+                        .buttonStyle(.plain)
                         if offlineMealQueue.pendingCount > 0 {
                             Divider()
                             HStack {
@@ -128,6 +167,7 @@ struct SettingsView: View {
             .tint(JournalTheme.moss)
             .toolbar(.hidden, for: .navigationBar)
             .fullScreenCover(isPresented: $showsPrivacy) { privacySheet }
+            .sheet(isPresented: $showsHowItWorks) { howItWorksSheet }
             .sheet(isPresented: $showsExport) {
                 NavigationStack {
                     ContentUnavailableView("Export outline", systemImage: "square.and.arrow.up", description: Text("A portable export will be added before release. Your records remain in your private app store."))
@@ -163,8 +203,8 @@ struct SettingsView: View {
                         icon: "lock.icloud.fill"
                     )
                     privacyRow(
-                        title: "Catalog search is separate from AI",
-                        message: "Food search checks FatSecret first and then supplements it with USDA FoodData Central. Results are intentionally shown separately for now; saved source details and portions remain attached to the meal for traceability.",
+                        title: "Ingredient sources",
+                        message: "Meal nutrition is sourced per ingredient from USDA FoodData Central, Open Food Facts when needed for branded products, and a manufacturer-site fallback. Saved portions and sources remain attached to the meal for traceability.",
                         icon: "magnifyingglass"
                     )
                 }
@@ -175,7 +215,43 @@ struct SettingsView: View {
             .navigationTitle("Photos & privacy")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showsPrivacy = false } } }
         }
-        .preferredColorScheme(.light)
+    }
+
+    private var howItWorksSheet: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("A fast, ingredient-level estimate with source checks before you save.")
+                        .font(.body)
+                        .foregroundStyle(JournalTheme.ink.opacity(0.72))
+                    howItWorksRow(number: "1", title: "Understand your meal", message: "Text, up to three photos, and an optional voice note identify meal-level foods such as chicken breast, bun, or sauce.")
+                    howItWorksRow(number: "2", title: "Find nutrition", message: "Generic foods use USDA FoodData Central. Branded foods check USDA’s branded database, then Open Food Facts, then an official manufacturer page if needed.")
+                    howItWorksRow(number: "3", title: "Check the result", message: "A separate AI sanity check looks for implausible amounts or unit mistakes before the review is shown.")
+                    howItWorksRow(number: "4", title: "You stay in control", message: "Review each food and portion before saving. Photos and recordings are used only to make that estimate; your saved meal keeps the resulting nutrition and source details.")
+                }
+                .padding(22)
+            }
+            .background(JournalTheme.paper.ignoresSafeArea())
+            .navigationTitle("How it works")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showsHowItWorks = false } } }
+        }
+    }
+
+    private func howItWorksRow(number: String, title: String, message: String) -> some View {
+        HStack(alignment: .top, spacing: 13) {
+            Text(number)
+                .font(.headline.bold())
+                .foregroundStyle(.white)
+                .frame(width: 30, height: 30)
+                .background(JournalTheme.moss, in: Circle())
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.headline).foregroundStyle(JournalTheme.ink)
+                Text(message).font(.subheadline).foregroundStyle(JournalTheme.ink.opacity(0.7))
+            }
+        }
+        .padding(15)
+        .background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private func privacyRow(title: String, message: String, icon: String) -> some View {

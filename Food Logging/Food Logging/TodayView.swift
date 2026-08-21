@@ -80,7 +80,10 @@ struct TodayView: View {
             JournalCard {
                 VStack(alignment: .leading, spacing: 18) {
                     HStack(alignment: .top) {
-                        SectionTitle(eyebrow: "Daily shape", title: "Nutrition so far")
+                        Text("Daily shape")
+                            .font(.caption.weight(.semibold))
+                            .tracking(1.4)
+                            .foregroundStyle(JournalTheme.moss)
                         Spacer()
                         Image(systemName: "chevron.right")
                             .font(.subheadline.weight(.bold))
@@ -183,7 +186,10 @@ struct DailyShapeDetailView: View {
             LazyVStack(alignment: .leading, spacing: 20) {
                 JournalCard {
                     VStack(alignment: .leading, spacing: 18) {
-                        SectionTitle(eyebrow: "Daily shape", title: "Nutrition so far")
+                        Text("Daily shape")
+                            .font(.caption.weight(.semibold))
+                            .tracking(1.4)
+                            .foregroundStyle(JournalTheme.moss)
                         LazyVGrid(columns: [.init(.flexible()), .init(.flexible())], spacing: 18) {
                             MacroValue(label: "Calories", value: calories, color: JournalTheme.blue, unit: "kcal")
                             MacroValue(label: "Carbs", value: carbs, color: JournalTheme.oat)
@@ -384,6 +390,7 @@ struct MealCard: View {
     var onEdit: (() -> Void)?
     var onDelete: (() -> Void)?
     @State private var expanded = false
+    @AppStorage("unitSystem") private var unitSystem = "us"
 
     var body: some View {
         JournalCard {
@@ -453,20 +460,26 @@ struct MealCard: View {
                         detail("Fiber", meal.fiber)
                     }
                     if meal.sodium > 0 || meal.potassium > 0 || meal.calcium > 0 || meal.iron > 0 || meal.magnesium > 0 || meal.vitaminD > 0 {
-                        VStack(alignment: .leading, spacing: 5) {
+                        VStack(alignment: .leading, spacing: 10) {
                             Text("Micronutrients").font(.subheadline.bold())
-                            Text(micronutrientSummary)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+                                ForEach(micronutrients) { nutrient in
+                                    micronutrient(nutrient)
+                                }
+                            }
                         }
+                        .padding(12)
+                        .background(JournalTheme.sage.opacity(0.16), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                     if showsSupportingDetails {
                         if let items = meal.items, !items.isEmpty {
                             VStack(alignment: .leading, spacing: 7) {
-                                Text("Foods & portions").font(.subheadline.bold())
-                                ForEach(items) { item in
-                                    Text("\(item.canonicalName) · \(item.portion)")
-                                        .font(.subheadline)
+                            Text("Ingredients & portions").font(.subheadline.bold())
+                            ForEach(items) { item in
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("\(item.canonicalName) · \(PortionDisplay.text(item.portion, unitSystem: unitSystem))").font(.subheadline)
+                                    if let source = item.sourceName { Text(source).font(.caption).foregroundStyle(.secondary) }
+                                }
                                 }
                             }
                         }
@@ -491,16 +504,41 @@ struct MealCard: View {
         .accessibilityLabel("\(label), \(Int(value)) grams")
     }
 
-    private var micronutrientSummary: String {
+    private var micronutrients: [Micronutrient] {
         [
-            meal.sodium > 0 ? "Sodium \(Int(meal.sodium.rounded())) mg" : nil,
-            meal.potassium > 0 ? "Potassium \(Int(meal.potassium.rounded())) mg" : nil,
-            meal.calcium > 0 ? "Calcium \(Int(meal.calcium.rounded())) mg" : nil,
-            meal.iron > 0 ? "Iron \(Int(meal.iron.rounded())) mg" : nil,
-            meal.magnesium > 0 ? "Magnesium \(Int(meal.magnesium.rounded())) mg" : nil,
-            meal.vitaminD > 0 ? "Vitamin D \(Int(meal.vitaminD.rounded())) mcg" : nil
-        ]
-        .compactMap { $0 }
-        .joined(separator: " · ")
+            Micronutrient(label: "Sodium", value: meal.sodium, unit: "mg", icon: "drop.fill"),
+            Micronutrient(label: "Potassium", value: meal.potassium, unit: "mg", icon: "bolt.fill"),
+            Micronutrient(label: "Calcium", value: meal.calcium, unit: "mg", icon: "circle.grid.cross.fill"),
+            Micronutrient(label: "Iron", value: meal.iron, unit: "mg", icon: "shield.fill"),
+            Micronutrient(label: "Magnesium", value: meal.magnesium, unit: "mg", icon: "sparkles"),
+            Micronutrient(label: "Vitamin D", value: meal.vitaminD, unit: "mcg", icon: "sun.max.fill")
+        ].filter { $0.value > 0 }
+    }
+
+    private func micronutrient(_ nutrient: Micronutrient) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Image(systemName: nutrient.icon)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(JournalTheme.moss)
+            Text(nutrient.label)
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(JournalTheme.ink.opacity(0.65))
+                .lineLimit(1)
+            Text("\(Int(nutrient.value.rounded())) \(nutrient.unit)")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(JournalTheme.ink)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity, minHeight: 73, alignment: .leading)
+        .padding(8)
+        .background(JournalTheme.card.opacity(0.75), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    private struct Micronutrient: Identifiable {
+        let label: String
+        let value: Double
+        let unit: String
+        let icon: String
+        var id: String { label }
     }
 }

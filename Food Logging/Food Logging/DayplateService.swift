@@ -11,8 +11,12 @@ enum DayplateServiceError: LocalizedError {
             return "This build is missing its Dayplate service URL. Configure DAYPLATE_SERVICE_URL before distributing the app."
         case .invalidResponse:
             return "The Dayplate service returned an unreadable response. Please try again."
+        case .server("route_not_found"):
+            return "Voice transcription is not available on the Dayplate service yet. Update the service deployment, then try again."
+        case .server("service_not_configured"):
+            return "Voice transcription is not configured on the Dayplate service yet."
         case .server(let message):
-            return message
+            return message.replacingOccurrences(of: "_", with: " ")
         }
     }
 }
@@ -36,6 +40,18 @@ struct DayplateService {
         decoder.dateDecodingStrategy = .iso8601
         guard let result = try? decoder.decode(FoodSearchResponse.self, from: data) else { throw DayplateServiceError.invalidResponse }
         return result.foods
+    }
+
+    func transcribe(audioData: Data, mimeType: String = "audio/m4a") async throws -> String {
+        guard let baseURL else { throw DayplateServiceError.notConfigured }
+        var request = URLRequest(url: baseURL.appending(path: "/v1/transcribe"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(TranscriptionRequest(audioBase64: audioData.base64EncodedString(), mimeType: mimeType))
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try validate(response, data: data)
+        guard let result = try? JSONDecoder().decode(TranscriptionResponse.self, from: data) else { throw DayplateServiceError.invalidResponse }
+        return result.text
     }
 
     func analyze(_ input: MealAnalysisInput) async throws -> MealDraft {
@@ -64,22 +80,23 @@ private struct ServiceError: Decodable { let error: String }
 
 private struct RemoteMealRequest: Encodable {
     let description: String
-    let mealPhotoBase64: String?
-    let nutritionLabelPhotoBase64: String?
+    let photosBase64: [String]
     let capturedAt: String
     let timeZoneIdentifier: String
 
     init(input: MealAnalysisInput) {
         description = input.description
-        mealPhotoBase64 = input.mealPhotoData?.base64EncodedString()
-        nutritionLabelPhotoBase64 = input.nutritionLabelPhotoData?.base64EncodedString()
+        photosBase64 = input.photoData.map { $0.base64EncodedString() }
         capturedAt = ISO8601DateFormatter().string(from: input.capturedAt)
         timeZoneIdentifier = input.timeZoneIdentifier
     }
 }
 
+private struct TranscriptionRequest: Encodable { let audioBase64: String; let mimeType: String }
+private struct TranscriptionResponse: Decodable { let text: String }
+
 private struct RemoteMealDraft: Decodable {
-    struct Food: Decodable { let name: String; let portion: String }
+    struct Food: Decodable { let name: String; let portion: String; let sourceName: String? }
     let title: String
     let calories: Double
     let carbohydrates: Double
@@ -98,6 +115,6 @@ private struct RemoteMealDraft: Decodable {
     let catalogVersion: String
 
     var mealDraft: MealDraft {
-        MealDraft(title: title, calories: calories, carbohydrates: carbohydrates, protein: protein, fat: fat, fiber: fiber, calcium: calcium, iron: iron, magnesium: magnesium, potassium: potassium, sodium: sodium, vitaminD: vitaminD, assumptions: assumptions, foods: foods.map { ($0.name, $0.portion) }, analysisVersion: analysisVersion, catalogVersion: catalogVersion)
+        MealDraft(title: title, calories: calories, carbohydrates: carbohydrates, protein: protein, fat: fat, fiber: fiber, calcium: calcium, iron: iron, magnesium: magnesium, potassium: potassium, sodium: sodium, vitaminD: vitaminD, assumptions: assumptions, foods: foods.map { ($0.name, $0.portion) }, ingredientSources: Dictionary(uniqueKeysWithValues: foods.compactMap { food in food.sourceName.map { (food.name, $0) } }), analysisVersion: analysisVersion, catalogVersion: catalogVersion)
     }
 }

@@ -77,7 +77,7 @@ struct SearchMealBuilderView: View {
                         Text("RESULTS").font(.caption.bold()).tracking(1.2).foregroundStyle(JournalTheme.moss)
                         ForEach(results) { food in resultRow(food) }
                     } else if query.isEmpty && selections.isEmpty {
-                        ContentUnavailableView("Find a food", systemImage: "fork.knife", description: Text("Search FatSecret first, with USDA FoodData Central supplemental results."))
+                        ContentUnavailableView("Find a food", systemImage: "fork.knife", description: Text("Food search is no longer part of Dayplate. Log the meal with text, voice, or photos instead."))
                             .padding(.top, 46)
                     }
                 }

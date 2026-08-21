@@ -14,38 +14,42 @@ struct MealCaptureView: View {
     @Query(sort: \MealLog.timestamp, order: .reverse) private var previousMeals: [MealLog]
     @State private var step: Step = .capture
     @State private var descriptionText = ""
-    @State private var selectedMealPhoto: PhotosPickerItem?
-    @State private var selectedLabelPhoto: PhotosPickerItem?
-    @State private var mealPhotoData: Data?
-    @State private var labelPhotoData: Data?
-    @State private var mealPhotoImage: UIImage?
-    @State private var labelPhotoImage: UIImage?
+    @State private var selectedPhotos: [PhotosPickerItem] = []
+    @State private var photoData: [Data] = []
+    @State private var photos: [UIImage] = []
+    @State private var cameraPhoto: UIImage?
     @State private var draft: MealDraft?
     @State private var isPreparingPreview = false
     @State private var showsCamera = false
     @State private var showsCameraDenied = false
-    @State private var cameraTarget: PhotoTarget = .meal
+    @State private var audioRecorder: AVAudioRecorder?
+    @State private var isRecording = false
+    @State private var isTranscribing = false
     @State private var analysisError: String?
     @State private var showsOfflineQueuedConfirmation = false
     @FocusState private var descriptionFocused: Bool
+    @AppStorage("unitSystem") private var unitSystem = "us"
     let onCompleted: () -> Void
 
     init(onCompleted: @escaping () -> Void = {}) {
         self.onCompleted = onCompleted
     }
 
-    private enum PhotoTarget { case meal, nutritionLabel }
-
     private var canAnalyze: Bool {
-        (!descriptionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || mealPhotoImage != nil || labelPhotoImage != nil) && !isPreparingPreview
+        (!descriptionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !photos.isEmpty) && !isPreparingPreview && !isTranscribing
     }
 
     private var usualMeals: [MealLog] {
         let currentHour = Calendar.current.component(.hour, from: .now)
-        var seen = Set<String>()
-        return previousMeals.filter { meal in
+        let recent = previousMeals.filter { meal in
             let hour = Calendar.current.component(.hour, from: meal.timestamp)
-            return abs(hour - currentHour) <= 2 && seen.insert(meal.title.lowercased()).inserted
+            return meal.timestamp >= .now.addingTimeInterval(-7 * 24 * 60 * 60) && abs(hour - currentHour) <= 1
+        }
+        let frequency = Dictionary(grouping: recent, by: { $0.title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() })
+        var seen = Set<String>()
+        return recent.filter { meal in
+            let key = meal.title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            return (frequency[key]?.count ?? 0) >= 2 && seen.insert(key).inserted
         }.prefix(3).map { $0 }
     }
 
@@ -66,23 +70,24 @@ struct MealCaptureView: View {
                         if step == .review { step = .capture } else { dismiss() }
                     }
                 }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { descriptionFocused = false }
+                }
             }
         }
         .fullScreenCover(isPresented: $showsCamera) {
-            CameraPicker(image: cameraTarget == .meal ? $mealPhotoImage : $labelPhotoImage)
+            CameraPicker(image: $cameraPhoto)
                 .ignoresSafeArea()
         }
-        .onChange(of: mealPhotoImage) { _, image in
-            if let image { mealPhotoData = image.analysisJPEGData() }
+        .onChange(of: cameraPhoto) { _, image in
+            guard let image, photos.count < 3 else { return }
+            photos.append(image)
+            if let data = image.analysisJPEGData() { photoData.append(data) }
+            cameraPhoto = nil
         }
-        .onChange(of: labelPhotoImage) { _, image in
-            if let image { labelPhotoData = image.analysisJPEGData() }
-        }
-        .onChange(of: selectedMealPhoto) { _, item in
-            load(item, as: .meal)
-        }
-        .onChange(of: selectedLabelPhoto) { _, item in
-            load(item, as: .nutritionLabel)
+        .onChange(of: selectedPhotos) { _, items in
+            loadPhotos(items)
         }
         .alert("Camera access is off", isPresented: $showsCameraDenied) {
             Button("Open Settings") { openSystemSettings() }
@@ -108,17 +113,18 @@ struct MealCaptureView: View {
                 if !usualMeals.isEmpty { usualRow }
 
                 VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Describe what you ate")
-                        Text("Optional")
-                            .font(.caption.bold())
-                            .padding(.horizontal, 8).padding(.vertical, 4)
-                            .background(JournalTheme.sage.opacity(0.38), in: Capsule())
+                    HStack(spacing: 10) {
+                        Text("Describe what you ate").font(.title2.bold()).lineLimit(1)
+                        Spacer()
+                        Button(action: toggleRecording) {
+                            Group { if isTranscribing { ProgressView().tint(.white) } else { Image(systemName: isRecording ? "stop.fill" : "mic.fill") } }
+                                .frame(width: 34, height: 34)
+                                .background(isRecording ? JournalTheme.clay : JournalTheme.moss, in: Circle())
+                                .foregroundStyle(.white)
+                        }
+                        .disabled(isTranscribing)
+                        .accessibilityLabel(isRecording ? "Stop recording" : "Speak meal description")
                     }
-                        .font(.title2.bold())
-                    Text("A short sentence improves the estimate. Include sauces, drinks, or portions when useful.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
                     TextField("Rice bowl with chicken, avocado, and salsa", text: $descriptionText, axis: .vertical)
                         .focused($descriptionFocused)
                         .lineLimit(3...6)
@@ -126,25 +132,12 @@ struct MealCaptureView: View {
                         .background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 16))
                         .overlay { RoundedRectangle(cornerRadius: 16).stroke(JournalTheme.ink.opacity(0.09)) }
                         .submitLabel(.done)
+                        .onSubmit { descriptionFocused = false }
                 }
 
-                photoSection(
-                    title: "Meal photo",
-                    detail: "Optional · shows ingredients and visible portions",
-                    image: mealPhotoImage,
-                    picker: $selectedMealPhoto,
-                    target: .meal
-                )
+                photoSection
 
-                photoSection(
-                    title: "Nutrition-label photo",
-                    detail: "Optional · helps use the packaged serving values",
-                    image: labelPhotoImage,
-                    picker: $selectedLabelPhoto,
-                    target: .nutritionLabel
-                )
-
-                Label("Add text or either photo to continue. You can include at most two photos.", systemImage: "checkmark.circle.fill")
+                Label("Add text or photos to continue. You can include up to three photos.", systemImage: "checkmark.circle.fill")
                     .font(.caption)
                     .foregroundStyle(JournalTheme.ink.opacity(0.65))
                 Label("Photos are used only for this estimate and are never saved to your meal history or camera roll.", systemImage: "lock.fill")
@@ -154,7 +147,7 @@ struct MealCaptureView: View {
                 Button(action: preparePreview) {
                     HStack {
                         if isPreparingPreview { ProgressView().tint(.white) }
-                        Text(isPreparingPreview ? "Preparing review…" : "Analyze meal")
+                    Text(isPreparingPreview ? "Preparing review…" : "Analyze meal")
                     }
                     .frame(maxWidth: .infinity, minHeight: 54)
                 }
@@ -197,13 +190,6 @@ struct MealCaptureView: View {
         ScrollView {
             if let draft {
                 VStack(alignment: .leading, spacing: 18) {
-                    HStack(alignment: .top, spacing: 10) {
-                        Image(systemName: "sparkles").foregroundStyle(JournalTheme.clay)
-                        Text("Approximate AI nutrition estimate")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(JournalTheme.clay)
-                    }
-
                     JournalCard {
                         VStack(alignment: .leading, spacing: 16) {
                             Text(Date.now, format: .dateTime.hour().minute())
@@ -218,24 +204,22 @@ struct MealCaptureView: View {
                                 reviewNutrient("Fiber", draft.fiber, JournalTheme.blue)
                             }
                             Divider()
-                            LabeledContent("Estimated energy", value: "\(Int(draft.calories)) kcal")
+                            LabeledContent("Energy", value: "\(Int(draft.calories)) kcal")
                                 .font(.subheadline)
                         }
                     }
 
                     JournalCard {
                         VStack(alignment: .leading, spacing: 11) {
-                            Text("Foods & approachable portions").font(.headline)
+                            Text("Foods & portions").font(.headline)
                             ForEach(Array(draft.foods.enumerated()), id: \.offset) { _, food in
                                 HStack(alignment: .firstTextBaseline) {
                                     Text(food.name)
                                     Spacer()
-                                    Text(food.portion).foregroundStyle(.secondary)
+                                    Text(PortionDisplay.text(food.portion, unitSystem: unitSystem)).foregroundStyle(.secondary)
                                 }
                                 .font(.subheadline)
                             }
-                            Text(draft.assumptions)
-                                .font(.caption).foregroundStyle(.secondary).padding(.top, 3)
                         }
                     }
 
@@ -282,49 +266,38 @@ struct MealCaptureView: View {
         .overlay { RoundedRectangle(cornerRadius: 18).stroke(style: StrokeStyle(lineWidth: 1, dash: [5])).foregroundStyle(JournalTheme.moss.opacity(0.35)) }
     }
 
-    private func photoSection(
-        title: String,
-        detail: String,
-        image: UIImage?,
-        picker: Binding<PhotosPickerItem?>,
-        target: PhotoTarget
-    ) -> some View {
+    private var photoSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.title3.bold())
-                Text(detail).font(.caption).foregroundStyle(.secondary)
+                Text("Photos").font(.title3.bold())
+                Text("Food, packaging, or nutrition labels — the estimate will identify each.").font(.caption).foregroundStyle(.secondary)
             }
-            if let image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 170)
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
-                    .overlay(alignment: .topTrailing) {
-                        Button { clearPhoto(target) } label: {
-                            Image(systemName: "xmark").font(.headline)
-                                .frame(width: 44, height: 44)
-                                .background(.ultraThinMaterial, in: Circle())
-                        }
-                        .padding(10)
-                        .accessibilityLabel("Remove \(title.lowercased())")
+            if !photos.isEmpty {
+                HStack(spacing: 10) {
+                    ForEach(Array(photos.enumerated()), id: \.offset) { index, image in
+                        Image(uiImage: image)
+                            .resizable().scaledToFill().frame(maxWidth: .infinity).frame(height: 108)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                            .overlay(alignment: .topTrailing) {
+                                Button { clearPhoto(at: index) } label: {
+                                    Image(systemName: "xmark").font(.caption.bold()).frame(width: 28, height: 28).background(.ultraThinMaterial, in: Circle())
+                                }.padding(5).accessibilityLabel("Remove photo \(index + 1)")
+                            }
                     }
-            } else {
+                }
+            }
+            if photos.count < 3 {
                 HStack(spacing: 12) {
-                    Button { requestCamera(for: target) } label: {
-                        photoButtonLabel("Take photo", icon: "camera.fill")
-                    }
-                    PhotosPicker(selection: picker, matching: .images) {
-                        photoButtonLabel("Choose photo", icon: "photo.on.rectangle")
+                    Button { requestCamera() } label: { photoButtonLabel("Take photo", icon: "camera.fill") }
+                    PhotosPicker(selection: $selectedPhotos, maxSelectionCount: max(1, 3 - photos.count), matching: .images) {
+                        photoButtonLabel("Choose photos", icon: "photo.on.rectangle")
                     }
                 }
             }
         }
     }
 
-    private func requestCamera(for target: PhotoTarget) {
-        cameraTarget = target
+    private func requestCamera() {
         guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
             showsCameraDenied = true
             return
@@ -342,6 +315,55 @@ struct MealCaptureView: View {
         }
     }
 
+    private func toggleRecording() {
+        if isRecording {
+            guard let recorder = audioRecorder else { return }
+            recorder.stop()
+            audioRecorder = nil
+            isRecording = false
+            isTranscribing = true
+            Task {
+                defer {
+                    isTranscribing = false
+                    try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+                    try? FileManager.default.removeItem(at: recorder.url)
+                }
+                do {
+                    let transcript = try await DayplateService.shared.transcribe(audioData: Data(contentsOf: recorder.url))
+                    guard !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                        analysisError = "No speech was detected. Try speaking a little closer to the microphone."
+                        return
+                    }
+                    let separator = descriptionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "" : " "
+                    descriptionText += separator + transcript
+                } catch {
+                    analysisError = "Couldn’t transcribe that recording: \((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)"
+                }
+            }
+            return
+        }
+
+        AVAudioSession.sharedInstance().requestRecordPermission { allowed in
+            DispatchQueue.main.async {
+                guard allowed else { analysisError = "Allow microphone access in Settings to speak your meal description."; return }
+                do {
+                    let session = AVAudioSession.sharedInstance()
+                    try session.setCategory(.record, mode: .measurement)
+                    try session.setActive(true)
+                    let url = FileManager.default.temporaryDirectory.appendingPathComponent("dayplate-meal-\(UUID().uuidString).m4a")
+                    let recorder = try AVAudioRecorder(url: url, settings: [AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: 44_100, AVNumberOfChannelsKey: 1, AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue])
+                    guard recorder.prepareToRecord(), recorder.record() else {
+                        throw NSError(domain: "DayplateRecording", code: 1, userInfo: [NSLocalizedDescriptionKey: "The microphone could not start recording."])
+                    }
+                    audioRecorder = recorder
+                    isRecording = true
+                } catch {
+                    analysisError = "Couldn’t start recording. Please try again."
+                }
+            }
+        }
+    }
+
     private func preparePreview() {
         guard canAnalyze else { return }
         descriptionFocused = false
@@ -356,8 +378,7 @@ struct MealCaptureView: View {
                 let result = try await MealAnalysisService.shared.analyze(
                     MealAnalysisInput(
                         description: descriptionText,
-                        mealPhotoData: mealPhotoData,
-                        nutritionLabelPhotoData: labelPhotoData
+                        photoData: photoData
                     )
                 )
                 guard !Task.isCancelled else { return }
@@ -377,8 +398,7 @@ struct MealCaptureView: View {
         do {
             try offlineMealQueue.enqueue(
                 description: descriptionText,
-                mealPhotoData: mealPhotoData,
-                nutritionLabelPhotoData: labelPhotoData
+                photoData: photoData
             )
             clearPhotos()
             showsOfflineQueuedConfirmation = true
@@ -404,7 +424,7 @@ struct MealCaptureView: View {
     }
 
     private func saveMeal(_ draft: MealDraft) {
-        let items = draft.foods.map { MealItem(canonicalName: $0.name, portion: $0.portion) }
+        let items = draft.foods.map { MealItem(canonicalName: $0.name, portion: $0.portion, sourceName: draft.ingredientSources[$0.name]) }
         let meal = MealLog(
             title: draft.title,
             descriptionText: descriptionText,
@@ -459,38 +479,31 @@ struct MealCaptureView: View {
         dismiss()
     }
 
-    private func load(_ item: PhotosPickerItem?, as target: PhotoTarget) {
-        guard let item else { return }
+    private func loadPhotos(_ items: [PhotosPickerItem]) {
+        guard !items.isEmpty else { return }
         Task {
-            if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) {
-                switch target {
-                case .meal:
-                    mealPhotoData = data
-                    mealPhotoImage = image
-                case .nutritionLabel:
-                    labelPhotoData = data
-                    labelPhotoImage = image
-                }
+            var loaded: [(UIImage, Data)] = []
+            for item in items.prefix(max(0, 3 - photos.count)) {
+                guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data), let compressed = image.analysisJPEGData() else { continue }
+                loaded.append((image, compressed))
             }
+            photos.append(contentsOf: loaded.map(\.0))
+            photoData.append(contentsOf: loaded.map(\.1))
+            selectedPhotos = []
         }
     }
 
-    private func clearPhoto(_ target: PhotoTarget) {
-        switch target {
-        case .meal:
-            selectedMealPhoto = nil
-            mealPhotoData = nil
-            mealPhotoImage = nil
-        case .nutritionLabel:
-            selectedLabelPhoto = nil
-            labelPhotoData = nil
-            labelPhotoImage = nil
-        }
+    private func clearPhoto(at index: Int) {
+        guard photos.indices.contains(index), photoData.indices.contains(index) else { return }
+        photos.remove(at: index)
+        photoData.remove(at: index)
+        selectedPhotos = []
     }
 
     private func clearPhotos() {
-        clearPhoto(.meal)
-        clearPhoto(.nutritionLabel)
+        selectedPhotos = []
+        photos = []
+        photoData = []
     }
 
     private func openSystemSettings() {
@@ -531,14 +544,21 @@ private struct CameraPicker: UIViewControllerRepresentable {
 }
 
 private extension UIImage {
-    /// Keeps temporary AI payloads fast to upload without creating a file or photo-library asset.
-    func analysisJPEGData(maximumDimension: CGFloat = 1_600) -> Data? {
+    /// Keeps three temporary AI photos within the service request budget.
+    func analysisJPEGData(maximumDimension: CGFloat = 1_280) -> Data? {
         let largestDimension = max(size.width, size.height)
-        guard largestDimension > maximumDimension else { return jpegData(compressionQuality: 0.82) }
-        let scale = maximumDimension / largestDimension
-        let targetSize = CGSize(width: size.width * scale, height: size.height * scale)
-        let renderer = UIGraphicsImageRenderer(size: targetSize)
-        return renderer.image { _ in draw(in: CGRect(origin: .zero, size: targetSize)) }
-            .jpegData(compressionQuality: 0.82)
+        let image: UIImage
+        if largestDimension > maximumDimension {
+            let scale = maximumDimension / largestDimension
+            let targetSize = CGSize(width: size.width * scale, height: size.height * scale)
+            let renderer = UIGraphicsImageRenderer(size: targetSize)
+            image = renderer.image { _ in draw(in: CGRect(origin: .zero, size: targetSize)) }
+        } else {
+            image = self
+        }
+        for quality in stride(from: 0.72, through: 0.44, by: -0.07) {
+            if let data = image.jpegData(compressionQuality: quality), data.count <= 2_000_000 { return data }
+        }
+        return image.jpegData(compressionQuality: 0.4)
     }
 }

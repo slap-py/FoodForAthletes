@@ -11,22 +11,37 @@ struct ContentView: View {
     @EnvironmentObject private var networkMonitor: NetworkMonitor
     @State private var selectedTab: AppTab = .today
     @State private var showsLogFood = false
+    @AppStorage("appearance") private var appearance = "system"
+    @AppStorage("appLanguage") private var appLanguage = "system"
+
+    private var preferredColorScheme: ColorScheme? {
+        switch appearance {
+        case "light": .light
+        case "dark": .dark
+        default: nil
+        }
+    }
+
+    private var locale: Locale {
+        appLanguage == "system" ? .autoupdatingCurrent : Locale(identifier: appLanguage)
+    }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            Group {
-                switch selectedTab {
-                case .today: TodayView(onLogMeal: { showsLogFood = true })
-                case .history: HistoryView()
-                case .settings: SettingsView()
-                }
+        Group {
+            switch selectedTab {
+            case .today: TodayView(onLogMeal: { showsLogFood = true })
+            case .history: HistoryView()
+            case .settings: SettingsView()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             BottomBar(selection: $selectedTab, onLogMeal: { showsLogFood = true })
+                .background(JournalTheme.paper)
         }
         .background(JournalTheme.paper.ignoresSafeArea())
-        .preferredColorScheme(.light)
+        .environment(\.locale, locale)
+        .preferredColorScheme(preferredColorScheme)
         .task {
             if UserDefaults.standard.bool(forKey: "dayplate.openLogFood") {
                 UserDefaults.standard.removeObject(forKey: "dayplate.openLogFood")
@@ -49,7 +64,7 @@ struct ContentView: View {
             Task { await offlineMealQueue.processPending(into: modelContext) }
         }
         .fullScreenCover(isPresented: $showsLogFood) {
-            LogFoodView()
+            MealCaptureView()
         }
         .onOpenURL { url in
             guard url.scheme == "dayplate", url.host == "log" else { return }
@@ -91,7 +106,7 @@ private struct BottomBar: View {
                 .shadow(color: JournalTheme.ink.opacity(0.2), radius: 10, y: 4)
             }
             .offset(y: -58)
-            .accessibilityHint("Choose Search foods, AI estimate, or Repeat a meal")
+            .accessibilityHint("Describe, speak, or photograph a meal, or repeat a meal")
         }
     }
 

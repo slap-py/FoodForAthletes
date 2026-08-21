@@ -41,21 +41,21 @@ final class OfflineMealQueueStore: ObservableObject {
         }
     }
 
-    func enqueue(description: String, mealPhotoData: Data?, nutritionLabelPhotoData: Data?, capturedAt: Date = .now) throws {
+    func enqueue(description: String, photoData: [Data], capturedAt: Date = .now) throws {
         let id = UUID()
         var storedPaths: [String] = []
         do {
-            let mealPhotoPath = try OfflineMealPhotoStore.save(mealPhotoData, id: id, kind: "meal")
-            if let mealPhotoPath { storedPaths.append(mealPhotoPath) }
-            let nutritionLabelPhotoPath = try OfflineMealPhotoStore.save(nutritionLabelPhotoData, id: id, kind: "label")
-            if let nutritionLabelPhotoPath { storedPaths.append(nutritionLabelPhotoPath) }
+            let photoPaths = try photoData.prefix(3).enumerated().compactMap { index, data in
+                let path = try OfflineMealPhotoStore.save(data, id: id, kind: "photo-\(index)")
+                if let path { storedPaths.append(path) }
+                return path
+            }
 
             context.insert(QueuedMeal(
                 id: id,
                 capturedAt: capturedAt,
                 descriptionText: description,
-                mealPhotoPath: mealPhotoPath,
-                nutritionLabelPhotoPath: nutritionLabelPhotoPath
+                photoPaths: photoPaths
             ))
             try context.save()
             reloadCount()
@@ -78,15 +78,13 @@ final class OfflineMealQueueStore: ObservableObject {
                 let draft = try await MealAnalysisService.shared.analyze(
                     MealAnalysisInput(
                         description: queuedMeal.descriptionText,
-                        mealPhotoData: OfflineMealPhotoStore.data(at: queuedMeal.mealPhotoPath),
-                        nutritionLabelPhotoData: OfflineMealPhotoStore.data(at: queuedMeal.nutritionLabelPhotoPath),
+                        photoData: queuedMeal.allPhotoPaths.compactMap(OfflineMealPhotoStore.data),
                         capturedAt: queuedMeal.capturedAt
                     )
                 )
                 mealContext.insert(MealLog(draft: draft, descriptionText: queuedMeal.descriptionText, timestamp: queuedMeal.capturedAt))
                 try mealContext.save()
-                OfflineMealPhotoStore.remove(queuedMeal.mealPhotoPath)
-                OfflineMealPhotoStore.remove(queuedMeal.nutritionLabelPhotoPath)
+                queuedMeal.allPhotoPaths.forEach(OfflineMealPhotoStore.remove)
                 context.delete(queuedMeal)
                 try context.save()
             } catch {
@@ -100,8 +98,7 @@ final class OfflineMealQueueStore: ObservableObject {
         let descriptor = FetchDescriptor<QueuedMeal>()
         guard let queuedMeals = try? context.fetch(descriptor) else { return }
         for queuedMeal in queuedMeals {
-            OfflineMealPhotoStore.remove(queuedMeal.mealPhotoPath)
-            OfflineMealPhotoStore.remove(queuedMeal.nutritionLabelPhotoPath)
+            queuedMeal.allPhotoPaths.forEach(OfflineMealPhotoStore.remove)
             context.delete(queuedMeal)
         }
         try? context.save()
@@ -158,7 +155,11 @@ extension MealLog {
             sodium: draft.sodium,
             vitaminD: draft.vitaminD,
             assumptions: draft.assumptions,
-            items: draft.foods.map { MealItem(canonicalName: $0.name, portion: $0.portion) }
+            items: draft.foods.map { MealItem(canonicalName: $0.name, portion: $0.portion, sourceName: draft.ingredientSources[$0.name]) }
         )
     }
+}
+
+private extension QueuedMeal {
+    var allPhotoPaths: [String] { [mealPhotoPath, nutritionLabelPhotoPath].compactMap { $0 } + photoPaths }
 }

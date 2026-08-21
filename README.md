@@ -1,6 +1,6 @@
 # Dayplate
 
-Dayplate is an iPhone-only SwiftUI meal and water logger built around quick, flexible entry. Its main picker offers catalog search, an optional text/photo AI estimate, and time-aware meal repeats. Search builds a timestamped multi-item meal from canonical USDA-derived generic and branded foods without calling OpenAI.
+Dayplate is an iPhone-only SwiftUI meal and water logger built around quick, flexible natural-language entry, photos, voice input, and time-aware meal repeats.
 
 The app focuses on meal timing, meal gaps, hydration, and neutral carbohydrate/protein distribution. It avoids calorie budgets, weight-loss goals, grades, deficits, and diet advice. Meals can be logged again from time-aware memory, and water can be added with one tap.
 
@@ -8,10 +8,10 @@ The app focuses on meal timing, meal gaps, hydration, and neutral carbohydrate/p
 
 - SwiftUI for iOS 17+
 - SwiftData with private iCloud/CloudKit sync
-- Versioned Dayplate catalog records with normalized names, brands, servings, nutrients, and USDA provenance
-- FatSecret v5 food search with API-defined servings and USDA FoodData Central supplemental results (no deduplication yet)
-- Optional food and macro interpretation from text, a meal photo, and/or a nutrition-label photo
-- Service-backed OpenAI vision analysis, receiving the description and optional meal and label photos
+- Ingredient-level meal logs with source details retained for each food
+- USDA FoodData Central for generic and branded foods, Open Food Facts for branded fallback, then manufacturer-site fallback
+- Food and macro interpretation from optional text and up to three undifferentiated photos
+- Service-backed OpenAI analysis and Whisper transcription
 - Offline AI retry, locally available repeat meals, App Shortcut routing, and configurable water amounts
 
 Training plans, exercise integration, coaching, nutrition targets, medication, and weight-loss features are intentionally deferred.
@@ -19,14 +19,14 @@ Training plans, exercise integration, coaching, nutrition targets, medication, a
 ## Repository contents
 
 - `Food Logging/` — the SwiftUI iPhone app source and Xcode project
-- `catalog-service/` — versioned canonical catalog pipeline plus search/detail HTTP reference service
+- `catalog-service/` — ingredient sourcing, meal analysis, transcription, and verification service
 - `plans/` — product and implementation plans
 - `README.md` — project overview and current scope
 
 Open `Food Logging/Food Logging.xcodeproj` in Xcode to build and run the app. The project targets iOS 17 or later.
 
-## Direct meal analysis
+## Meal analysis
 
-Catalog search and AI estimate are independent. Catalog search calls the Dayplate service, which queries FatSecret v5 first and appends USDA FoodData Central results without deduplication. FatSecret v5 requires the `premier` OAuth scope and supplies its standard serving choices (such as `1 sandwich`) with nutrients for each serving. The service owns the FatSecret, OpenAI, and USDA credentials; no provider keys are stored in the iPhone app.
+Each meal is separated into meal-level ingredients, rather than recipe subcomponents. Generic items use the full USDA FoodData Central search corpus. Branded items use USDA Branded Food Products, then Open Food Facts, then a manufacturer-site lookup. A separate GPT sanity check runs before the result is returned. The service owns the USDA and OpenAI credentials; no provider keys are stored in the iPhone app.
 
-When the user analyzes a meal, the app sends the description plus both optional images to the Dayplate service, which forwards them to OpenAI. FatSecret is used only for the standard food-search endpoint. Images are transient request data and are never saved with a meal; when a meal is queued offline, they are held only in protected device storage until analysis succeeds, then deleted.
+When the user analyzes a meal, the app sends the optional description plus up to three photos to the Dayplate service. Images and recorded audio are transient request data and are never saved with a meal; when a meal is queued offline, photos are held only in protected device storage until analysis succeeds, then deleted.

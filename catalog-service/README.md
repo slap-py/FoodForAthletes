@@ -1,12 +1,12 @@
 # Dayplate catalog service
 
-This service exposes `GET /v1/catalog`, `GET /v1/foods/search?q=…`, `GET /v1/foods/:id`, and `POST /v1/meal-analysis`.
+This service exposes `POST /v1/meal-analysis` and `POST /v1/transcribe`.
 
-`GET /v1/foods/search` queries FatSecret’s v5 food-search endpoint first and then appends USDA FoodData Central results. FatSecret v5 requires the `premier` OAuth scope and returns the provider-defined servings and nutrients for each food; the service passes those choices through to the app. Results are deliberately not deduplicated. `POST /v1/meal-analysis` sends the original text and optional meal and nutrition-label images to OpenAI; it does not call FatSecret NLP or any other paid FatSecret add-on. FatSecret barcode, autocomplete, image-recognition, and recipe APIs are also not used.
+`POST /v1/meal-analysis` accepts optional text and up to three photos. It identifies meal-level ingredients, sources generic food data from USDA FoodData Central’s full search corpus, and resolves branded food data in order through USDA Branded Food Products, Open Food Facts, then manufacturer websites through an OpenAI web-search fallback. A separate GPT sanity check runs after each meal analysis. `POST /v1/transcribe` uses Whisper to turn a temporary voice recording into meal-description text.
 
 ## Configuration
 
-Copy [`.env.example`](.env.example) into your deployment’s secret manager and set `FATSECRET_CLIENT_ID`, `FATSECRET_CLIENT_SECRET`, `USDA_FOODDATA_API_KEY`, and `OPENAI_API_KEY`. Never place these values in the iOS app or source control. FatSecret's OAuth client-credentials flow requires the token request to come from a proxy service, which is why this service owns the credentials and caches its access token.
+Copy [`.env.example`](.env.example) into your deployment’s secret manager and set `USDA_FOODDATA_API_KEY` and `OPENAI_API_KEY`. Never place these values in the iOS app or source control.
 
 Set the iOS `DAYPLATE_SERVICE_URL` build setting to this service’s public HTTPS URL before shipping the app. That URL is configuration only; it is not a credential.
 

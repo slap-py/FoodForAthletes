@@ -132,6 +132,9 @@ final class QueuedMeal {
     var descriptionText: String = ""
     var mealPhotoPath: String?
     var nutritionLabelPhotoPath: String?
+    /// Added with the unified three-photo meal capture flow. Legacy paths above
+    /// remain so already queued meals can still be processed.
+    var photoPaths: [String] = []
     var lastError: String?
 
     init(
@@ -139,13 +142,15 @@ final class QueuedMeal {
         capturedAt: Date = .now,
         descriptionText: String,
         mealPhotoPath: String? = nil,
-        nutritionLabelPhotoPath: String? = nil
+        nutritionLabelPhotoPath: String? = nil,
+        photoPaths: [String] = []
     ) {
         self.id = id
         self.capturedAt = capturedAt
         self.descriptionText = descriptionText
         self.mealPhotoPath = mealPhotoPath
         self.nutritionLabelPhotoPath = nutritionLabelPhotoPath
+        self.photoPaths = photoPaths
     }
 }
 
@@ -174,6 +179,7 @@ struct MealDraft: Equatable {
     var vitaminD: Double = 0
     var assumptions: String
     var foods: [(name: String, portion: String)]
+    var ingredientSources: [String: String] = [:]
     var loggingMethod: LoggingMethod = .ai
     var catalogItems: [CatalogMealItem] = []
     var analysisVersion: String = "local-catalog-v1"
@@ -192,6 +198,7 @@ struct MealDraft: Equatable {
         lhs.potassium == rhs.potassium &&
         lhs.sodium == rhs.sodium &&
         lhs.vitaminD == rhs.vitaminD &&
+        lhs.ingredientSources == rhs.ingredientSources &&
         lhs.foods.elementsEqual(rhs.foods, by: { $0.name == $1.name && $0.portion == $1.portion })
     }
 }

@@ -5,12 +5,7 @@ struct LogFoodView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \MealLog.timestamp, order: .reverse) private var meals: [MealLog]
-    @State private var route: Route?
-
-    private enum Route: Identifiable {
-        case search, ai
-        var id: Int { self == .search ? 0 : 1 }
-    }
+    @State private var showsMealCapture = false
 
     private var repeats: [MealLog] {
         let hour = Calendar.current.component(.hour, from: .now)
@@ -25,13 +20,12 @@ struct LogFoodView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     VStack(alignment: .leading, spacing: 7) {
-                        Text("How would you like to log?").font(.largeTitle.bold()).foregroundStyle(JournalTheme.ink)
-                        Text("Search is quick and calculated. AI is optional when a description or photo is easier.")
+                        Text("Log a meal").font(.largeTitle.bold()).foregroundStyle(JournalTheme.ink)
+                        Text("Describe, speak, or photograph what you ate. You’ll review the sourced estimate before saving.")
                             .font(.subheadline).foregroundStyle(.secondary)
                     }
 
-                    methodButton(title: "Search foods", detail: "Build a meal from common foods and packaged brands", icon: "magnifyingglass", color: JournalTheme.moss) { route = .search }
-                    methodButton(title: "AI estimate", detail: "Describe or photograph a meal, then review the estimate", icon: "sparkles", color: JournalTheme.clay) { route = .ai }
+                    methodButton(title: "Log a meal", detail: "Describe, speak, or add photos, then review the estimate", icon: "sparkles", color: JournalTheme.clay) { showsMealCapture = true }
 
                     VStack(alignment: .leading, spacing: 10) {
                         Text("REPEAT A MEAL").font(.caption.bold()).tracking(1.3).foregroundStyle(JournalTheme.moss)
@@ -67,12 +61,7 @@ struct LogFoodView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
         }
-        .fullScreenCover(item: $route) { destination in
-            switch destination {
-            case .search: SearchMealBuilderView(onCompleted: { dismiss() })
-            case .ai: MealCaptureView(onCompleted: { dismiss() })
-            }
-        }
+        .fullScreenCover(isPresented: $showsMealCapture) { MealCaptureView(onCompleted: { dismiss() }) }
     }
 
     private func methodButton(title: String, detail: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
