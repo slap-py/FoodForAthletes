@@ -6,16 +6,22 @@ struct HistoryView: View {
     @Query(sort: \MealLog.timestamp, order: .reverse) private var meals: [MealLog]
     @Query(sort: \WaterLog.timestamp, order: .reverse) private var water: [WaterLog]
     @State private var mode = 0
-    @State private var selectedDate = Calendar.current.startOfDay(for: .now)
     @State private var displayedMonth = Calendar.current.startOfDay(for: .now)
-    @State private var mealToEdit: MealLog?
+    @Binding var selectedDate: Date
+    @State private var showsSelectedDayJournal = false
+    @State private var mealToReestimate: MealLog?
     @State private var mealToDelete: MealLog?
     @State private var waterToEdit: WaterLog?
     @State private var waterToDelete: WaterLog?
     @AppStorage("unitSystem") private var unitSystem = "us"
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    let onLogMeal: (Date) -> Void
 
     private let calendar = Calendar.autoupdatingCurrent
+
+    init(selectedDate: Binding<Date>, onLogMeal: @escaping (Date) -> Void) {
+        _selectedDate = selectedDate
+        self.onLogMeal = onLogMeal
+    }
 
     private var summaries: [Date: HistoryDaySummary] {
         HistoryDaySummary.grouped(meals: meals, water: water, calendar: calendar)
@@ -31,11 +37,6 @@ struct HistoryView: View {
 
     private var firstHistoryMonth: Date {
         calendar.dateInterval(of: .month, for: earliestHistoryDay)?.start ?? earliestHistoryDay
-    }
-
-    private var selectedWeek: [Date] {
-        guard let interval = calendar.dateInterval(of: .weekOfYear, for: selectedDate) else { return [selectedDate] }
-        return (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: interval.start) }
     }
 
     var body: some View {
@@ -62,12 +63,8 @@ struct HistoryView: View {
             }
             .background(JournalTheme.paper)
             .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(for: HistoryDayRoute.self) { route in
-                dayPage(for: route.date)
-                    .toolbar(.visible, for: .navigationBar)
-            }
-            .sheet(item: $mealToEdit) { meal in
-                MealTimeEditor(meal: meal)
+            .sheet(item: $mealToReestimate) { meal in
+                MealReestimateView(meal: meal)
             }
             .sheet(item: $waterToEdit) { waterLog in
                 WaterEditor(water: waterLog, unitSystem: unitSystem)
@@ -111,8 +108,8 @@ struct HistoryView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 20) {
                 calendarSection
-                weekSection
-                periodAverageSection
+                selectedDaySection
+                monthlyAverageCard
             }
             .padding(.horizontal, 18)
             .padding(.top, 8)
@@ -146,7 +143,7 @@ struct HistoryView: View {
             }
 
             HStack {
-                Text("Choose a day to update the week below.")
+                Text("Choose a day to see its journal below.")
                     .font(.caption)
                     .foregroundStyle(JournalTheme.ink.opacity(0.62))
                 Spacer()
@@ -169,77 +166,22 @@ struct HistoryView: View {
         }
     }
 
-    private var weekSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Week at a glance")
-                        .font(.headline)
-                    Text(weekRangeLabel)
-                        .font(.caption)
-                        .foregroundStyle(JournalTheme.ink.opacity(0.62))
-                }
-                Spacer()
-                HStack(spacing: 0) {
-                    Button { moveWeek(by: -1) } label: { Image(systemName: "chevron.left").frame(width: 36, height: 36) }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(JournalTheme.moss)
-                    Button { moveWeek(by: 1) } label: { Image(systemName: "chevron.right").frame(width: 36, height: 36) }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(canMoveWeekForward ? JournalTheme.moss : JournalTheme.ink.opacity(0.25))
-                        .disabled(!canMoveWeekForward)
-                }
-            }
-
-            if dynamicTypeSize.isAccessibilitySize {
-                VStack(spacing: 10) {
-                    ForEach(selectedWeek, id: \.self) { date in
-                        NavigationLink(value: HistoryDayRoute(date: date)) {
-                            HistoryWeekDayCard(summary: summaries[date] ?? HistoryDaySummary(date: date), compact: false)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
-                        ForEach(selectedWeek, id: \.self) { date in
-                            NavigationLink(value: HistoryDayRoute(date: date)) {
-                                HistoryWeekDayCard(summary: summaries[date] ?? HistoryDaySummary(date: date), compact: true)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private var periodAverageSection: some View {
-        let weekSummaries = selectedWeek.compactMap { summaries[$0] }.filter(\.hasMeals)
+    private var monthlyAverageCard: some View {
         let monthSummaries = summaries.values.filter { calendar.isDate($0.date, equalTo: displayedMonth, toGranularity: .month) && $0.hasMeals }
-
-        return VStack(spacing: 12) {
-            periodAverageCard(title: "Week average", summaries: weekSummaries)
-            periodAverageCard(title: "Monthly average", summaries: monthSummaries)
-        }
-    }
-
-    private func periodAverageCard(title: String, summaries: [HistoryDaySummary]) -> some View {
-        JournalCard {
+        return JournalCard {
             VStack(alignment: .leading, spacing: 14) {
-                Text(title).font(.headline)
-                if summaries.isEmpty {
-                    Text("No meal days logged in this period.")
+                Text("Monthly average").font(.headline)
+                if monthSummaries.isEmpty {
+                    Text("No meal days logged in this month.")
                         .font(.subheadline)
                         .foregroundStyle(JournalTheme.ink.opacity(0.62))
                 } else {
                     HStack(spacing: 16) {
-                        HistoryAverageValue(label: "Calories", value: summaries.map(\.calories).average, unit: "kcal")
-                        HistoryAverageValue(label: "Carbs", value: summaries.map(\.carbohydrates).average, unit: "g")
-                        HistoryAverageValue(label: "Protein", value: summaries.map(\.protein).average, unit: "g")
+                        HistoryAverageValue(label: "Calories", value: monthSummaries.map(\.calories).average, unit: "kcal")
+                        HistoryAverageValue(label: "Carbs", value: monthSummaries.map(\.carbohydrates).average, unit: "g")
+                        HistoryAverageValue(label: "Protein", value: monthSummaries.map(\.protein).average, unit: "g")
                     }
-                    Text("Average across \(summaries.count) \(summaries.count == 1 ? "day" : "days") with meals")
+                    Text("Average across \(monthSummaries.count) \(monthSummaries.count == 1 ? "day" : "days") with meals")
                         .font(.caption)
                         .foregroundStyle(JournalTheme.ink.opacity(0.62))
                 }
@@ -247,58 +189,65 @@ struct HistoryView: View {
         }
     }
 
-    private func dayPage(for day: Date) -> some View {
-        let summary = summaries[day] ?? HistoryDaySummary(date: day)
+    private var selectedDaySection: some View {
+        let summary = summaries[selectedDate] ?? HistoryDaySummary(date: selectedDate)
         let dayMeals = summary.meals.sorted { $0.timestamp < $1.timestamp }
         let dayWater = summary.water.sorted { $0.timestamp < $1.timestamp }
         let entries = (dayMeals.map(HistoryJournalEntry.meal) + dayWater.map(HistoryJournalEntry.water)).sorted { $0.timestamp < $1.timestamp }
 
-        return ScrollView {
-            LazyVStack(alignment: .leading, spacing: 14) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(day, format: .dateTime.weekday(.wide).month(.wide).day())
-                        .font(.title2.bold())
-                    if calendar.isDateInToday(day) {
-                        Text("Today")
-                            .font(.caption)
-                            .foregroundStyle(JournalTheme.ink.opacity(0.58))
-                    }
+        return VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(selectedDate, format: .dateTime.weekday(.wide).month(.wide).day())
+                    .font(.title2.bold())
+                if calendar.isDateInToday(selectedDate) {
+                    Text("Today")
+                        .font(.caption)
+                        .foregroundStyle(JournalTheme.ink.opacity(0.58))
                 }
+            }
 
+            if entries.isEmpty {
                 HistoryDayNutritionCard(summary: summary, unitSystem: unitSystem)
+            } else {
+                Button {
+                    withAnimation(.snappy) { showsSelectedDayJournal.toggle() }
+                } label: {
+                    HistoryDayNutritionCard(summary: summary, unitSystem: unitSystem)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint(showsSelectedDayJournal ? "Hides the meals and water for this day" : "Shows the meals and water for this day")
+            }
 
-                if entries.isEmpty {
-                    JournalCard {
+            if entries.isEmpty {
+                JournalCard {
+                    VStack(alignment: .leading, spacing: 12) {
                         Text("No meals or water logged on this day.")
                             .foregroundStyle(JournalTheme.ink.opacity(0.62))
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Button("Log a meal for this day") { onLogMeal(selectedDate) }
+                            .buttonStyle(.borderedProminent)
                     }
-                } else {
-                    ForEach(entries) { entry in
-                        switch entry {
-                        case .meal(let meal):
-                            MealCard(
-                                meal: meal,
-                                showsSupportingDetails: false,
-                                onEdit: { mealToEdit = meal },
-                                onDelete: { mealToDelete = meal }
-                            )
-                        case .water(let waterLog):
-                            WaterJournalCard(
-                                water: waterLog,
-                                unitSystem: unitSystem,
-                                onEdit: { waterToEdit = waterLog },
-                                onDelete: { waterToDelete = waterLog }
-                            )
-                        }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            } else if showsSelectedDayJournal {
+                ForEach(entries) { entry in
+                    switch entry {
+                    case .meal(let meal):
+                        MealCard(
+                            meal: meal,
+                            showsSupportingDetails: false,
+                            onEdit: { mealToReestimate = meal },
+                            onDelete: { mealToDelete = meal }
+                        )
+                    case .water(let waterLog):
+                        WaterJournalCard(
+                            water: waterLog,
+                            unitSystem: unitSystem,
+                            onEdit: { waterToEdit = waterLog },
+                            onDelete: { waterToDelete = waterLog }
+                        )
                     }
                 }
-        }
-        .padding(.horizontal, 18)
-        .padding(.top, 8)
-        .padding(.bottom, 110)
-        .navigationTitle("Day")
-        .navigationBarTitleDisplayMode(.inline)
+            }
         }
     }
 
@@ -372,19 +321,10 @@ struct HistoryView: View {
         return "\(WaterDisplay.amount(totals.reduce(0, +) / Double(totals.count), unitSystem: unitSystem)) per logged day"
     }
 
-    private var weekRangeLabel: String {
-        guard let first = selectedWeek.first, let last = selectedWeek.last else { return "" }
-        return "\(first.formatted(.dateTime.month(.abbreviated).day())) – \(last.formatted(.dateTime.month(.abbreviated).day()))"
-    }
-
-    private var canMoveWeekForward: Bool {
-        guard let next = calendar.date(byAdding: .day, value: 7, to: selectedDate) else { return false }
-        return next <= calendar.startOfDay(for: .now)
-    }
-
     private func selectDay(_ date: Date) {
         guard date <= calendar.startOfDay(for: .now) else { return }
         selectedDate = calendar.startOfDay(for: date)
+        showsSelectedDayJournal = false
     }
 
     private func canMoveMonth(by offset: Int) -> Bool {
@@ -396,15 +336,7 @@ struct HistoryView: View {
         guard canMoveMonth(by: offset), let destination = calendar.date(byAdding: .month, value: offset, to: displayedMonth) else { return }
         displayedMonth = destination
         selectedDate = dayMatchingSelection(in: destination)
-    }
-
-    private func moveWeek(by offset: Int) {
-        guard offset < 0 || canMoveWeekForward,
-              let destination = calendar.date(byAdding: .day, value: offset * 7, to: selectedDate),
-              destination >= earliestHistoryDay,
-              destination <= calendar.startOfDay(for: .now) else { return }
-        selectedDate = calendar.startOfDay(for: destination)
-        displayedMonth = calendar.dateInterval(of: .month, for: selectedDate)?.start ?? displayedMonth
+        showsSelectedDayJournal = false
     }
 
     private func dayMatchingSelection(in month: Date) -> Date {
@@ -445,10 +377,6 @@ struct HistoryDaySummary: Identifiable {
             (date, HistoryDaySummary(date: date, meals: mealGroups[date] ?? [], water: waterGroups[date] ?? []))
         })
     }
-}
-
-private struct HistoryDayRoute: Hashable {
-    let date: Date
 }
 
 private struct WeekdayHeader: View {
@@ -532,65 +460,6 @@ private struct MonthCalendarGrid: View {
     }
 }
 
-private struct HistoryWeekDayCard: View {
-    let summary: HistoryDaySummary
-    let compact: Bool
-
-    var body: some View {
-        JournalCard {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Text(summary.date, format: .dateTime.weekday(.short))
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(JournalTheme.moss)
-                    Spacer()
-                    Text(summary.date, format: .dateTime.day())
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(JournalTheme.ink.opacity(0.6))
-                }
-
-                if summary.hasMeals {
-                    nutritionValue("Calories", value: summary.calories, unit: "kcal")
-                    nutritionValue("Carbs", value: summary.carbohydrates, unit: "g")
-                    nutritionValue("Protein", value: summary.protein, unit: "g")
-                    Text("\(summary.mealCount) meal\(summary.mealCount == 1 ? "" : "s")\(firstMealLabel)")
-                        .font(.caption2)
-                        .foregroundStyle(JournalTheme.ink.opacity(0.62))
-                } else if summary.hasEntries {
-                    Label("Water only", systemImage: "drop.fill")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(JournalTheme.blue)
-                        .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
-                } else {
-                    Text("No meals logged")
-                        .font(.caption)
-                        .foregroundStyle(JournalTheme.ink.opacity(0.58))
-                        .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
-                }
-            }
-            .frame(width: compact ? 138 : nil, alignment: .leading)
-        }
-        .accessibilityElement(children: .combine)
-    }
-
-    private var firstMealLabel: String {
-        guard let firstMeal = summary.firstMeal else { return "" }
-        return " · first \(firstMeal.formatted(date: .omitted, time: .shortened))"
-    }
-
-    private func nutritionValue(_ label: String, value: Double, unit: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 4) {
-            Text(label)
-                .font(.caption2)
-                .foregroundStyle(JournalTheme.ink.opacity(0.62))
-            Spacer(minLength: 4)
-            Text("\(Int(value.rounded())) \(unit)")
-                .font(.caption.weight(.bold))
-                .foregroundStyle(JournalTheme.ink)
-        }
-    }
-}
-
 private struct HistoryDayNutritionCard: View {
     let summary: HistoryDaySummary
     let unitSystem: String
@@ -649,7 +518,7 @@ private struct HistoryAverageValue: View {
                 .foregroundStyle(JournalTheme.ink.opacity(0.62))
             Text("\(Int(value.rounded()))")
                 .font(.subheadline.weight(.bold))
-                .foregroundStyle(JournalTheme.ink)
+                .foregroundStyle(nutrientColor)
             Text(unit)
                 .font(.caption2)
                 .foregroundStyle(JournalTheme.ink.opacity(0.58))
@@ -657,6 +526,15 @@ private struct HistoryAverageValue: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(label), \(Int(value.rounded())) \(unit)")
+    }
+
+    private var nutrientColor: Color {
+        switch label {
+        case "Calories": JournalTheme.blue
+        case "Carbs": JournalTheme.oat
+        case "Protein": JournalTheme.clay
+        default: JournalTheme.ink
+        }
     }
 }
 
@@ -686,46 +564,6 @@ private enum HistoryJournalEntry: Identifiable {
     }
 }
 
-private struct MealTimeEditor: View {
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
-    let meal: MealLog
-    @State private var time: Date
-
-    init(meal: MealLog) {
-        self.meal = meal
-        _time = State(initialValue: meal.timestamp)
-    }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("Meal") { Text(meal.title) }
-                Section("When did you eat it?") {
-                    DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute)
-                        .datePickerStyle(.wheel)
-                }
-            }
-            .navigationTitle("Edit meal time")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        let calendar = Calendar.current
-                        let hour = calendar.component(.hour, from: time)
-                        let minute = calendar.component(.minute, from: time)
-                        meal.timestamp = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: calendar.startOfDay(for: meal.timestamp)) ?? meal.timestamp
-                        try? modelContext.save()
-                        dismiss()
-                    }
-                    .fontWeight(.semibold)
-                }
-            }
-        }
-    }
-}
-
 private struct WaterEditor: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -733,12 +571,17 @@ private struct WaterEditor: View {
     let unitSystem: String
     @State private var time: Date
     @State private var amount: Double
+    private let initialAmount: Double
 
     init(water: WaterLog, unitSystem: String) {
         self.water = water
         self.unitSystem = unitSystem
         _time = State(initialValue: water.timestamp)
-        _amount = State(initialValue: unitSystem == "us" ? water.milliliters / 29.5735 : water.milliliters)
+        let displayedAmount = unitSystem == "us"
+            ? (water.milliliters / 29.5735).rounded()
+            : water.milliliters.rounded()
+        initialAmount = displayedAmount
+        _amount = State(initialValue: displayedAmount)
     }
 
     var body: some View {
@@ -748,7 +591,7 @@ private struct WaterEditor: View {
                     HStack {
                         Text("Amount")
                         Spacer()
-                        TextField("Amount", value: $amount, format: .number)
+                        TextField("Amount", value: $amount, format: .number.precision(.fractionLength(0...1)))
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                             .frame(width: 90)
@@ -771,7 +614,9 @@ private struct WaterEditor: View {
                         let hour = calendar.component(.hour, from: time)
                         let minute = calendar.component(.minute, from: time)
                         water.timestamp = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: calendar.startOfDay(for: water.timestamp)) ?? water.timestamp
-                        water.milliliters = max(0, unitSystem == "us" ? amount * 29.5735 : amount)
+                        if amount != initialAmount {
+                            water.milliliters = max(0, unitSystem == "us" ? amount * 29.5735 : amount)
+                        }
                         try? modelContext.save()
                         dismiss()
                     }

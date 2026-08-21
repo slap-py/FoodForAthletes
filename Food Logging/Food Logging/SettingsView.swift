@@ -105,28 +105,19 @@ struct SettingsView: View {
                     }
 
                     SettingsSection("Privacy") {
-                        Button("How your meal data is handled") { showsPrivacy = true }
+                        SettingsDisclosureButton(
+                            title: "How your meal data is handled",
+                            icon: "hand.raised.fill",
+                            action: { showsPrivacy = true }
+                        )
                     }
 
                     SettingsSection("Food & AI service") {
-                        Text("Meal analysis separates the meal into recognizable ingredients, sources nutrition from USDA FoodData Central and Open Food Facts when appropriate, and checks the result before you save. Photos and audio are sent only for the estimate. Provider keys stay on the service and are never stored in this app.")
-                            .font(.caption)
-                            .foregroundStyle(JournalTheme.ink.opacity(0.62))
-                        Divider()
-                        Button {
-                            showsHowItWorks = true
-                        } label: {
-                            HStack {
-                                Label("How it works", systemImage: "questionmark.circle")
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .font(.caption.weight(.bold))
-                                    .foregroundStyle(JournalTheme.ink.opacity(0.45))
-                            }
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(JournalTheme.moss)
-                        }
-                        .buttonStyle(.plain)
+                        SettingsDisclosureButton(
+                            title: "How it works",
+                            icon: "questionmark.circle",
+                            action: { showsHowItWorks = true }
+                        )
                         if offlineMealQueue.pendingCount > 0 {
                             Divider()
                             HStack {
@@ -304,6 +295,33 @@ struct SettingsView: View {
         case .unavailable: "Apple Health unavailable"
         case .notRequested, .failed: "Connect Apple Health"
         }
+    }
+}
+
+private struct SettingsDisclosureButton: View {
+    let title: String
+    let icon: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(JournalTheme.moss)
+                    .frame(width: 34, height: 34)
+                    .background(JournalTheme.sage.opacity(0.24), in: Circle())
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(JournalTheme.ink)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(JournalTheme.ink.opacity(0.45))
+            }
+            .frame(maxWidth: .infinity, minHeight: 44)
+        }
+        .buttonStyle(.plain)
     }
 }
 

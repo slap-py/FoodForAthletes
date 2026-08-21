@@ -2,12 +2,11 @@ import SwiftUI
 import SwiftData
 
 struct TodayView: View {
-    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var healthStore: HealthKitStore
     @Query(sort: \MealLog.timestamp) private var allMeals: [MealLog]
     @Query(sort: \WaterLog.timestamp) private var allWater: [WaterLog]
     @AppStorage("unitSystem") private var unitSystem = "us"
-    @AppStorage("defaultWaterML") private var defaultWaterML = 240.0
+    @State private var mealToReestimate: MealLog?
     let onLogMeal: () -> Void
 
     private var meals: [MealLog] { allMeals.filter { Calendar.current.isDateInToday($0.timestamp) } }
@@ -33,6 +32,9 @@ struct TodayView: View {
             .background(JournalTheme.paper)
             .toolbar(.hidden, for: .navigationBar)
             .task { await healthStore.refreshToday() }
+            .sheet(item: $mealToReestimate) { meal in
+                MealReestimateView(meal: meal)
+            }
         }
     }
 
@@ -54,16 +56,6 @@ struct TodayView: View {
                     .frame(width: 52, height: 52)
                     .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
             }
-            HStack {
-                Label(waterLabel, systemImage: "drop.fill")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(JournalTheme.blue)
-                Spacer()
-                Button("+ \(quickWaterLabel)") { addWater() }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
-                    .accessibilityLabel("Add \(quickWaterLabel) of water")
-            }
         }
         .padding(.top, 18)
     }
@@ -75,7 +67,7 @@ struct TodayView: View {
         let calories = meals.reduce(0) { $0 + $1.calories }
 
         return NavigationLink {
-            DailyShapeDetailView(meals: meals)
+            DailyShapeDetailView(meals: meals, waterMilliliters: water, unitSystem: unitSystem)
         } label: {
             JournalCard {
                 VStack(alignment: .leading, spacing: 18) {
@@ -95,6 +87,7 @@ struct TodayView: View {
                         MacroValue(label: "Carbs", value: carbs, color: JournalTheme.oat)
                         MacroValue(label: "Protein", value: protein, color: JournalTheme.clay)
                         MacroValue(label: "Fat", value: fat, color: JournalTheme.sage)
+                        WaterMacroValue(milliliters: water, unitSystem: unitSystem)
                     }
                 }
             }
@@ -120,7 +113,8 @@ struct TodayView: View {
             } else {
                 ForEach(journalEntries) { entry in
                     switch entry {
-                    case .meal(let meal): MealCard(meal: meal)
+                    case .meal(let meal):
+                        MealCard(meal: meal, onEdit: { mealToReestimate = meal })
                     case .water(let waterLog): WaterJournalCard(water: waterLog, unitSystem: unitSystem)
                     }
                 }
@@ -128,26 +122,6 @@ struct TodayView: View {
         }
     }
 
-    private var waterLabel: String {
-        WaterDisplay.total(water, unitSystem: unitSystem)
-    }
-
-    private var quickWaterLabel: String {
-        WaterDisplay.amount(defaultWaterML, unitSystem: unitSystem)
-    }
-
-    private func addWater() {
-        let now = Date.now
-        let consolidationWindow: TimeInterval = 5 * 60
-        if let latestWater = todayWater.max(by: { $0.timestamp < $1.timestamp }),
-           now.timeIntervalSince(latestWater.timestamp) <= consolidationWindow {
-            latestWater.milliliters += defaultWaterML
-            latestWater.timestamp = now
-        } else {
-            modelContext.insert(WaterLog(timestamp: now, milliliters: defaultWaterML))
-        }
-        try? modelContext.save()
-    }
 }
 
 private enum TodayJournalEntry: Identifiable {
@@ -171,16 +145,14 @@ private enum TodayJournalEntry: Identifiable {
 
 struct DailyShapeDetailView: View {
     let meals: [MealLog]
+    let waterMilliliters: Double
+    let unitSystem: String
 
     private var calories: Double { meals.reduce(0) { $0 + $1.calories } }
     private var carbs: Double { meals.reduce(0) { $0 + $1.carbohydrates } }
     private var protein: Double { meals.reduce(0) { $0 + $1.protein } }
     private var fat: Double { meals.reduce(0) { $0 + $1.fat } }
     private var fiber: Double { meals.reduce(0) { $0 + $1.fiber } }
-    private var hasMicronutrients: Bool {
-        meals.contains { $0.sodium > 0 || $0.potassium > 0 || $0.calcium > 0 || $0.iron > 0 || $0.magnesium > 0 || $0.vitaminD > 0 }
-    }
-
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 20) {
@@ -195,6 +167,7 @@ struct DailyShapeDetailView: View {
                             MacroValue(label: "Carbs", value: carbs, color: JournalTheme.oat)
                             MacroValue(label: "Protein", value: protein, color: JournalTheme.clay)
                             MacroValue(label: "Fat", value: fat, color: JournalTheme.sage)
+                            WaterMacroValue(milliliters: waterMilliliters, unitSystem: unitSystem)
                         }
                     }
                 }
@@ -204,15 +177,13 @@ struct DailyShapeDetailView: View {
                         Text("More nutrition")
                             .font(.headline)
                         detailRow("Fiber", value: fiber, unit: "g")
-                        if hasMicronutrients {
-                            Divider()
-                            detailRow("Sodium", value: total(\.sodium), unit: "mg")
-                            detailRow("Potassium", value: total(\.potassium), unit: "mg")
-                            detailRow("Calcium", value: total(\.calcium), unit: "mg")
-                            detailRow("Iron", value: total(\.iron), unit: "mg")
-                            detailRow("Magnesium", value: total(\.magnesium), unit: "mg")
-                            detailRow("Vitamin D", value: total(\.vitaminD), unit: "mcg")
-                        }
+                        Divider()
+                        detailRow("Sodium", value: total(\.sodium), unit: "mg")
+                        detailRow("Potassium", value: total(\.potassium), unit: "mg")
+                        detailRow("Calcium", value: total(\.calcium), unit: "mg")
+                        detailRow("Iron", value: total(\.iron), unit: "mg")
+                        detailRow("Magnesium", value: total(\.magnesium), unit: "mg")
+                        detailRow("Vitamin D", value: total(\.vitaminD), unit: "mcg")
                     }
                 }
 
@@ -256,6 +227,29 @@ struct DailyShapeDetailView: View {
             Text("\(Int(value.rounded())) \(unit)").fontWeight(.semibold)
         }
         .foregroundStyle(JournalTheme.ink.opacity(0.75))
+    }
+}
+
+private struct WaterMacroValue: View {
+    let milliliters: Double
+    let unitSystem: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(JournalTheme.blue)
+                    .frame(width: 4, height: 17)
+                Text("Water")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(JournalTheme.ink.opacity(0.68))
+            }
+            Text(WaterDisplay.amount(milliliters, unitSystem: unitSystem))
+                .font(.title2.weight(.bold))
+                .foregroundStyle(JournalTheme.blue)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityLabel("Water, \(WaterDisplay.amount(milliliters, unitSystem: unitSystem))")
     }
 }
 
@@ -420,7 +414,7 @@ struct MealCard: View {
                         .buttonStyle(.plain)
                         .foregroundStyle(JournalTheme.moss)
                         .background(JournalTheme.sage.opacity(0.28), in: Circle())
-                        .accessibilityLabel("Edit time for \(meal.title)")
+                        .accessibilityLabel("Edit \(meal.title)")
                     }
                     if let onDelete {
                         Button(role: .destructive, action: onDelete) {
@@ -540,5 +534,208 @@ struct MealCard: View {
         let unit: String
         let icon: String
         var id: String { label }
+    }
+}
+
+struct MealReestimateView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var networkMonitor: NetworkMonitor
+    @AppStorage("unitSystem") private var unitSystem = "us"
+    let meal: MealLog
+    @State private var descriptionText: String
+    @State private var timestamp: Date
+    @State private var draft: MealDraft?
+    @State private var isAnalyzing = false
+    @State private var errorMessage: String?
+    @FocusState private var descriptionFocused: Bool
+
+    init(meal: MealLog) {
+        self.meal = meal
+        _descriptionText = State(initialValue: meal.descriptionText)
+        _timestamp = State(initialValue: meal.timestamp)
+    }
+
+    private var canAnalyze: Bool {
+        !descriptionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isAnalyzing
+    }
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if let draft {
+                    review(draft)
+                } else {
+                    editor
+                }
+            }
+            .background(JournalTheme.paper.ignoresSafeArea())
+            .navigationTitle(draft == nil ? "Edit meal" : "Review update")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") { descriptionFocused = false }
+                }
+            }
+        }
+        .alert("Couldn’t re-estimate this meal", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+            Button("OK", role: .cancel) { errorMessage = nil }
+        } message: {
+            Text(errorMessage ?? "Please try again.")
+        }
+    }
+
+    private var editor: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                JournalCard {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Refine the original description", systemImage: "sparkles")
+                            .font(.headline)
+                            .foregroundStyle(JournalTheme.moss)
+                        Text("Update what you ate, then get a fresh estimate before replacing this saved meal. The original photo is not needed.")
+                            .font(.subheadline)
+                            .foregroundStyle(JournalTheme.ink.opacity(0.68))
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("What did you eat?").font(.headline)
+                    TextField("Describe the meal", text: $descriptionText, axis: .vertical)
+                        .focused($descriptionFocused)
+                        .lineLimit(4...8)
+                        .padding(14)
+                        .background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(JournalTheme.ink.opacity(0.09))
+                        }
+                }
+
+                JournalCard {
+                    DatePicker("When did you eat it?", selection: $timestamp, displayedComponents: [.date, .hourAndMinute])
+                        .tint(JournalTheme.moss)
+                }
+
+                Button(action: reestimate) {
+                    HStack {
+                        if isAnalyzing { ProgressView().tint(.white) }
+                        Text(isAnalyzing ? "Re-estimating…" : "Re-estimate meal")
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 52)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .disabled(!canAnalyze)
+            }
+            .padding(18)
+            .padding(.bottom, 28)
+        }
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    private func review(_ draft: MealDraft) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                JournalCard {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text(timestamp, format: .dateTime.weekday(.short).month(.abbreviated).day().hour().minute())
+                            .font(.caption.bold())
+                            .tracking(1)
+                            .foregroundStyle(JournalTheme.moss)
+                        Text(draft.title)
+                            .font(.title.bold())
+                            .foregroundStyle(JournalTheme.ink)
+                        HStack(spacing: 14) {
+                            MacroValue(label: "Calories", value: draft.calories, color: JournalTheme.blue, unit: "kcal")
+                            MacroValue(label: "Carbs", value: draft.carbohydrates, color: JournalTheme.oat)
+                            MacroValue(label: "Protein", value: draft.protein, color: JournalTheme.clay)
+                        }
+                    }
+                }
+
+                JournalCard {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Foods & portions").font(.headline)
+                        ForEach(Array(draft.foods.enumerated()), id: \.offset) { _, food in
+                            HStack(alignment: .firstTextBaseline) {
+                                Text(food.name)
+                                Spacer()
+                                Text(PortionDisplay.text(food.portion, unitSystem: unitSystem))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .font(.subheadline)
+                        }
+                    }
+                }
+
+                Button("Edit description") {
+                    self.draft = nil
+                    descriptionFocused = true
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+                .frame(maxWidth: .infinity)
+
+                Button("Update saved meal") { updateMeal(with: draft) }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity)
+            }
+            .padding(18)
+            .padding(.bottom, 28)
+        }
+    }
+
+    private func reestimate() {
+        guard canAnalyze else { return }
+        guard networkMonitor.isConnected else {
+            errorMessage = "Connect to the internet to re-estimate this saved meal."
+            return
+        }
+        descriptionFocused = false
+        isAnalyzing = true
+        Task {
+            defer { isAnalyzing = false }
+            do {
+                draft = try await MealAnalysisService.shared.analyze(
+                    MealAnalysisInput(description: descriptionText, photoData: [])
+                )
+            } catch {
+                errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            }
+        }
+    }
+
+    private func updateMeal(with draft: MealDraft) {
+        (meal.items ?? []).forEach(modelContext.delete)
+        let items = draft.foods.map {
+            MealItem(canonicalName: $0.name, portion: $0.portion, sourceName: draft.ingredientSources[$0.name])
+        }
+        items.forEach { $0.meal = meal }
+        meal.items = items
+        meal.timestamp = timestamp
+        meal.title = draft.title
+        meal.descriptionText = descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
+        meal.calories = draft.calories
+        meal.carbohydrates = draft.carbohydrates
+        meal.protein = draft.protein
+        meal.fat = draft.fat
+        meal.fiber = draft.fiber
+        meal.calcium = draft.calcium
+        meal.iron = draft.iron
+        meal.magnesium = draft.magnesium
+        meal.potassium = draft.potassium
+        meal.sodium = draft.sodium
+        meal.vitaminD = draft.vitaminD
+        meal.assumptions = draft.assumptions
+        meal.loggingMethod = .ai
+        meal.catalogVersion = draft.catalogVersion
+        try? modelContext.save()
+        dismiss()
     }
 }

@@ -29,9 +29,11 @@ struct MealCaptureView: View {
     @State private var showsOfflineQueuedConfirmation = false
     @FocusState private var descriptionFocused: Bool
     @AppStorage("unitSystem") private var unitSystem = "us"
+    let loggingDate: Date
     let onCompleted: () -> Void
 
-    init(onCompleted: @escaping () -> Void = {}) {
+    init(loggingDate: Date = .now, onCompleted: @escaping () -> Void = {}) {
+        self.loggingDate = loggingDate
         self.onCompleted = onCompleted
     }
 
@@ -68,6 +70,11 @@ struct MealCaptureView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(step == .capture ? "Cancel" : "Back") {
                         if step == .review { step = .capture } else { dismiss() }
+                    }
+                }
+                if descriptionFocused {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Done") { descriptionFocused = false }
                     }
                 }
                 ToolbarItemGroup(placement: .keyboard) {
@@ -112,6 +119,15 @@ struct MealCaptureView: View {
             VStack(alignment: .leading, spacing: 22) {
                 if !usualMeals.isEmpty { usualRow }
 
+                if !Calendar.current.isDateInToday(loggingDate) {
+                    Label("Logging for \(loggingDate.formatted(.dateTime.weekday(.wide).month(.wide).day()))", systemImage: "calendar")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(JournalTheme.moss)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(JournalTheme.sage.opacity(0.2), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 10) {
                         Text("Describe what you ate").font(.title2.bold()).lineLimit(1)
@@ -147,7 +163,7 @@ struct MealCaptureView: View {
                 Button(action: preparePreview) {
                     HStack {
                         if isPreparingPreview { ProgressView().tint(.white) }
-                    Text(isPreparingPreview ? "Preparing review…" : "Analyze meal")
+                    Text(isPreparingPreview ? "Reviewing meal…" : "Analyze meal")
                     }
                     .frame(maxWidth: .infinity, minHeight: 54)
                 }
@@ -172,14 +188,14 @@ struct MealCaptureView: View {
                         Button { repeatMeal(meal) } label: {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(meal.title).font(.subheadline.bold()).lineLimit(1)
-                                Text("Log again now").font(.caption).foregroundStyle(.secondary)
+                                Text(repeatLogLabel).font(.caption).foregroundStyle(.secondary)
                             }
                             .padding(13)
                             .frame(width: 180, alignment: .leading)
                             .background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 15))
                         }
                         .buttonStyle(.plain)
-                        .accessibilityHint("Logs the previously confirmed meal at the current time without a photo")
+                        .accessibilityHint("Logs the previously confirmed meal for the selected day without a photo")
                     }
                 }
             }
@@ -192,7 +208,7 @@ struct MealCaptureView: View {
                 VStack(alignment: .leading, spacing: 18) {
                     JournalCard {
                         VStack(alignment: .leading, spacing: 16) {
-                            Text(Date.now, format: .dateTime.hour().minute())
+                            Text(loggingDate, format: .dateTime.weekday(.short).month(.abbreviated).day().hour().minute())
                                 .font(.caption.bold()).tracking(1).foregroundStyle(JournalTheme.moss)
                             Text(draft.title).font(.title.bold()).foregroundStyle(JournalTheme.ink)
                             HStack {
@@ -426,6 +442,7 @@ struct MealCaptureView: View {
     private func saveMeal(_ draft: MealDraft) {
         let items = draft.foods.map { MealItem(canonicalName: $0.name, portion: $0.portion, sourceName: draft.ingredientSources[$0.name]) }
         let meal = MealLog(
+            timestamp: loggingDate,
             title: draft.title,
             descriptionText: descriptionText,
             calories: draft.calories,
@@ -454,6 +471,7 @@ struct MealCaptureView: View {
     private func repeatMeal(_ source: MealLog) {
         let items = (source.items ?? []).map { MealItem(canonicalName: $0.canonicalName, portion: $0.portion, quantity: $0.quantity, catalogFoodID: $0.catalogFoodID, sourceRecordIDs: $0.sourceRecordIDs, brandName: $0.brandName, sourceName: $0.sourceName) }
         let meal = MealLog(
+            timestamp: loggingDate,
             title: source.title,
             descriptionText: source.descriptionText,
             calories: source.calories,
@@ -477,6 +495,10 @@ struct MealCaptureView: View {
         try? modelContext.save()
         onCompleted()
         dismiss()
+    }
+
+    private var repeatLogLabel: String {
+        Calendar.current.isDateInToday(loggingDate) ? "Log again now" : "Log for selected day"
     }
 
     private func loadPhotos(_ items: [PhotosPickerItem]) {

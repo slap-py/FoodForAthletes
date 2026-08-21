@@ -9,10 +9,15 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var offlineMealQueue: OfflineMealQueueStore
     @EnvironmentObject private var networkMonitor: NetworkMonitor
+    @Query(sort: \WaterLog.timestamp) private var waterLogs: [WaterLog]
     @State private var selectedTab: AppTab = .today
     @State private var showsLogFood = false
+    @State private var historySelectedDate = Calendar.current.startOfDay(for: .now)
+    @State private var loggingDate = Date.now
     @AppStorage("appearance") private var appearance = "system"
     @AppStorage("appLanguage") private var appLanguage = "system"
+    @AppStorage("unitSystem") private var unitSystem = "us"
+    @AppStorage("defaultWaterML") private var defaultWaterML = 240.0
 
     private var preferredColorScheme: ColorScheme? {
         switch appearance {
@@ -27,17 +32,10 @@ struct ContentView: View {
     }
 
     var body: some View {
-        Group {
-            switch selectedTab {
-            case .today: TodayView(onLogMeal: { showsLogFood = true })
-            case .history: HistoryView()
-            case .settings: SettingsView()
-            }
-        }
+        currentTabContent
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            BottomBar(selection: $selectedTab, onLogMeal: { showsLogFood = true })
-                .background(JournalTheme.paper)
+            bottomBar
         }
         .background(JournalTheme.paper.ignoresSafeArea())
         .environment(\.locale, locale)
@@ -64,21 +62,68 @@ struct ContentView: View {
             Task { await offlineMealQueue.processPending(into: modelContext) }
         }
         .fullScreenCover(isPresented: $showsLogFood) {
-            MealCaptureView()
+            MealCaptureView(loggingDate: loggingDate)
         }
         .onOpenURL { url in
             guard url.scheme == "dayplate", url.host == "log" else { return }
-            showsLogFood = true
+            openMealCapture(for: .now)
         }
         .onReceive(NotificationCenter.default.publisher(for: .dayplateLogFood)) { _ in
-            showsLogFood = true
+            openMealCapture(for: .now)
         }
+    }
+
+    @ViewBuilder private var currentTabContent: some View {
+        switch selectedTab {
+        case .today:
+            TodayView(onLogMeal: { openMealCapture(for: .now) })
+        case .history:
+            HistoryView(selectedDate: $historySelectedDate, onLogMeal: { date in openMealCapture(for: date) })
+        case .settings:
+            SettingsView()
+        }
+    }
+
+    private var bottomBar: some View {
+        BottomBar(
+            selection: $selectedTab,
+            onLogMeal: { openMealCapture(for: selectedTab == .history ? historySelectedDate : .now) },
+            onAddWater: selectedTab == .today ? { addQuickWater() } : nil,
+            quickWaterLabel: WaterDisplay.amount(defaultWaterML, unitSystem: unitSystem)
+        )
+        .background(JournalTheme.paper)
+    }
+
+    private func openMealCapture(for date: Date) {
+        let calendar = Calendar.current
+        let now = Date.now
+        loggingDate = calendar.date(
+            bySettingHour: calendar.component(.hour, from: now),
+            minute: calendar.component(.minute, from: now),
+            second: 0,
+            of: calendar.startOfDay(for: date)
+        ) ?? date
+        showsLogFood = true
+    }
+
+    private func addQuickWater() {
+        let now = Date.now
+        let recentWater = waterLogs.last { Calendar.current.isDateInToday($0.timestamp) }
+        if let recentWater, now.timeIntervalSince(recentWater.timestamp) <= 5 * 60 {
+            recentWater.milliliters += defaultWaterML
+            recentWater.timestamp = now
+        } else {
+            modelContext.insert(WaterLog(timestamp: now, milliliters: defaultWaterML))
+        }
+        try? modelContext.save()
     }
 }
 
 private struct BottomBar: View {
     @Binding var selection: AppTab
     let onLogMeal: () -> Void
+    let onAddWater: (() -> Void)?
+    let quickWaterLabel: String
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -93,20 +138,37 @@ private struct BottomBar: View {
             .background(JournalTheme.paper)
             .overlay(alignment: .top) { Divider().opacity(0.35) }
 
-            Button(action: onLogMeal) {
-                HStack(spacing: 8) {
-                    Image(systemName: "plus")
-                        .font(.headline.bold())
-                    Text("Log meal")
+            HStack(spacing: 12) {
+                if let onAddWater {
+                    Button(action: onAddWater) {
+                        HStack(spacing: 7) {
+                            Image(systemName: "drop.fill")
+                            Text("+ \(quickWaterLabel)")
+                        }
                         .font(.subheadline.weight(.bold))
+                        .foregroundStyle(JournalTheme.blue)
+                        .frame(height: 52)
+                        .padding(.horizontal, 17)
+                        .background(JournalTheme.blue.opacity(0.13), in: Capsule())
+                    }
+                    .accessibilityLabel("Add \(quickWaterLabel) of water")
                 }
-                .foregroundStyle(.white)
-                .frame(width: 136, height: 52)
-                .background(JournalTheme.moss, in: Capsule())
-                .shadow(color: JournalTheme.ink.opacity(0.2), radius: 10, y: 4)
+
+                Button(action: onLogMeal) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus")
+                            .font(.headline.bold())
+                        Text("Log meal")
+                            .font(.subheadline.weight(.bold))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(width: 136, height: 52)
+                    .background(JournalTheme.moss, in: Capsule())
+                    .shadow(color: JournalTheme.ink.opacity(0.2), radius: 10, y: 4)
+                }
+                .accessibilityHint("Describe, speak, or photograph a meal, or repeat a meal")
             }
             .offset(y: -58)
-            .accessibilityHint("Describe, speak, or photograph a meal, or repeat a meal")
         }
     }
 

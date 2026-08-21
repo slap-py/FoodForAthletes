@@ -55,6 +55,11 @@ struct Food_LoggingTests {
         #expect(water.milliliters == 240)
     }
 
+    @Test func waterDisplayUsesStableRoundedUnitLabels() {
+        #expect(WaterDisplay.amount(240, unitSystem: "us") == "8 oz")
+        #expect(WaterDisplay.amount(240, unitSystem: "metric") == "240 mL")
+    }
+
     @Test func historySummariesCombineDayLogsAndKeepWaterOnlyDaysDistinct() {
         let calendar = Calendar(identifier: .gregorian)
         let firstMeal = MealLog(
