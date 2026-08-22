@@ -195,7 +195,13 @@ struct SearchMealBuilderView: View {
             do {
                 results = try await DayplateService.shared.searchFoods(query: trimmedQuery)
             } catch {
-                searchError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                // The deployed analysis service does not currently expose the
+                // catalog-search route. Keep direct logging useful with the
+                // versioned on-device catalog until that backend route ships.
+                results = DayplateCatalog.search(trimmedQuery)
+                if results.isEmpty {
+                    searchError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                }
             }
         }
     }

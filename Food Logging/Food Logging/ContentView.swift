@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 enum AppTab: Hashable {
-    case today, history, settings
+    case today, history, insights, you
 }
 
 struct ContentView: View {
@@ -18,6 +18,7 @@ struct ContentView: View {
     @AppStorage("appLanguage") private var appLanguage = "system"
     @AppStorage("unitSystem") private var unitSystem = "us"
     @AppStorage("defaultWaterML") private var defaultWaterML = 240.0
+    @AppStorage("waterLoggingEnabled") private var waterLoggingEnabled = false
 
     private var preferredColorScheme: ColorScheme? {
         switch appearance {
@@ -76,10 +77,12 @@ struct ContentView: View {
     @ViewBuilder private var currentTabContent: some View {
         switch selectedTab {
         case .today:
-            TodayView(onLogMeal: { openMealCapture(for: .now) })
+            DayplateTodayView(onOpenProfile: { selectedTab = .you })
         case .history:
-            HistoryView(selectedDate: $historySelectedDate, onLogMeal: { date in openMealCapture(for: date) })
-        case .settings:
+            DayplateHistoryView(selectedDate: $historySelectedDate)
+        case .insights:
+            DayplateInsightsView()
+        case .you:
             SettingsView()
         }
     }
@@ -88,7 +91,7 @@ struct ContentView: View {
         BottomBar(
             selection: $selectedTab,
             onLogMeal: { openMealCapture(for: selectedTab == .history ? historySelectedDate : .now) },
-            onAddWater: selectedTab == .today ? { addQuickWater() } : nil,
+            onAddWater: selectedTab == .today && waterLoggingEnabled ? { addQuickWater() } : nil,
             quickWaterLabel: WaterDisplay.amount(defaultWaterML, unitSystem: unitSystem)
         )
         .background(JournalTheme.paper)
@@ -128,9 +131,10 @@ private struct BottomBar: View {
     var body: some View {
         ZStack(alignment: .top) {
             HStack {
-                tabButton("Today", icon: "sun.max", tab: .today)
-                tabButton("History", icon: "clock.arrow.circlepath", tab: .history)
-                tabButton("Settings", icon: "slider.horizontal.3", tab: .settings)
+                tabButton("Today", icon: "circle.dotted", tab: .today)
+                tabButton("History", icon: "calendar", tab: .history)
+                tabButton("Insights", icon: "chart.bar.fill", tab: .insights)
+                tabButton("You", icon: "person", tab: .you)
             }
             .padding(.horizontal, 14)
             .padding(.top, 10)
@@ -168,7 +172,7 @@ private struct BottomBar: View {
                 }
                 .accessibilityHint("Describe, speak, or photograph a meal, or repeat a meal")
             }
-            .offset(y: -58)
+            .offset(y: -60)
         }
     }
 

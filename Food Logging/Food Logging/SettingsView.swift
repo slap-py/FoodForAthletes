@@ -13,111 +13,110 @@ struct SettingsView: View {
     @AppStorage("appearance") private var appearance = "system"
     @AppStorage("appLanguage") private var appLanguage = "system"
     @AppStorage("defaultWaterML") private var defaultWaterML = 240.0
+    @AppStorage("profileName") private var profileName = "Jordan Reyes"
+    @AppStorage("insightsWindow") private var insightsWindow = "rolling"
+    @AppStorage("waterLoggingEnabled") private var waterLoggingEnabled = false
     @State private var showsPrivacy = false
     @State private var showsHowItWorks = false
     @State private var showsDeleteConfirmation = false
     @State private var showsExport = false
+    @State private var showsProfileEditor = false
+    @State private var profileNameDraft = ""
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 24) {
-                    Text("Settings")
-                        .font(.largeTitle.bold())
-                        .foregroundStyle(JournalTheme.ink)
+                    HStack(spacing: 14) {
+                        ZStack(alignment: .bottomTrailing) {
+                            Text(profileInitials)
+                                .font(.title3.bold()).foregroundStyle(JournalTheme.moss)
+                                .frame(width: 58, height: 58)
+                                .background(JournalTheme.mint, in: Circle())
+                                .overlay(Circle().stroke(JournalTheme.moss.opacity(0.18)))
+                            Image(systemName: "pencil")
+                                .font(.system(size: 9, weight: .bold)).foregroundStyle(.white)
+                                .frame(width: 22, height: 22).background(JournalTheme.moss, in: Circle())
+                                .overlay(Circle().stroke(JournalTheme.paper, lineWidth: 2))
+                        }
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(profileName).font(.title2.bold()).foregroundStyle(JournalTheme.ink)
+                            Text("Your Dayplate").font(.subheadline).foregroundStyle(JournalTheme.ink.opacity(0.55))
+                        }
+                    }
 
-                    SettingsSection("Preferences") {
-                        preferencePicker(title: "Units", description: "Choose U.S. or metric measurements") {
+                    DayplateSettingsGroup("LOGGING") {
+                        DayplateSettingsPickerRow(title: "Units") {
                             Picker("Units", selection: $unitSystem) {
                                 Text("U.S.").tag("us")
                                 Text("Metric").tag("metric")
                             }
-                            .labelsHidden()
-                            .pickerStyle(.menu)
+                            .labelsHidden().pickerStyle(.menu)
                         }
                         Divider()
-                        preferencePicker(title: "Appearance", description: "Use the system look, light, or dark") {
+                        DayplateSettingsPickerRow(title: "Insights period", subtitle: "How averages and the chart are grouped") {
+                            Picker("Insights period", selection: $insightsWindow) {
+                                Text("Rolling 7 days").tag("rolling")
+                                Text("This week").tag("week")
+                            }.labelsHidden().pickerStyle(.menu)
+                        }
+                        Divider()
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("Water logging").font(.body.weight(.medium))
+                                Text("Adds a quick-add button to Today").font(.caption).foregroundStyle(JournalTheme.ink.opacity(0.55))
+                            }
+                            Spacer()
+                            Toggle("Water logging", isOn: $waterLoggingEnabled).labelsHidden().tint(JournalTheme.moss)
+                        }
+                        if waterLoggingEnabled {
+                            Divider()
+                            DayplateSettingsPickerRow(title: "Quick-add amount") {
+                                Picker("Quick-add amount", selection: $defaultWaterML) {
+                                    Text(WaterDisplay.amount(240, unitSystem: unitSystem)).tag(240.0)
+                                    Text(WaterDisplay.amount(355, unitSystem: unitSystem)).tag(355.0)
+                                    Text(WaterDisplay.amount(500, unitSystem: unitSystem)).tag(500.0)
+                                }.labelsHidden().pickerStyle(.menu)
+                            }
+                        }
+                        Divider()
+                        DayplateSettingsPickerRow(title: "Appearance") {
                             Picker("Appearance", selection: $appearance) {
                                 Text("System").tag("system")
                                 Text("Light").tag("light")
                                 Text("Dark").tag("dark")
                             }
-                            .labelsHidden()
-                            .pickerStyle(.menu)
+                            .labelsHidden().pickerStyle(.menu)
                         }
                         Divider()
-                        preferencePicker(title: "Language", description: "Choose the language used for dates") {
+                        DayplateSettingsPickerRow(title: "Language") {
                             Picker("Language", selection: $appLanguage) {
                                 Text("System").tag("system")
                                 Text("English").tag("en_US")
                                 Text("Spanish").tag("es_ES")
                                 Text("French").tag("fr_FR")
                             }
-                            .labelsHidden()
-                            .pickerStyle(.menu)
-                        }
-                        Divider()
-                        preferencePicker(title: "Default water size", description: "Amount added with Quick water") {
-                            Picker("Default water size", selection: $defaultWaterML) {
-                                Text(WaterDisplay.amount(240, unitSystem: unitSystem)).tag(240.0)
-                                Text(WaterDisplay.amount(355, unitSystem: unitSystem)).tag(355.0)
-                                Text(WaterDisplay.amount(500, unitSystem: unitSystem)).tag(500.0)
-                            }
-                            .labelsHidden()
-                            .pickerStyle(.menu)
+                            .labelsHidden().pickerStyle(.menu)
                         }
                     }
 
-                    SettingsSection("Sync") {
-                        ICloudStatusRow()
-                        Divider()
-                        Text("Your device store is ready for private iCloud sync. No separate Dayplate account is needed.")
-                            .font(.caption)
-                            .foregroundStyle(JournalTheme.ink.opacity(0.62))
-                    }
-
-                    SettingsSection("Apple Health") {
-                        HStack(alignment: .center, spacing: 12) {
-                            Image(systemName: "heart.fill")
-                                .foregroundStyle(.red)
-                                .frame(width: 34, height: 34)
-                                .background(.red.opacity(0.1), in: Circle())
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(healthStore.connectionState.label)
-                                    .font(.headline)
-                                Text("Reads today’s workouts and active calories. Health data is never written by this app.")
-                                    .font(.caption)
-                                    .foregroundStyle(JournalTheme.ink.opacity(0.62))
-                            }
-                        }
-                        Divider()
-                        Button(healthButtonTitle) {
+                    DayplateSettingsGroup("DATA") {
+                        Button {
                             Task {
-                                if case .connected = healthStore.connectionState {
-                                    await healthStore.refreshToday()
-                                } else {
-                                    await healthStore.requestAuthorization()
-                                }
+                                if case .connected = healthStore.connectionState { await healthStore.refreshToday() }
+                                else { await healthStore.requestAuthorization() }
                             }
+                        } label: {
+                            DayplateSettingsValueRow(title: "Apple Health", value: healthStore.connectionState.label)
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.plain)
                         .disabled(healthStore.connectionState == .loading || healthStore.connectionState == .unavailable)
-                    }
-
-                    SettingsSection("Privacy") {
-                        SettingsDisclosureButton(
-                            title: "How your meal data is handled",
-                            icon: "hand.raised.fill",
-                            action: { showsPrivacy = true }
-                        )
-                    }
-
-                    SettingsSection("Food & AI service") {
-                        SettingsDisclosureButton(
-                            title: "How it works",
-                            icon: "questionmark.circle",
-                            action: { showsHowItWorks = true }
-                        )
+                        Divider()
+                        Button { showsExport = true } label: { DayplateSettingsValueRow(title: "Export your data", value: "CSV, JSON") }.buttonStyle(.plain)
+                        Divider()
+                        Button { showsHowItWorks = true } label: { DayplateSettingsValueRow(title: "How it works") }.buttonStyle(.plain)
+                        Divider()
+                        Button { showsPrivacy = true } label: { DayplateSettingsValueRow(title: "How your meal data is handled") }.buttonStyle(.plain)
                         if offlineMealQueue.pendingCount > 0 {
                             Divider()
                             HStack {
@@ -134,17 +133,20 @@ struct SettingsView: View {
                         }
                     }
 
-                    SettingsSection("Your data") {
-                        Button("Export data") { showsExport = true }
+                    DayplateSettingsGroup("ACCOUNT") {
+                        Button {
+                            profileNameDraft = profileName
+                            showsProfileEditor = true
+                        } label: { DayplateSettingsValueRow(title: "Name & photo", value: profileName) }
+                        .buttonStyle(.plain)
+                        Divider()
+                        ICloudStatusRow()
                         Divider()
                         Button("Delete all data", role: .destructive) { showsDeleteConfirmation = true }
-                            .foregroundStyle(.red)
+                            .font(.body.weight(.medium)).foregroundStyle(JournalTheme.clay)
                     }
 
-                    Text("Dayplate estimates are approximate and are designed to reveal meal timing and nutrient distribution—not to prescribe targets.")
-                        .font(.footnote)
-                        .foregroundStyle(JournalTheme.ink.opacity(0.58))
-                    Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.3")")
+                    Text("Nutrition data v2026.7 · Dayplate \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.3")")
                         .font(.caption)
                         .foregroundStyle(JournalTheme.ink.opacity(0.45))
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -167,6 +169,36 @@ struct SettingsView: View {
                 }
                 .presentationDetents([.medium])
             }
+            .sheet(isPresented: $showsProfileEditor) {
+                NavigationStack {
+                    Form {
+                        Section("Profile") {
+                            TextField("Name", text: $profileNameDraft)
+                            HStack {
+                                Text("Initials")
+                                Spacer()
+                                Text(profileNameDraft.split(separator: " ").prefix(2).compactMap(\.first).map(String.init).joined().uppercased())
+                                    .font(.headline).foregroundStyle(JournalTheme.moss)
+                            }
+                        }
+                    }
+                    .scrollContentBackground(.hidden)
+                    .background(JournalTheme.paper)
+                    .navigationTitle("Name & photo")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) { Button("Cancel") { showsProfileEditor = false } }
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Save") {
+                                let trimmed = profileNameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if !trimmed.isEmpty { profileName = trimmed }
+                                showsProfileEditor = false
+                            }
+                        }
+                    }
+                }
+                .presentationDetents([.medium])
+            }
             .confirmationDialog("Delete all meal and water logs?", isPresented: $showsDeleteConfirmation, titleVisibility: .visible) {
                 Button("Delete all data", role: .destructive, action: deleteAllData)
                 Button("Cancel", role: .cancel) {}
@@ -174,6 +206,10 @@ struct SettingsView: View {
                 Text("This cannot be undone.")
             }
         }
+    }
+
+    private var profileInitials: String {
+        profileName.split(separator: " ").prefix(2).compactMap(\.first).map(String.init).joined().uppercased()
     }
 
     private var privacySheet: some View {
@@ -322,6 +358,71 @@ private struct SettingsDisclosureButton: View {
             .frame(maxWidth: .infinity, minHeight: 44)
         }
         .buttonStyle(.plain)
+    }
+}
+
+private struct DayplateSettingsGroup<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+
+    init(_ title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.caption.weight(.semibold)).tracking(1.4)
+                .foregroundStyle(JournalTheme.moss)
+            VStack(alignment: .leading, spacing: 13) { content }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 14).padding(.vertical, 13)
+                .background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 18).stroke(JournalTheme.moss.opacity(0.12)))
+        }
+    }
+}
+
+private struct DayplateSettingsValueRow: View {
+    let title: String
+    var value: String?
+
+    init(title: String, value: String? = nil) {
+        self.title = title
+        self.value = value
+    }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(title).font(.body).foregroundStyle(JournalTheme.ink)
+            Spacer(minLength: 8)
+            if let value { Text(value).font(.subheadline).foregroundStyle(JournalTheme.ink.opacity(0.5)).lineLimit(1) }
+            Image(systemName: "chevron.right").font(.caption2.bold()).foregroundStyle(JournalTheme.ink.opacity(0.35))
+        }.frame(minHeight: 28)
+    }
+}
+
+private struct DayplateSettingsPickerRow<PickerContent: View>: View {
+    let title: String
+    var subtitle: String?
+    @ViewBuilder let picker: PickerContent
+
+    init(title: String, subtitle: String? = nil, @ViewBuilder picker: () -> PickerContent) {
+        self.title = title
+        self.subtitle = subtitle
+        self.picker = picker()
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.body.weight(.medium))
+                if let subtitle { Text(subtitle).font(.caption).foregroundStyle(JournalTheme.ink.opacity(0.55)) }
+            }
+            Spacer(minLength: 6)
+            picker.foregroundStyle(JournalTheme.moss)
+        }
     }
 }
 

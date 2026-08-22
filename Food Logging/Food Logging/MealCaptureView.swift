@@ -42,17 +42,11 @@ struct MealCaptureView: View {
     }
 
     private var usualMeals: [MealLog] {
-        let currentHour = Calendar.current.component(.hour, from: .now)
-        let recent = previousMeals.filter { meal in
-            let hour = Calendar.current.component(.hour, from: meal.timestamp)
-            return meal.timestamp >= .now.addingTimeInterval(-7 * 24 * 60 * 60) && abs(hour - currentHour) <= 1
-        }
-        let frequency = Dictionary(grouping: recent, by: { $0.title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() })
         var seen = Set<String>()
-        return recent.filter { meal in
+        return previousMeals.filter { meal in
             let key = meal.title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            return (frequency[key]?.count ?? 0) >= 2 && seen.insert(key).inserted
-        }.prefix(3).map { $0 }
+            return seen.insert(key).inserted
+        }.prefix(4).map { $0 }
     }
 
     var body: some View {
@@ -64,19 +58,8 @@ struct MealCaptureView: View {
                 }
             }
             .background(JournalTheme.paper.ignoresSafeArea())
-            .navigationTitle(step == .capture ? "Log a meal" : "Review meal")
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(step == .capture ? "Cancel" : "Back") {
-                        if step == .review { step = .capture } else { dismiss() }
-                    }
-                }
-                if descriptionFocused {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Done") { descriptionFocused = false }
-                    }
-                }
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
                     Button("Done") { descriptionFocused = false }
@@ -116,8 +99,14 @@ struct MealCaptureView: View {
 
     private var captureStep: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                if !usualMeals.isEmpty { usualRow }
+            VStack(alignment: .leading, spacing: 16) {
+                Button("Cancel") { dismiss() }
+                    .font(.body).foregroundStyle(JournalTheme.moss)
+                Text("Log a meal")
+                    .font(.system(size: 31, weight: .bold)).tracking(-0.6)
+                Text("Say it however you'd say it out loud. You'll see the estimate before it's saved.")
+                    .font(.body).foregroundStyle(JournalTheme.ink.opacity(0.60))
+                    .padding(.top, -10)
 
                 if !Calendar.current.isDateInToday(loggingDate) {
                     Label("Logging for \(loggingDate.formatted(.dateTime.weekday(.wide).month(.wide).day()))", systemImage: "calendar")
@@ -128,27 +117,32 @@ struct MealCaptureView: View {
                         .background(JournalTheme.sage.opacity(0.2), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
 
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 10) {
-                        Text("Describe what you ate").font(.title2.bold()).lineLimit(1)
+                VStack(alignment: .leading, spacing: 10) {
+                    TextField("Rice bowl with chicken, avocado, and salsa", text: $descriptionText, axis: .vertical)
+                        .focused($descriptionFocused)
+                        .font(.body)
+                        .lineLimit(4...7)
+                        .padding(14)
+                        .frame(minHeight: 116, alignment: .top)
+                        .background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 18))
+                        .overlay { RoundedRectangle(cornerRadius: 18).stroke(JournalTheme.ink.opacity(0.10)) }
+                        .submitLabel(.done)
+                        .onSubmit { descriptionFocused = false }
+                    HStack {
                         Spacer()
+                        Button(action: requestCamera) {
+                            Image(systemName: "camera").frame(width: 38, height: 38)
+                                .background(JournalTheme.moss.opacity(0.10), in: Circle())
+                        }
                         Button(action: toggleRecording) {
                             Group { if isTranscribing { ProgressView().tint(.white) } else { Image(systemName: isRecording ? "stop.fill" : "mic.fill") } }
-                                .frame(width: 34, height: 34)
+                                .frame(width: 38, height: 38)
                                 .background(isRecording ? JournalTheme.clay : JournalTheme.moss, in: Circle())
                                 .foregroundStyle(.white)
                         }
                         .disabled(isTranscribing)
                         .accessibilityLabel(isRecording ? "Stop recording" : "Speak meal description")
                     }
-                    TextField("Rice bowl with chicken, avocado, and salsa", text: $descriptionText, axis: .vertical)
-                        .focused($descriptionFocused)
-                        .lineLimit(3...6)
-                        .padding(14)
-                        .background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 16))
-                        .overlay { RoundedRectangle(cornerRadius: 16).stroke(JournalTheme.ink.opacity(0.09)) }
-                        .submitLabel(.done)
-                        .onSubmit { descriptionFocused = false }
                 }
 
                 photoSection
@@ -171,6 +165,8 @@ struct MealCaptureView: View {
                 .controlSize(.large)
                 .disabled(!canAnalyze)
                 .accessibilityHint(canAnalyze ? "Creates an approximate nutrition review" : "Add a description, a meal photo, or a nutrition-label photo first")
+
+                if !usualMeals.isEmpty { usualRow }
             }
             .padding(18)
             .padding(.bottom, 20)
@@ -180,23 +176,26 @@ struct MealCaptureView: View {
 
     private var usualRow: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("USUAL AROUND NOW")
+            Text("RECENTS")
                 .font(.caption.bold()).tracking(1.3).foregroundStyle(JournalTheme.moss)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(usualMeals) { meal in
-                        Button { repeatMeal(meal) } label: {
-                            VStack(alignment: .leading, spacing: 4) {
+            VStack(spacing: 9) {
+                ForEach(usualMeals) { meal in
+                    Button { repeatMeal(meal) } label: {
+                        HStack(spacing: 11) {
+                            Text(mealEmojiForCapture(meal.title)).font(.title3)
+                            VStack(alignment: .leading, spacing: 3) {
                                 Text(meal.title).font(.subheadline.bold()).lineLimit(1)
-                                Text(repeatLogLabel).font(.caption).foregroundStyle(.secondary)
+                                Text("\(Int(meal.calories)) kcal · \(meal.timestamp.formatted(.relative(presentation: .named)))")
+                                    .font(.caption).foregroundStyle(JournalTheme.ink.opacity(0.55)).lineLimit(1)
                             }
-                            .padding(13)
-                            .frame(width: 180, alignment: .leading)
-                            .background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 15))
+                            Spacer()
+                            Text("Log again").font(.caption.weight(.semibold)).foregroundStyle(JournalTheme.moss)
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityHint("Logs the previously confirmed meal for the selected day without a photo")
+                        .padding(13).background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 16))
+                        .overlay(RoundedRectangle(cornerRadius: 16).stroke(JournalTheme.moss.opacity(0.12)))
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Logs the previously confirmed meal for the selected day without a photo")
                 }
             }
         }
@@ -206,22 +205,21 @@ struct MealCaptureView: View {
         ScrollView {
             if let draft {
                 VStack(alignment: .leading, spacing: 18) {
+                    Button("‹ Back") { step = .capture }
+                        .font(.body).foregroundStyle(JournalTheme.moss)
+                    Text(loggingDate, format: .dateTime.weekday(.short).month(.abbreviated).day().hour().minute())
+                        .font(.caption.bold()).tracking(1.4).foregroundStyle(JournalTheme.moss)
+                    Text(draft.title).font(.system(size: 29, weight: .bold)).tracking(-0.6).foregroundStyle(JournalTheme.ink)
                     JournalCard {
                         VStack(alignment: .leading, spacing: 16) {
-                            Text(loggingDate, format: .dateTime.weekday(.short).month(.abbreviated).day().hour().minute())
-                                .font(.caption.bold()).tracking(1).foregroundStyle(JournalTheme.moss)
-                            Text(draft.title).font(.title.bold()).foregroundStyle(JournalTheme.ink)
                             HStack {
-                                reviewNutrient("Carbs", draft.carbohydrates, JournalTheme.oat)
+                                reviewNutrient("Calories", draft.calories, JournalTheme.blue, unit: "kcal")
+                            }
+                            HStack {
                                 reviewNutrient("Protein", draft.protein, JournalTheme.clay)
-                            }
-                            HStack {
+                                reviewNutrient("Carbs", draft.carbohydrates, JournalTheme.oat)
                                 reviewNutrient("Fat", draft.fat, JournalTheme.sage)
-                                reviewNutrient("Fiber", draft.fiber, JournalTheme.blue)
                             }
-                            Divider()
-                            LabeledContent("Energy", value: "\(Int(draft.calories)) kcal")
-                                .font(.subheadline)
                         }
                     }
 
@@ -233,6 +231,13 @@ struct MealCaptureView: View {
                                     Text(food.name)
                                     Spacer()
                                     Text(PortionDisplay.text(food.portion, unitSystem: unitSystem)).foregroundStyle(.secondary)
+                                    Button {
+                                        step = .capture
+                                        descriptionFocused = true
+                                    } label: {
+                                        Image(systemName: "pencil").font(.caption.bold()).foregroundStyle(JournalTheme.moss)
+                                            .frame(width: 28, height: 28).background(JournalTheme.sage.opacity(0.30), in: Circle())
+                                    }.buttonStyle(.plain).accessibilityLabel("Edit \(food.name)")
                                 }
                                 .font(.subheadline)
                             }
@@ -258,28 +263,17 @@ struct MealCaptureView: View {
         }
     }
 
-    private func reviewNutrient(_ label: String, _ value: Double, _ color: Color) -> some View {
+    private func reviewNutrient(_ label: String, _ value: Double, _ color: Color, unit: String = "g") -> some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 5) {
                 Circle().fill(color).frame(width: 7, height: 7)
                 Text(label).font(.caption).foregroundStyle(.secondary)
             }
-            Text("\(Int(value)) g").font(.title3.bold())
+            Text("\(Int(value)) \(unit)").font(label == "Calories" ? .title.bold() : .title3.bold())
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(label), \(Int(value)) grams")
-    }
-
-    private func photoButtonLabel(_ title: String, icon: String) -> some View {
-        VStack(spacing: 9) {
-            Image(systemName: icon).font(.title2)
-            Text(title).font(.subheadline.bold())
-        }
-        .foregroundStyle(JournalTheme.moss)
-        .frame(maxWidth: .infinity, minHeight: 106)
-        .background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 18))
-        .overlay { RoundedRectangle(cornerRadius: 18).stroke(style: StrokeStyle(lineWidth: 1, dash: [5])).foregroundStyle(JournalTheme.moss.opacity(0.35)) }
     }
 
     private var photoSection: some View {
@@ -303,14 +297,24 @@ struct MealCaptureView: View {
                 }
             }
             if photos.count < 3 {
-                HStack(spacing: 12) {
-                    Button { requestCamera() } label: { photoButtonLabel("Take photo", icon: "camera.fill") }
-                    PhotosPicker(selection: $selectedPhotos, maxSelectionCount: max(1, 3 - photos.count), matching: .images) {
-                        photoButtonLabel("Choose photos", icon: "photo.on.rectangle")
-                    }
+                PhotosPicker(selection: $selectedPhotos, maxSelectionCount: max(1, 3 - photos.count), matching: .images) {
+                    Label("Choose from Photos", systemImage: "photo.on.rectangle")
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(JournalTheme.moss)
+                        .frame(maxWidth: .infinity).frame(height: 48)
+                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(JournalTheme.moss.opacity(0.32), style: StrokeStyle(lineWidth: 1, dash: [5])))
                 }
             }
         }
+    }
+
+    private func mealEmojiForCapture(_ title: String) -> String {
+        let value = title.lowercased()
+        if value.contains("coffee") || value.contains("latte") { return "☕" }
+        if value.contains("salmon") || value.contains("miso") || value.contains("noodle") { return "🍜" }
+        if value.contains("bowl") || value.contains("salad") { return "🥗" }
+        if value.contains("sandwich") || value.contains("toast") { return "🥪" }
+        if value.contains("banana") { return "🍌" }
+        return "🍽️"
     }
 
     private func requestCamera() {
@@ -495,10 +499,6 @@ struct MealCaptureView: View {
         try? modelContext.save()
         onCompleted()
         dismiss()
-    }
-
-    private var repeatLogLabel: String {
-        Calendar.current.isDateInToday(loggingDate) ? "Log again now" : "Log for selected day"
     }
 
     private func loadPhotos(_ items: [PhotosPickerItem]) {
