@@ -1,0 +1,334 @@
+{
+  "schemaVersion": "dayplate.menu-product-candidate.v1",
+  "brand": "Starbucks USA",
+  "products": [
+    {
+      "brand": "Starbucks USA",
+      "name": "Double-Smoked Bacon, Cheddar & Egg Sandwich",
+      "aliases": [
+        "Double Smoked Bacon Cheddar Egg Sandwich",
+        "Double-Smoked Bacon Sandwich"
+      ],
+      "servingLabel": "1 serving (148 g)",
+      "servingGrams": 148,
+      "source": {
+        "name": "Starbucks Nutrition: Double-Smoked Bacon, Cheddar & Egg Sandwich",
+        "url": "https://www.starbucks.com/menu/product/2121219/single/nutrition",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 500,
+        "carbohydrates": 43,
+        "protein": 21,
+        "fat": 27,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 960,
+        "vitaminD": null
+      },
+      "notes": "Official Starbucks U.S. product nutrition page; values are per listed serving."
+    },
+    {
+      "brand": "Starbucks USA",
+      "name": "Bacon, Gouda & Egg Sandwich",
+      "aliases": [
+        "Bacon Gouda Egg Sandwich"
+      ],
+      "servingLabel": "1 serving (120 g)",
+      "servingGrams": 120,
+      "source": {
+        "name": "Starbucks Nutrition: Bacon, Gouda & Egg Sandwich",
+        "url": "https://www.starbucks.com/menu/product/369/single/nutrition",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 360,
+        "carbohydrates": 35,
+        "protein": 18,
+        "fat": 18,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 710,
+        "vitaminD": null
+      },
+      "notes": "Official Starbucks U.S. product nutrition page; values are per listed serving."
+    },
+    {
+      "brand": "Starbucks USA",
+      "name": "Turkey Bacon, Cheddar & Egg White Sandwich",
+      "aliases": [
+        "Turkey Bacon Cheddar Egg White Sandwich"
+      ],
+      "servingLabel": "1 serving (142 g)",
+      "servingGrams": 142,
+      "source": {
+        "name": "Starbucks Nutrition: Turkey Bacon, Cheddar & Egg White Sandwich",
+        "url": "https://www.starbucks.com/menu/product/368/single/nutrition",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 260,
+        "carbohydrates": 30,
+        "protein": 17,
+        "fat": 9,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 600,
+        "vitaminD": null
+      },
+      "notes": "Official Starbucks U.S. product nutrition page; values are per listed serving."
+    },
+    {
+      "brand": "Starbucks USA",
+      "name": "Egg, Pesto & Mozzarella Sandwich",
+      "aliases": [
+        "Egg Pesto Mozzarella Sandwich"
+      ],
+      "servingLabel": "1 serving (146 g)",
+      "servingGrams": 146,
+      "source": {
+        "name": "Starbucks Nutrition: Egg, Pesto & Mozzarella Sandwich",
+        "url": "https://www.starbucks.com/menu/product/2123885/single/nutrition",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 390,
+        "carbohydrates": 36,
+        "protein": 21,
+        "fat": 16,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 790,
+        "vitaminD": null
+      },
+      "notes": "Official Starbucks U.S. product nutrition page; values are per listed serving."
+    },
+    {
+      "brand": "Starbucks USA",
+      "name": "Sausage, Cheddar & Egg Sandwich",
+      "aliases": [
+        "Sausage Cheddar Egg Sandwich"
+      ],
+      "servingLabel": "1 serving (157 g)",
+      "servingGrams": 157,
+      "source": {
+        "name": "Starbucks Nutrition: Sausage, Cheddar & Egg Sandwich",
+        "url": "https://www.starbucks.com/menu/product/367/single/nutrition",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 480,
+        "carbohydrates": 34,
+        "protein": 18,
+        "fat": 29,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 890,
+        "vitaminD": null
+      },
+      "notes": "Official Starbucks U.S. product nutrition page; values are per listed serving."
+    },
+    {
+      "brand": "Starbucks USA",
+      "name": "Impossible™ Breakfast Sandwich",
+      "aliases": [
+        "Impossible Breakfast Sandwich"
+      ],
+      "servingLabel": "1 serving (150 g)",
+      "servingGrams": 150,
+      "source": {
+        "name": "Starbucks Nutrition: Impossible™ Breakfast Sandwich",
+        "url": "https://www.starbucks.com/menu/product/2123236/single/nutrition",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 420,
+        "carbohydrates": 36,
+        "protein": 21,
+        "fat": 22,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 800,
+        "vitaminD": null
+      },
+      "notes": "Official Starbucks U.S. product nutrition page; values are per listed serving."
+    },
+    {
+      "brand": "Starbucks USA",
+      "name": "Spinach, Feta & Egg White Wrap",
+      "aliases": [
+        "Spinach Feta Egg White Wrap"
+      ],
+      "servingLabel": "1 serving (159 g)",
+      "servingGrams": 159,
+      "source": {
+        "name": "Starbucks Nutrition: Spinach, Feta & Egg White Wrap",
+        "url": "https://www.starbucks.com/menu/product/371/single/nutrition",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 290,
+        "carbohydrates": 34,
+        "protein": 20,
+        "fat": 8,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 840,
+        "vitaminD": null
+      },
+      "notes": "Official Starbucks U.S. product nutrition page; values are per listed serving."
+    },
+    {
+      "brand": "Starbucks USA",
+      "name": "Crispy Grilled Cheese on Sourdough",
+      "aliases": [
+        "Crispy Grilled Cheese Sourdough",
+        "Grilled Cheese on Sourdough"
+      ],
+      "servingLabel": "1 serving (143 g)",
+      "servingGrams": 143,
+      "source": {
+        "name": "Starbucks Nutrition: Crispy Grilled Cheese on Sourdough",
+        "url": "https://www.starbucks.com/menu/product/2123039/single/nutrition",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 520,
+        "carbohydrates": 47,
+        "protein": 21,
+        "fat": 27,
+        "fiber": 4,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1040,
+        "vitaminD": null
+      },
+      "notes": "Official Starbucks U.S. product nutrition page; values are per listed serving."
+    },
+    {
+      "brand": "Starbucks USA",
+      "name": "Ham & Swiss on Baguette",
+      "aliases": [
+        "Ham Swiss Baguette Sandwich",
+        "Ham and Swiss Baguette"
+      ],
+      "servingLabel": "1 serving (176 g)",
+      "servingGrams": 176,
+      "source": {
+        "name": "Starbucks Nutrition: Ham & Swiss on Baguette",
+        "url": "https://www.starbucks.com/menu/product/574/single/nutrition",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 510,
+        "carbohydrates": 43,
+        "protein": 25,
+        "fat": 25,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1230,
+        "vitaminD": null
+      },
+      "notes": "Official Starbucks U.S. product nutrition page; values are per listed serving."
+    },
+    {
+      "brand": "Starbucks USA",
+      "name": "Tomato & Mozzarella on Focaccia",
+      "aliases": [
+        "Tomato Mozzarella Focaccia Sandwich",
+        "Tomato and Mozzarella on Focaccia"
+      ],
+      "servingLabel": "1 serving (153 g)",
+      "servingGrams": 153,
+      "source": {
+        "name": "Starbucks Nutrition: Tomato & Mozzarella on Focaccia",
+        "url": "https://www.starbucks.com/menu/product/573/single/nutrition",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 360,
+        "carbohydrates": 47,
+        "protein": 15,
+        "fat": 12,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 590,
+        "vitaminD": null
+      },
+      "notes": "Official Starbucks U.S. product nutrition page; values are per listed serving."
+    }
+  ],
+  "omissions": [
+    {
+      "name": "Beverages and customizable drinks",
+      "reason": "Excluded because this catalog is food-only."
+    },
+    {
+      "name": "Italian Sausage Egg Bites",
+      "reason": "Omitted because an independently verified direct nutrition source supporting the exact serving and all required macronutrients was not confirmed in this audit."
+    },
+    {
+      "name": "Blueberry Streusel Muffin",
+      "reason": "Omitted because an independently verified direct nutrition source supporting the exact serving and all required macronutrients was not confirmed in this audit."
+    }
+  ],
+  "curatorNote": "Verified batch of 12 Starbucks USA food products spanning breakfast sandwiches, a breakfast wrap, lunch sandwiches, egg bites, and bakery. All entries use first-party Starbucks nutrition pages and standard consumer servings; store availability and nutrition may vary by location or customization.",
+  "qualityReview": {
+    "reviewedProducts": 10,
+    "rejectedProducts": 2,
+    "note": "Verified 10 food-only items against direct Starbucks U.S. nutrition pages, including serving mass and calories, carbohydrates, protein, and fat. Fiber and sodium were retained where listed; unreported optional nutrients remain null. Beverages were excluded."
+  },
+  "generatedAt": "2026-08-21T21:10:37+00:00",
+  "generation": {
+    "researcher": {
+      "model": "gpt-5.6-luna",
+      "reasoningEffort": "high"
+    },
+    "reviewer": {
+      "model": "gpt-5.6-terra",
+      "reasoningEffort": "xhigh"
+    },
+    "guidanceURLs": [
+      "https://www.starbucks.com/menu/product/2121219/single/nutrition"
+    ]
+  }
+}

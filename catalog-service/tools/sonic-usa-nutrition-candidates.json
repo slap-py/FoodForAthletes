@@ -1,0 +1,3393 @@
+{
+  "schemaVersion": "dayplate.menu-product-candidate.v1",
+  "brand": "Sonic USA",
+  "products": [
+    {
+      "brand": "Sonic USA",
+      "name": "Tropical Heat SONIC Smasher",
+      "aliases": [
+        "Tropical Heat Sonic Smasher"
+      ],
+      "servingLabel": "1 burger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 870,
+        "carbohydrates": 37,
+        "protein": 46,
+        "fat": 60,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2340,
+        "vitaminD": null
+      },
+      "notes": "Limited-time item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Tropical Heat Triple SONIC Smasher",
+      "aliases": [
+        "Tropical Heat Triple Sonic Smasher"
+      ],
+      "servingLabel": "1 burger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 910,
+        "carbohydrates": 35,
+        "protein": 53,
+        "fat": 63,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2280,
+        "vitaminD": null
+      },
+      "notes": "Limited-time item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "All-American Bacon SONIC Smasher (Double)",
+      "aliases": [
+        "All-American Bacon SONIC Smasher Double"
+      ],
+      "servingLabel": "1 burger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 670,
+        "carbohydrates": 32,
+        "protein": 39,
+        "fat": 42,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1870,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "All-American Bacon SONIC Smasher (Triple)",
+      "aliases": [
+        "All-American Bacon SONIC Smasher Triple"
+      ],
+      "servingLabel": "1 burger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 860,
+        "carbohydrates": 33,
+        "protein": 52,
+        "fat": 57,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2440,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "All-American SONIC Smasher (Double)",
+      "aliases": [
+        "All-American SONIC Smasher Double"
+      ],
+      "servingLabel": "1 burger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 610,
+        "carbohydrates": 32,
+        "protein": 35,
+        "fat": 37,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1650,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "All-American SONIC Smasher (Triple)",
+      "aliases": [
+        "All-American SONIC Smasher Triple"
+      ],
+      "servingLabel": "1 burger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 790,
+        "carbohydrates": 33,
+        "protein": 48,
+        "fat": 52,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2220,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Hatch Green Chile Cheeseburger with Mustard",
+      "aliases": [
+        "Hatch Green Chile Cheeseburger"
+      ],
+      "servingLabel": "1 burger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 650,
+        "carbohydrates": 50,
+        "protein": 30,
+        "fat": 35,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1110,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Jr Bacon Cheeseburger",
+      "aliases": [
+        "Junior Bacon Cheeseburger"
+      ],
+      "servingLabel": "1 burger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 400,
+        "carbohydrates": 27,
+        "protein": 17,
+        "fat": 26,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1440,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Jr Double Cheeseburger",
+      "aliases": [
+        "Junior Double Cheeseburger"
+      ],
+      "servingLabel": "1 burger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 390,
+        "carbohydrates": 25,
+        "protein": 21,
+        "fat": 23,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 870,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Original SONIC Smasher (Double)",
+      "aliases": [
+        "Original SONIC Smasher Double"
+      ],
+      "servingLabel": "1 burger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 600,
+        "carbohydrates": 30,
+        "protein": 35,
+        "fat": 37,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1530,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Original SONIC Smasher (Triple)",
+      "aliases": [
+        "Original SONIC Smasher Triple"
+      ],
+      "servingLabel": "1 burger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 780,
+        "carbohydrates": 31,
+        "protein": 48,
+        "fat": 51,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2070,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Cheeseburger with Ketchup & Mayo",
+      "aliases": [
+        "SONIC Cheeseburger",
+        "Sonic Cheeseburger with Ketchup and Mayo"
+      ],
+      "servingLabel": "1 cheeseburger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 700,
+        "carbohydrates": 52,
+        "protein": 30,
+        "fat": 41,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1360,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SuperSONIC Double Cheeseburger with Ketchup & Mayo",
+      "aliases": [
+        "SuperSONIC Double Cheeseburger",
+        "SuperSONIC Double Cheeseburger with Ketchup and Mayo"
+      ],
+      "servingLabel": "1 cheeseburger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 1040,
+        "carbohydrates": 54,
+        "protein": 50,
+        "fat": 68,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1970,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SuperSONIC Jalapeño Double Cheeseburger with Mustard",
+      "aliases": [
+        "SuperSONIC Jalapeño Double Cheeseburger"
+      ],
+      "servingLabel": "1 cheeseburger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 970,
+        "carbohydrates": 51,
+        "protein": 51,
+        "fat": 61,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1850,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Deluxe Teriyaki SONIC Smasher (Double)",
+      "aliases": [
+        "Deluxe Teriyaki SONIC Smasher Double"
+      ],
+      "servingLabel": "1 burger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 760,
+        "carbohydrates": 58,
+        "protein": 36,
+        "fat": 42,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1930,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Deluxe Teriyaki SONIC Smasher (Triple)",
+      "aliases": [
+        "Deluxe Teriyaki SONIC Smasher Triple"
+      ],
+      "servingLabel": "1 burger",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 940,
+        "carbohydrates": 59,
+        "protein": 49,
+        "fat": 56,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2490,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "BLT TOASTER",
+      "aliases": [
+        "BLT Toaster"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 450,
+        "carbohydrates": 42,
+        "protein": 16,
+        "fat": 25,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 940,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Chicken Club TOASTER",
+      "aliases": [
+        "Chicken Club Toaster"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 670,
+        "carbohydrates": 55,
+        "protein": 33,
+        "fat": 36,
+        "fiber": 5,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1890,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Cheesy Baja Crispy Tender Wrap",
+      "aliases": [
+        "Cheesy Baja Tender Wrap"
+      ],
+      "servingLabel": "1 wrap",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 290,
+        "carbohydrates": 30,
+        "protein": 12,
+        "fat": 14,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 810,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Crispy Tenders (3 PC.)",
+      "aliases": [
+        "Crispy Tenders 3 Piece",
+        "3 Piece Crispy Tenders"
+      ],
+      "servingLabel": "3 pieces",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 260,
+        "carbohydrates": 16,
+        "protein": 21,
+        "fat": 12,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 730,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Crispy Tenders (5 PC.)",
+      "aliases": [
+        "Crispy Tenders 5 Piece",
+        "5 Piece Crispy Tenders"
+      ],
+      "servingLabel": "5 pieces",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 430,
+        "carbohydrates": 27,
+        "protein": 35,
+        "fat": 20,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1210,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Garlic Parmesan Ranch Crispy Tender Wrap",
+      "aliases": [
+        "Garlic Parmesan Ranch Tender Wrap"
+      ],
+      "servingLabel": "1 wrap",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 330,
+        "carbohydrates": 34,
+        "protein": 12,
+        "fat": 16,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 950,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Premium Chicken Bites Small",
+      "aliases": [
+        "Chicken Bites Small"
+      ],
+      "servingLabel": "1 small serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 240,
+        "carbohydrates": 19,
+        "protein": 13,
+        "fat": 12,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 900,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Premium Chicken Bites Medium",
+      "aliases": [
+        "Chicken Bites Medium"
+      ],
+      "servingLabel": "1 medium serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 350,
+        "carbohydrates": 28,
+        "protein": 19,
+        "fat": 18,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1320,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Premium Chicken Bites Large",
+      "aliases": [
+        "Chicken Bites Large"
+      ],
+      "servingLabel": "1 large serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 510,
+        "carbohydrates": 41,
+        "protein": 27,
+        "fat": 26,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1920,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Country Fried Steak Sandwich",
+      "aliases": [
+        "Country Fried Steak"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 640,
+        "carbohydrates": 76,
+        "protein": 16,
+        "fat": 29,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1350,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Crispy Chicken Sandwich",
+      "aliases": [
+        "Crispy Chicken"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 520,
+        "carbohydrates": 52,
+        "protein": 24,
+        "fat": 24,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1470,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Grilled Cheese Sandwich",
+      "aliases": [
+        "Grilled Cheese"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 390,
+        "carbohydrates": 42,
+        "protein": 13,
+        "fat": 20,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1130,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Philly Cheesesteak Sandwich",
+      "aliases": [
+        "Philly Cheesesteak"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 750,
+        "carbohydrates": 53,
+        "protein": 46,
+        "fat": 39,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1710,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Pork Tenderloin Sandwich",
+      "aliases": [
+        "Pork Tenderloin"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 650,
+        "carbohydrates": 69,
+        "protein": 20,
+        "fat": 30,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1060,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "All-American Hot Dog",
+      "aliases": [
+        "All American Hot Dog"
+      ],
+      "servingLabel": "1 hot dog",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 410,
+        "carbohydrates": 42,
+        "protein": 13,
+        "fat": 21,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1150,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Chicago Hot Dog",
+      "aliases": [
+        "Chicago-Style Hot Dog",
+        "Chicago Dog"
+      ],
+      "servingLabel": "1 hot dog",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 400,
+        "carbohydrates": 42,
+        "protein": 11,
+        "fat": 20,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2030,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Chili Cheese Coney",
+      "aliases": [
+        "Chili Cheese Hot Dog"
+      ],
+      "servingLabel": "1 coney",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 470,
+        "carbohydrates": 34,
+        "protein": 18,
+        "fat": 29,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1200,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Footlong Quarter Pound Coney",
+      "aliases": [
+        "Footlong Coney"
+      ],
+      "servingLabel": "1 footlong coney",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 770,
+        "carbohydrates": 54,
+        "protein": 31,
+        "fat": 48,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2160,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "New York Hot Dog",
+      "aliases": [
+        "New York-Style Hot Dog",
+        "New York Dog"
+      ],
+      "servingLabel": "1 hot dog",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 400,
+        "carbohydrates": 35,
+        "protein": 13,
+        "fat": 23,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1110,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Regular Hot Dog",
+      "aliases": [
+        "Classic Hot Dog"
+      ],
+      "servingLabel": "1 hot dog",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 360,
+        "carbohydrates": 31,
+        "protein": 12,
+        "fat": 21,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 800,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Biscuit Sandwich Bacon",
+      "aliases": [
+        "Bacon Biscuit Sandwich"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 480,
+        "carbohydrates": 40,
+        "protein": 20,
+        "fat": 24,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2130,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Biscuit Sandwich Ham",
+      "aliases": [
+        "Ham Biscuit Sandwich"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 500,
+        "carbohydrates": 43,
+        "protein": 23,
+        "fat": 22,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2010,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Biscuit Sandwich Sausage",
+      "aliases": [
+        "Sausage Biscuit Sandwich"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 580,
+        "carbohydrates": 40,
+        "protein": 21,
+        "fat": 34,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2150,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Breakfast Burrito Bacon",
+      "aliases": [
+        "Bacon Breakfast Burrito"
+      ],
+      "servingLabel": "1 burrito",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 470,
+        "carbohydrates": 35,
+        "protein": 25,
+        "fat": 25,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1540,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Breakfast Burrito Ham",
+      "aliases": [
+        "Ham Breakfast Burrito"
+      ],
+      "servingLabel": "1 burrito",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 440,
+        "carbohydrates": 38,
+        "protein": 27,
+        "fat": 20,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1920,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Breakfast Burrito Sausage",
+      "aliases": [
+        "Sausage Breakfast Burrito"
+      ],
+      "servingLabel": "1 burrito",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 490,
+        "carbohydrates": 35,
+        "protein": 23,
+        "fat": 28,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1450,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "BREAKFAST TOASTER Bacon",
+      "aliases": [
+        "Bacon BREAKFAST TOASTER",
+        "Bacon Breakfast Toaster"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 470,
+        "carbohydrates": 42,
+        "protein": 22,
+        "fat": 24,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1940,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "BREAKFAST TOASTER Ham",
+      "aliases": [
+        "Ham BREAKFAST TOASTER",
+        "Ham Breakfast Toaster"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 470,
+        "carbohydrates": 45,
+        "protein": 26,
+        "fat": 21,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2390,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "BREAKFAST TOASTER Sausage",
+      "aliases": [
+        "Sausage BREAKFAST TOASTER",
+        "Sausage Breakfast Toaster"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 570,
+        "carbohydrates": 42,
+        "protein": 23,
+        "fat": 34,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1960,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Brioche Sandwich Bacon",
+      "aliases": [
+        "Bacon Brioche Sandwich"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 440,
+        "carbohydrates": 38,
+        "protein": 20,
+        "fat": 23,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1820,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Brioche Sandwich Ham",
+      "aliases": [
+        "Ham Brioche Sandwich"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 450,
+        "carbohydrates": 41,
+        "protein": 24,
+        "fat": 21,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1700,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Brioche Sandwich Sausage",
+      "aliases": [
+        "Sausage Brioche Sandwich"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 530,
+        "carbohydrates": 38,
+        "protein": 22,
+        "fat": 33,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1840,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "CroisSONIC Sandwich Bacon",
+      "aliases": [
+        "Bacon CroisSONIC Sandwich"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 430,
+        "carbohydrates": 29,
+        "protein": 18,
+        "fat": 27,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1540,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "CroisSONIC Sandwich Ham",
+      "aliases": [
+        "Ham CroisSONIC Sandwich"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 430,
+        "carbohydrates": 31,
+        "protein": 22,
+        "fat": 23,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2000,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "CroisSONIC Sandwich Sausage",
+      "aliases": [
+        "Sausage CroisSONIC Sandwich"
+      ],
+      "servingLabel": "1 sandwich",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 530,
+        "carbohydrates": 29,
+        "protein": 19,
+        "fat": 37,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1560,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "French Toast Sticks",
+      "aliases": [
+        "French Toast Sticks without Syrup",
+        "French Toast Sticks 4 Piece"
+      ],
+      "servingLabel": "4 pieces",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 480,
+        "carbohydrates": 54,
+        "protein": 8,
+        "fat": 25,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 460,
+        "vitaminD": null
+      },
+      "notes": "The nutritional source specifies the four sticks without syrup."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Jr Breakfast Burrito Bacon",
+      "aliases": [
+        "Junior Bacon Breakfast Burrito"
+      ],
+      "servingLabel": "1 burrito",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 270,
+        "carbohydrates": 22,
+        "protein": 13,
+        "fat": 14,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 870,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Jr Breakfast Burrito Sausage",
+      "aliases": [
+        "Junior Sausage Breakfast Burrito"
+      ],
+      "servingLabel": "1 burrito",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 280,
+        "carbohydrates": 22,
+        "protein": 12,
+        "fat": 16,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 830,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SuperSONIC Breakfast Burrito",
+      "aliases": [
+        "Super Sonic Breakfast Burrito"
+      ],
+      "servingLabel": "1 burrito",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 590,
+        "carbohydrates": 49,
+        "protein": 24,
+        "fat": 33,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1770,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Ultimate Meat & Cheese Breakfast Burrito",
+      "aliases": [
+        "Ultimate Breakfast Burrito"
+      ],
+      "servingLabel": "1 burrito",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 820,
+        "carbohydrates": 47,
+        "protein": 29,
+        "fat": 56,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2190,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "CHED'R' Bites Small",
+      "aliases": [
+        "Cheddar Bites Small",
+        "Ched R Bites Small"
+      ],
+      "servingLabel": "1 small serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 280,
+        "carbohydrates": 22,
+        "protein": 13,
+        "fat": 15,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 740,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "CHED'R' Bites Medium",
+      "aliases": [
+        "Cheddar Bites Medium",
+        "Ched R Bites Medium"
+      ],
+      "servingLabel": "1 medium serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 410,
+        "carbohydrates": 32,
+        "protein": 20,
+        "fat": 23,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1110,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "CHED'R' Bites Large",
+      "aliases": [
+        "Cheddar Bites Large",
+        "Ched R Bites Large"
+      ],
+      "servingLabel": "1 large serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 550,
+        "carbohydrates": 43,
+        "protein": 27,
+        "fat": 30,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1480,
+        "vitaminD": null
+      },
+      "notes": "Optional/regional item; availability may vary by location."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "CHED'R' Peppers (4 PC.) Small",
+      "aliases": [
+        "Cheddar Peppers 4 Piece Small",
+        "Ched R Peppers Small"
+      ],
+      "servingLabel": "4 pieces",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 330,
+        "carbohydrates": 36,
+        "protein": 8,
+        "fat": 17,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1110,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "CHED'R' Peppers (6 PC.) Medium",
+      "aliases": [
+        "Cheddar Peppers 6 Piece Medium",
+        "Ched R Peppers Medium"
+      ],
+      "servingLabel": "6 pieces",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 490,
+        "carbohydrates": 54,
+        "protein": 12,
+        "fat": 25,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1660,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "CHED'R' Peppers (8 PC.) Large",
+      "aliases": [
+        "Cheddar Peppers 8 Piece Large",
+        "Ched R Peppers Large"
+      ],
+      "servingLabel": "8 pieces",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 660,
+        "carbohydrates": 72,
+        "protein": 17,
+        "fat": 34,
+        "fiber": 4,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2220,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Cheese Groovy Fries Small",
+      "aliases": [
+        "Cheese Fries Small"
+      ],
+      "servingLabel": "1 small serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 330,
+        "carbohydrates": 29,
+        "protein": 6,
+        "fat": 21,
+        "fiber": 4,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 900,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Cheese Groovy Fries Medium",
+      "aliases": [
+        "Cheese Fries Medium"
+      ],
+      "servingLabel": "1 medium serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 460,
+        "carbohydrates": 40,
+        "protein": 8,
+        "fat": 30,
+        "fiber": 5,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1280,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Cheese Groovy Fries Large",
+      "aliases": [
+        "Cheese Fries Large"
+      ],
+      "servingLabel": "1 large serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 650,
+        "carbohydrates": 57,
+        "protein": 11,
+        "fat": 42,
+        "fiber": 7,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1770,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Cheese Tots Small",
+      "aliases": [
+        "Cheese Tater Tots Small"
+      ],
+      "servingLabel": "1 small serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 310,
+        "carbohydrates": 30,
+        "protein": 6,
+        "fat": 19,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 950,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Cheese Tots Medium",
+      "aliases": [
+        "Cheese Tater Tots Medium"
+      ],
+      "servingLabel": "1 medium serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 450,
+        "carbohydrates": 43,
+        "protein": 8,
+        "fat": 28,
+        "fiber": 4,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1390,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Cheese Tots Large",
+      "aliases": [
+        "Cheese Tater Tots Large"
+      ],
+      "servingLabel": "1 large serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 840,
+        "carbohydrates": 86,
+        "protein": 13,
+        "fat": 50,
+        "fiber": 8,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2450,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Chili Cheese Groovy Fries Small",
+      "aliases": [
+        "Chili Cheese Fries Small"
+      ],
+      "servingLabel": "1 small serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 360,
+        "carbohydrates": 31,
+        "protein": 7,
+        "fat": 23,
+        "fiber": 4,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 950,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Chili Cheese Groovy Fries Medium",
+      "aliases": [
+        "Chili Cheese Fries Medium"
+      ],
+      "servingLabel": "1 medium serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 540,
+        "carbohydrates": 44,
+        "protein": 12,
+        "fat": 35,
+        "fiber": 6,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1430,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Chili Cheese Groovy Fries Large",
+      "aliases": [
+        "Chili Cheese Fries Large"
+      ],
+      "servingLabel": "1 large serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 760,
+        "carbohydrates": 62,
+        "protein": 17,
+        "fat": 49,
+        "fiber": 9,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2020,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Chili Cheese Tots Small",
+      "aliases": [
+        "Chili Cheese Tater Tots Small"
+      ],
+      "servingLabel": "1 small serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 350,
+        "carbohydrates": 32,
+        "protein": 8,
+        "fat": 22,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1030,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Chili Cheese Tots Medium",
+      "aliases": [
+        "Chili Cheese Tater Tots Medium"
+      ],
+      "servingLabel": "1 medium serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 540,
+        "carbohydrates": 48,
+        "protein": 13,
+        "fat": 33,
+        "fiber": 5,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1580,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Chili Cheese Tots Large",
+      "aliases": [
+        "Chili Cheese Tater Tots Large"
+      ],
+      "servingLabel": "1 large serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 840,
+        "carbohydrates": 77,
+        "protein": 19,
+        "fat": 51,
+        "fiber": 8,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 2420,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Corn Dog",
+      "aliases": [
+        "Regular Corn Dog"
+      ],
+      "servingLabel": "1 corn dog",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 230,
+        "carbohydrates": 23,
+        "protein": 6,
+        "fat": 13,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 480,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Groovy Fries Small",
+      "aliases": [
+        "Fries Small"
+      ],
+      "servingLabel": "1 small serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 260,
+        "carbohydrates": 28,
+        "protein": 2,
+        "fat": 16,
+        "fiber": 4,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 570,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Groovy Fries Medium",
+      "aliases": [
+        "Fries Medium"
+      ],
+      "servingLabel": "1 medium serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 370,
+        "carbohydrates": 39,
+        "protein": 3,
+        "fat": 22,
+        "fiber": 5,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 790,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Groovy Fries Large",
+      "aliases": [
+        "Fries Large"
+      ],
+      "servingLabel": "1 large serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 520,
+        "carbohydrates": 56,
+        "protein": 4,
+        "fat": 31,
+        "fiber": 7,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1110,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Mozzarella Sticks (4 PC.) Small",
+      "aliases": [
+        "Mozzarella Sticks Small",
+        "4 Piece Mozzarella Sticks"
+      ],
+      "servingLabel": "4 pieces",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 370,
+        "carbohydrates": 36,
+        "protein": 15,
+        "fat": 19,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 790,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Mozzarella Sticks (6 PC.) Medium",
+      "aliases": [
+        "Mozzarella Sticks Medium",
+        "6 Piece Mozzarella Sticks"
+      ],
+      "servingLabel": "6 pieces",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 560,
+        "carbohydrates": 54,
+        "protein": 22,
+        "fat": 28,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1190,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Mozzarella Sticks (8 PC.) Large",
+      "aliases": [
+        "Mozzarella Sticks Large",
+        "8 Piece Mozzarella Sticks"
+      ],
+      "servingLabel": "8 pieces",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 750,
+        "carbohydrates": 72,
+        "protein": 30,
+        "fat": 38,
+        "fiber": 4,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1590,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Onion Rings Small",
+      "aliases": [
+        "Small Onion Rings"
+      ],
+      "servingLabel": "1 small serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 440,
+        "carbohydrates": 55,
+        "protein": 6,
+        "fat": 21,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 430,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Onion Rings Medium",
+      "aliases": [
+        "Medium Onion Rings"
+      ],
+      "servingLabel": "1 medium serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 580,
+        "carbohydrates": 74,
+        "protein": 8,
+        "fat": 29,
+        "fiber": 4,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 570,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Onion Rings Large",
+      "aliases": [
+        "Large Onion Rings"
+      ],
+      "servingLabel": "1 large serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 800,
+        "carbohydrates": 101,
+        "protein": 11,
+        "fat": 39,
+        "fiber": 5,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 790,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Soft Pretzel Twist",
+      "aliases": [
+        "Pretzel Twist"
+      ],
+      "servingLabel": "1 pretzel twist",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 250,
+        "carbohydrates": 39,
+        "protein": 7,
+        "fat": 7,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 440,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Tots Small",
+      "aliases": [
+        "Tater Tots Small"
+      ],
+      "servingLabel": "1 small serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 250,
+        "carbohydrates": 30,
+        "protein": 2,
+        "fat": 13,
+        "fiber": 3,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 620,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Tots Medium",
+      "aliases": [
+        "Tater Tots Medium"
+      ],
+      "servingLabel": "1 medium serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 360,
+        "carbohydrates": 43,
+        "protein": 3,
+        "fat": 19,
+        "fiber": 4,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 890,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Tots Large",
+      "aliases": [
+        "Tater Tots Large"
+      ],
+      "servingLabel": "1 large serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 580,
+        "carbohydrates": 69,
+        "protein": 5,
+        "fat": 31,
+        "fiber": 6,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 1450,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with Chocolate Chip Cookie Dough Mini",
+      "aliases": [
+        "Chocolate Chip Cookie Dough Blast Mini"
+      ],
+      "servingLabel": "1 mini dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 410,
+        "carbohydrates": 66,
+        "protein": 7,
+        "fat": 14,
+        "fiber": 0,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 300,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with Chocolate Chip Cookie Dough Small",
+      "aliases": [
+        "Chocolate Chip Cookie Dough Blast Small"
+      ],
+      "servingLabel": "1 small dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 620,
+        "carbohydrates": 100,
+        "protein": 11,
+        "fat": 22,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 470,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with Chocolate Chip Cookie Dough Medium",
+      "aliases": [
+        "Chocolate Chip Cookie Dough Blast Medium"
+      ],
+      "servingLabel": "1 medium dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 820,
+        "carbohydrates": 134,
+        "protein": 15,
+        "fat": 29,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 630,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with Chocolate Chunk Brownie Mini",
+      "aliases": [
+        "Chocolate Chunk Brownie Blast Mini"
+      ],
+      "servingLabel": "1 mini dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 410,
+        "carbohydrates": 60,
+        "protein": 7,
+        "fat": 17,
+        "fiber": 0,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 340,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with Chocolate Chunk Brownie Small",
+      "aliases": [
+        "Chocolate Chunk Brownie Blast Small"
+      ],
+      "servingLabel": "1 small dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 620,
+        "carbohydrates": 92,
+        "protein": 12,
+        "fat": 26,
+        "fiber": 0,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 520,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with Chocolate Chunk Brownie Medium",
+      "aliases": [
+        "Chocolate Chunk Brownie Blast Medium"
+      ],
+      "servingLabel": "1 medium dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 820,
+        "carbohydrates": 122,
+        "protein": 15,
+        "fat": 34,
+        "fiber": 0,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 700,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with Heath Toffee Pieces Mini",
+      "aliases": [
+        "Heath Toffee Blast Mini"
+      ],
+      "servingLabel": "1 mini dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 430,
+        "carbohydrates": 61,
+        "protein": 7,
+        "fat": 19,
+        "fiber": 0,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 360,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with Heath Toffee Pieces Small",
+      "aliases": [
+        "Heath Toffee Blast Small"
+      ],
+      "servingLabel": "1 small dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 650,
+        "carbohydrates": 93,
+        "protein": 11,
+        "fat": 29,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 560,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with Heath Toffee Pieces Medium",
+      "aliases": [
+        "Heath Toffee Blast Medium"
+      ],
+      "servingLabel": "1 medium dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 860,
+        "carbohydrates": 123,
+        "protein": 15,
+        "fat": 38,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 740,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with M&M's Minis Chocolate Candies Mini",
+      "aliases": [
+        "M&M's Blast Mini"
+      ],
+      "servingLabel": "1 mini dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 490,
+        "carbohydrates": 73,
+        "protein": 8,
+        "fat": 20,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 290,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with M&M's Minis Chocolate Candies Small",
+      "aliases": [
+        "M&M's Blast Small"
+      ],
+      "servingLabel": "1 small dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 730,
+        "carbohydrates": 109,
+        "protein": 13,
+        "fat": 29,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 460,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with M&M's Minis Chocolate Candies Medium",
+      "aliases": [
+        "M&M's Blast Medium"
+      ],
+      "servingLabel": "1 medium dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 960,
+        "carbohydrates": 144,
+        "protein": 17,
+        "fat": 38,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 620,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with OREO Cookie Pieces Mini",
+      "aliases": [
+        "OREO Blast Mini"
+      ],
+      "servingLabel": "1 mini dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 370,
+        "carbohydrates": 58,
+        "protein": 7,
+        "fat": 13,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 390,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with OREO Cookie Pieces Small",
+      "aliases": [
+        "OREO Blast Small"
+      ],
+      "servingLabel": "1 small dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 580,
+        "carbohydrates": 92,
+        "protein": 11,
+        "fat": 21,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 610,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with OREO Cookie Pieces Medium",
+      "aliases": [
+        "OREO Blast Medium"
+      ],
+      "servingLabel": "1 medium dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 770,
+        "carbohydrates": 121,
+        "protein": 15,
+        "fat": 28,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 800,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with Reese's Peanut Butter Cups Mini",
+      "aliases": [
+        "Reese's Blast Mini"
+      ],
+      "servingLabel": "1 mini dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 450,
+        "carbohydrates": 63,
+        "protein": 10,
+        "fat": 20,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 390,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with Reese's Peanut Butter Cups Small",
+      "aliases": [
+        "Reese's Blast Small"
+      ],
+      "servingLabel": "1 small dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 680,
+        "carbohydrates": 96,
+        "protein": 15,
+        "fat": 30,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 600,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with Reese's Peanut Butter Cups Medium",
+      "aliases": [
+        "Reese's Blast Medium"
+      ],
+      "servingLabel": "1 medium dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 890,
+        "carbohydrates": 126,
+        "protein": 20,
+        "fat": 39,
+        "fiber": 2,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 790,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with Turtle Truffle Nut Mini",
+      "aliases": [
+        "Turtle Truffle Nut Blast Mini"
+      ],
+      "servingLabel": "1 mini dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 460,
+        "carbohydrates": 69,
+        "protein": 8,
+        "fat": 19,
+        "fiber": 0,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 320,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with Turtle Truffle Nut Small",
+      "aliases": [
+        "Turtle Truffle Nut Blast Small"
+      ],
+      "servingLabel": "1 small dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 700,
+        "carbohydrates": 104,
+        "protein": 13,
+        "fat": 29,
+        "fiber": 0,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 510,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "SONIC Blast with Turtle Truffle Nut Medium",
+      "aliases": [
+        "Turtle Truffle Nut Blast Medium"
+      ],
+      "servingLabel": "1 medium dessert",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 920,
+        "carbohydrates": 138,
+        "protein": 17,
+        "fat": 38,
+        "fiber": 0,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 670,
+        "vitaminD": null
+      },
+      "notes": "SONIC classifies Blasts under Sweets; retained as a frozen dessert."
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Caramel Sundae",
+      "aliases": [
+        "Caramel Ice Cream Sundae"
+      ],
+      "servingLabel": "1 sundae",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 430,
+        "carbohydrates": 71,
+        "protein": 7,
+        "fat": 13,
+        "fiber": 0,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 400,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Chocolate Sundae",
+      "aliases": [
+        "Chocolate Ice Cream Sundae"
+      ],
+      "servingLabel": "1 sundae",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 440,
+        "carbohydrates": 76,
+        "protein": 7,
+        "fat": 12,
+        "fiber": 0,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 340,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Hot Fudge Sundae",
+      "aliases": [
+        "Hot Fudge Ice Cream Sundae"
+      ],
+      "servingLabel": "1 sundae",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 460,
+        "carbohydrates": 73,
+        "protein": 8,
+        "fat": 17,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 360,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Strawberry Sundae",
+      "aliases": [
+        "Strawberry Ice Cream Sundae"
+      ],
+      "servingLabel": "1 sundae",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 380,
+        "carbohydrates": 62,
+        "protein": 7,
+        "fat": 12,
+        "fiber": 1,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 310,
+        "vitaminD": null
+      },
+      "notes": ""
+    },
+    {
+      "brand": "Sonic USA",
+      "name": "Vanilla Soft Serve Cup",
+      "aliases": [
+        "Vanilla Ice Cream Cup"
+      ],
+      "servingLabel": "1 serving",
+      "servingGrams": null,
+      "source": {
+        "name": "SONIC Summer 2026 Nutritional Information",
+        "url": "https://assets.ctfassets.net/whnlxz6bna9d/1Wtr8uYNYWyb2JzoSQg1rF/60a8a009073b4e9319bb7fb138a1f176/August_2026_National_Nutritional_Brochure.pdf",
+        "isFirstParty": true,
+        "accessedDate": "2026-08-21"
+      },
+      "nutrientsPerServing": {
+        "calories": 300,
+        "carbohydrates": 47,
+        "protein": 7,
+        "fat": 10,
+        "fiber": 0,
+        "calcium": null,
+        "iron": null,
+        "magnesium": null,
+        "potassium": null,
+        "sodium": 300,
+        "vitaminD": null
+      },
+      "notes": "Corrected from 380 to 300 calories per the first-party nutrition source."
+    }
+  ],
+  "omissions": [
+    {
+      "name": "All beverages and customizable drinks",
+      "reason": "Excluded by request, including coffee, iced tea, soft drinks, refreshers, slushes, lemonades, floats, shakes, and milk-based drinks."
+    },
+    {
+      "name": "Condiments, dipping sauces, and customization add-ins",
+      "reason": "Not included as whole standalone food products; the brochure lists them as components, add-ons, or customization options."
+    },
+    {
+      "name": "Food items not listed with complete calories, carbohydrates, protein, and fat",
+      "reason": "Omitted rather than estimated from components."
+    },
+    {
+      "name": "Crispy Tenders 2 Piece",
+      "reason": "The verified current menu identifies two tenders as the entrée component of a Crispy Tenders Wacky Pack®, not as an independently purchasable food-only item."
+    },
+    {
+      "name": "Corn Dog Kids Meal Item",
+      "reason": "This is a component of the Corn Dog Wacky Pack® rather than a full food-only purchase; the standalone Corn Dog is retained separately."
+    },
+    {
+      "name": "Groovy Fries Small Kids Meal Item",
+      "reason": "This is a Wacky Pack® side selection rather than a distinct full food-only purchase; the standalone small Groovy Fries are retained separately."
+    },
+    {
+      "name": "Jr Burger Kids Meal Item",
+      "reason": "This is a Hamburger Wacky Pack® entrée component, not an independently purchasable food-only menu item."
+    },
+    {
+      "name": "Jr Cheeseburger Kids Meal Item",
+      "reason": "This is a Wacky Pack® entrée component, not an independently purchasable food-only menu item."
+    },
+    {
+      "name": "Tots Small Kids Meal Item",
+      "reason": "This is a Wacky Pack® side selection rather than a distinct full food-only purchase; the standalone small Tots are retained separately."
+    },
+    {
+      "name": "Tree Top Apple Sauce",
+      "reason": "The verified source lists this as a Wacky Pack® side choice, not as an independently purchasable food-only menu item."
+    }
+  ],
+  "curatorNote": "Coverage uses the current first-party SONIC August 2026 National Nutritional Brochure and includes 120 verified food products and size variants across burgers, kids-meal foods, sandwiches, chicken, hot dogs, breakfast, snacks and sides, frozen desserts, and sundaes. Beverages were excluded. SONIC notes that availability and nutrition can vary by location, serving variation, special ordering, suppliers, and product changes.",
+  "qualityReview": {
+    "reviewedProducts": 114,
+    "rejectedProducts": 7,
+    "note": "Verified retained items’ calories, carbohydrates, protein, fat, fiber, and sodium against SONIC’s first-party Summer 2026 nutritional PDF on August 21, 2026. Wacky Pack® components were removed because they are not full food-only purchases. SONIC Blasts were retained because SONIC categorizes them under Sweets/frozen desserts, not Drinks. Calcium, iron, magnesium, potassium, vitamin D, and serving weights were not supplied by the verified source and remain null; location, availability, and custom-order variation may apply."
+  },
+  "generatedAt": "2026-08-21T21:39:56+00:00",
+  "generation": {
+    "researcher": {
+      "model": "gpt-5.6-luna",
+      "reasoningEffort": "high"
+    },
+    "reviewer": {
+      "model": "gpt-5.6-terra",
+      "reasoningEffort": "xhigh"
+    },
+    "guidanceURLs": [
+      "https://assets.ctfassets.net/whnlxz6bna9d/2XxFBXaI4KvdUQE9YA1tcQ/110f7e0c25963b354480e24f8a318c57/59235-3_S26_NAT_NutritionalBrochure_FA2_rg_WCAG.pdf?utm_source=chatgpt.com"
+    ]
+  }
+}

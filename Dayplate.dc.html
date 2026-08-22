@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics=""><style>body{margin:0;background:#EDE7D8}*{-webkit-font-smoothing:antialiased}a{color:#2E5A3B}a:hover{color:#1A4F2E}::-webkit-scrollbar{width:0;height:0}</style></helmet>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px;background:#EDE7D8;box-sizing:border-box">
+
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ 402 }}" height="{{ 874 }}" hint-size="402px,874px">
+
+<div style="height:100%;display:flex;flex-direction:column;background:#F6F1E3;font-family:-apple-system,'SF Pro Text',system-ui,sans-serif;color:#1A2E1F;position:relative;overflow:hidden">
+
+<div style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch">
+
+<sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
+<div style="padding:56px 18px 170px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:20px">
+    <div style="display:flex;flex-direction:column;gap:3px">
+      <span style="font-size:12px;font-weight:600;letter-spacing:1.8px;color:#2E5A3B">TODAY</span>
+      <span style="font-size:33px;font-weight:700;line-height:1.06;letter-spacing:-0.6px;text-wrap:pretty">Friday, August 21</span>
+    </div>
+    <button onClick="{{ openProfile }}" style="flex:none;width:46px;height:46px;border-radius:23px;border:1px solid rgba(46,90,59,0.18);background:#DEEBD6;color:#2E5A3B;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:4px">JR</button>
+  </div>
+
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:20px;padding:18px 16px 6px;margin-bottom:18px">
+    <div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:18px">
+      <span style="font-size:44px;font-weight:700;letter-spacing:-1.2px;line-height:1">2,035</span>
+      <span style="font-size:16px;font-weight:600;color:rgba(26,46,31,0.55);padding-bottom:7px">kcal</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding-bottom:14px">
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:4px;height:16px;border-radius:2px;background:#B06E4D"></div><span style="font-size:14px;font-weight:500;color:rgba(26,46,31,0.68)">Protein</span><span style="{{ arrowP.style }}">{{ arrowP.icon }}</span></div>
+        <span style="font-size:21px;font-weight:700">123 g</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:4px;height:16px;border-radius:2px;background:#D6BA82"></div><span style="font-size:14px;font-weight:500;color:rgba(26,46,31,0.68)">Carbs</span><span style="{{ arrowC.style }}">{{ arrowC.icon }}</span></div>
+        <span style="font-size:21px;font-weight:700">202 g</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;gap:5px"><div style="width:4px;height:16px;border-radius:2px;background:#9EB88A"></div><span style="font-size:14px;font-weight:500;color:rgba(26,46,31,0.68)">Fat</span><span style="{{ arrowF.style }}">{{ arrowF.icon }}</span></div>
+        <span style="font-size:21px;font-weight:700">78 g</span>
+      </div>
+    </div>
+    <button onClick="{{ toggleNutrients }}" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:none;border:none;border-top:1px solid rgba(46,90,59,0.1);padding:13px 0;font-family:inherit;font-size:14px;font-weight:600;color:#2E5A3B;cursor:pointer">
+      <span>Nutrient detail</span>
+      <span style="font-size:12px;color:rgba(26,46,31,0.45)">{{ nutrientChevron }}</span>
+    </button>
+    <sc-if value="{{ nutrientsOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:2px 0 16px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="position:relative;overflow:hidden;border-radius:14px;background:rgba(46,90,59,0.07);padding:11px 12px 11px 16px">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#2E5A3B"></div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.1px;color:rgba(26,46,31,0.55);margin-bottom:5px">FIBER</div>
+            <div style="display:flex;align-items:baseline;gap:3px"><span style="font-size:19px;font-weight:700;letter-spacing:-0.3px">27</span><span style="font-size:12px;font-weight:600;color:rgba(26,46,31,0.5)">g</span></div>
+          </div>
+          <div style="position:relative;overflow:hidden;border-radius:14px;background:rgba(176,110,77,0.1);padding:11px 12px 11px 16px">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#B06E4D"></div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.1px;color:rgba(26,46,31,0.55);margin-bottom:5px">SODIUM</div>
+            <div style="display:flex;align-items:baseline;gap:3px"><span style="font-size:19px;font-weight:700;letter-spacing:-0.3px">2,140</span><span style="font-size:12px;font-weight:600;color:rgba(26,46,31,0.5)">mg</span></div>
+          </div>
+          <div style="position:relative;overflow:hidden;border-radius:14px;background:rgba(89,143,156,0.12);padding:11px 12px 11px 16px">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#598F9C"></div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.1px;color:rgba(26,46,31,0.55);margin-bottom:5px">POTASSIUM</div>
+            <div style="display:flex;align-items:baseline;gap:3px"><span style="font-size:19px;font-weight:700;letter-spacing:-0.3px">3,020</span><span style="font-size:12px;font-weight:600;color:rgba(26,46,31,0.5)">mg</span></div>
+          </div>
+          <div style="position:relative;overflow:hidden;border-radius:14px;background:rgba(214,186,130,0.22);padding:11px 12px 11px 16px">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:#D6BA82"></div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.1px;color:rgba(26,46,31,0.55);margin-bottom:5px">MAGNESIUM</div>
+            <div style="display:flex;align-items:baseline;gap:3px"><span style="font-size:19px;font-weight:700;letter-spacing:-0.3px">320</span><span style="font-size:12px;font-weight:600;color:rgba(26,46,31,0.5)">mg</span></div>
+          </div>
+        </div>
+        <div style="border-radius:14px;background:rgba(158,184,138,0.2);padding:12px 13px;display:flex;flex-direction:column;gap:11px">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.1px;color:#2E5A3B">WATCHED MINERALS</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px"><span style="font-weight:600">Iron</span><span style="color:rgba(26,46,31,0.6)"><strong style="font-weight:700;color:#B06E4D">12</strong> of 18 mg</span></div>
+            <div style="height:6px;border-radius:3px;background:rgba(255,252,245,0.75);overflow:hidden"><div style="width:67%;height:100%;background:#B06E4D;border-radius:3px"></div></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px"><span style="font-weight:600">Calcium</span><span style="color:rgba(26,46,31,0.6)"><strong style="font-weight:700;color:#598F9C">890</strong> of 1,000 mg</span></div>
+            <div style="height:6px;border-radius:3px;background:rgba(255,252,245,0.75);overflow:hidden"><div style="width:89%;height:100%;background:#598F9C;border-radius:3px"></div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;padding-top:2px;border-top:1px solid rgba(46,90,59,0.12)"><span style="font-weight:600;padding-top:8px">Vitamin D</span><span style="color:rgba(26,46,31,0.6);padding-top:8px"><strong style="font-weight:700">9</strong> mcg</span></div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+    <span style="font-size:12px;font-weight:600;letter-spacing:1.4px;color:#2E5A3B">THE DAY SO FAR</span>
+    <span style="font-size: 13px; color: rgba(26,46,31,0.45); font-weight: 700">{{ entryCountLabel }}</span>
+  </div>
+
+  <div style="position:relative;padding-left:64px">
+    <div style="position:absolute;left:50px;top:20px;bottom:20px;width:1.5px;background:rgba(46,90,59,0.22)"></div>
+    <div style="position:absolute;left:42px;top:19px;width:9px;height:1.5px;background:rgba(46,90,59,0.35)"></div>
+    <div style="position:absolute;left:42px;bottom:19px;width:9px;height:1.5px;background:rgba(46,90,59,0.35)"></div>
+    <sc-for list="{{ allEntries }}" as="entry" hint-placeholder-count="4">
+      <div style="position:relative;margin-bottom:9px">
+        <span style="position:absolute;left:-64px;top:14px;width:46px;text-align:right;font-size:11px;font-weight:700;color:rgba(26,46,31,0.45);white-space:nowrap;line-height:1.2">{{ entry.timeLine1 }}<br>{{ entry.timeLine2 }}</span>
+        <div style="{{ entry.dotStyle }}"></div>
+        <sc-if value="{{ entry.isWater }}" hint-placeholder-val="{{ false }}">
+          <div style="background:rgba(89,143,156,0.1);border:1px solid rgba(89,143,156,0.2);border-radius:14px;padding:9px 13px;display:flex;align-items:center;gap:9px">
+            <span style="font-size:16px;opacity:0.8">💧</span>
+            <span style="font-size:13.5px;font-weight:600;color:#598F9C">{{ entry.waterLabel }}</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{ entry.isMeal }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ entry.open }}" style="width:100%;text-align:left;background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;padding:11px 12px;font-family:inherit;color:inherit;cursor:pointer;display:flex;gap:10px;align-items:center">
+            <span style="flex:none;width:36px;height:36px;border-radius:18px;background:rgba(158,184,138,0.24);display:flex;align-items:center;justify-content:center;font-size:18px">{{ entry.emoji }}</span>
+            <span style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">
+              <span style="font-size:15px;font-weight:600;letter-spacing:-0.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ entry.title }}</span>
+              <span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;flex-wrap:nowrap">
+                <span style="color:#598F9C">{{ entry.kcal }}</span>
+                <span style="width:2px;height:2px;border-radius:1px;background:rgba(26,46,31,0.2)"></span>
+                <span style="color:#B06E4D">{{ entry.p }}</span>
+                <span style="width:2px;height:2px;border-radius:1px;background:rgba(26,46,31,0.2)"></span>
+                <span style="color:#B08A3E">{{ entry.c }}</span>
+                <span style="width:2px;height:2px;border-radius:1px;background:rgba(26,46,31,0.2)"></span>
+                <span style="color:#6E8C58">{{ entry.f }}</span>
+              </span>
+            </span>
+            <span style="font-size:13px;color:rgba(26,46,31,0.28);font-weight:700">›</span>
+          </button>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMeal }}" hint-placeholder-val="{{ false }}">
+<div style="padding:56px 18px 170px">
+  <button onClick="{{ goToday }}" style="background:none;border:none;font-family:inherit;font-size:15px;color:#2E5A3B;padding:0 0 18px;cursor:pointer">‹ Today</button>
+  <div style="font-size:12px;font-weight:600;letter-spacing:1.4px;color:#2E5A3B;margin-bottom:6px">{{ mealTimeLabel }}</div>
+  <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:20px">
+    <span style="font-size:30px">{{ mealEmoji }}</span>
+    <span style="font-size:29px;font-weight:700;line-height:1.1;letter-spacing:-0.6px;text-wrap:pretty">{{ mealTitle }}</span>
+  </div>
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:20px;padding:16px;margin-bottom:14px">
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:4px;height:16px;border-radius:2px;background:#598F9C"></div><span style="font-size:14px;font-weight:500;color:rgba(26,46,31,0.68)">Calories</span></div>
+      <span style="font-size:32px;font-weight:700;letter-spacing:-0.8px;line-height:1">{{ mealKcal }}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;align-items:center;gap:6px"><div style="width:4px;height:14px;border-radius:2px;background:#B06E4D"></div><span style="font-size:13px;color:rgba(26,46,31,0.68)">Protein</span></div><span style="font-size:18px;font-weight:700">{{ mealP }}</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;align-items:center;gap:6px"><div style="width:4px;height:14px;border-radius:2px;background:#D6BA82"></div><span style="font-size:13px;color:rgba(26,46,31,0.68)">Carbs</span></div><span style="font-size:18px;font-weight:700">{{ mealC }}</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;align-items:center;gap:6px"><div style="width:4px;height:14px;border-radius:2px;background:#9EB88A"></div><span style="font-size:13px;color:rgba(26,46,31,0.68)">Fat</span></div><span style="font-size:18px;font-weight:700">{{ mealF }}</span></div>
+    </div>
+  </div>
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:20px;padding:16px;margin-bottom:14px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:11px">Foods &amp; portions</div>
+    <sc-for list="{{ mealItems }}" as="item" hint-placeholder-count="3">
+      <div style="display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:6px 0;border-top:1px solid rgba(46,90,59,0.08)">
+        <span>{{ item.name }}</span>
+        <span style="color:rgba(26,46,31,0.55);white-space:nowrap">{{ item.portion }}</span>
+      </div>
+    </sc-for>
+  </div>
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:20px;padding:15px 16px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="width:4px;height:13px;border-radius:2px;background:#9EB88A"></div>
+      <span style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:#2E5A3B">NOTES</span>
+    </div>
+    <span style="font-size:13.5px;line-height:1.55;color:rgba(26,46,31,0.7)">{{ mealNote }}</span>
+  </div>
+  <button onClick="{{ goLog }}" style="width:100%;height:50px;border-radius:25px;border:1px solid rgba(46,90,59,0.3);background:none;font-family:inherit;font-size:16px;font-weight:600;color:#2E5A3B;cursor:pointer">Edit &amp; re-estimate</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLog }}" hint-placeholder-val="{{ false }}">
+<div style="padding:56px 18px 170px">
+  <button onClick="{{ back }}" style="background:none;border:none;font-family:inherit;font-size:15px;color:#2E5A3B;padding:0 0 16px;cursor:pointer">Cancel</button>
+  <div style="font-size:31px;font-weight:700;letter-spacing:-0.6px;margin-bottom:6px">Log a meal</div>
+  <div style="font-size:15px;line-height:1.45;color:rgba(26,46,31,0.6);margin-bottom:20px">Say it however you'd say it out loud. You'll see the estimate before it's saved.</div>
+
+  <div style="background:#FFFCF5;border:1px solid rgba(26,46,31,0.1);border-radius:18px;padding:14px;margin-bottom:12px">
+    <textarea onChange="{{ onLogText }}" value="{{ logText }}" placeholder="Rice bowl with chicken, avocado, and salsa" style="width:100%;min-height:96px;border:none;outline:none;resize:none;background:none;font-family:inherit;font-size:17px;line-height:1.45;color:#1A2E1F;padding:0"></textarea>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;padding-top:10px;border-top:1px solid rgba(46,90,59,0.08)">
+      <button onClick="{{ goCamera }}" style="width:38px;height:38px;border-radius:19px;border:none;background:rgba(46,90,59,0.1);cursor:pointer;display:flex;align-items:center;justify-content:center" aria-label="Add a photo">
+        <svg width="19" height="16" viewBox="0 0 19 16"><rect x="0.9" y="2.6" width="17.2" height="12.5" rx="3.2" fill="none" stroke="#2E5A3B" stroke-width="1.5"></rect><circle cx="9.5" cy="8.9" r="3.4" fill="none" stroke="#2E5A3B" stroke-width="1.5"></circle><rect x="6.4" y="0.7" width="6.2" height="2" rx="1" fill="#2E5A3B"></rect></svg>
+      </button>
+      <button onClick="{{ toggleMic }}" style="{{ micStyle }}" aria-label="Speak your meal">
+        <svg width="13" height="18" viewBox="0 0 13 18"><rect x="4" y="0.8" width="5" height="9.5" rx="2.5" fill="#FFFFFF"></rect><path d="M1.2 8.6a5.3 5.3 0 0 0 10.6 0" fill="none" stroke="#FFFFFF" stroke-width="1.5"></path><rect x="5.8" y="14" width="1.4" height="3.2" rx="0.7" fill="#FFFFFF"></rect></svg>
+      </button>
+    </div>
+  </div>
+
+  <sc-if value="{{ recording }}" hint-placeholder-val="{{ false }}">
+    <div style="font-size:13px;color:#B06E4D;font-weight:600;margin-bottom:14px">Listening… tap the mic again to stop</div>
+  </sc-if>
+
+  <button onClick="{{ analyze }}" style="{{ analyzeStyle }}">{{ analyzeLabel }}</button>
+
+  <div style="font-size:12px;font-weight:600;letter-spacing:1.4px;color:#2E5A3B;margin:26px 0 12px">RECENTS</div>
+  <div style="display:flex;flex-direction:column;gap:9px">
+    <sc-for list="{{ recents }}" as="r" hint-placeholder-count="4">
+      <button onClick="{{ r.use }}" style="width:100%;text-align:left;background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:16px;padding:13px 14px;font-family:inherit;color:inherit;cursor:pointer;display:flex;align-items:center;gap:11px">
+        <span style="font-size:18px">{{ r.emoji }}</span>
+        <span style="flex:1;display:flex;flex-direction:column;gap:3px">
+          <span style="font-size:15px;font-weight:600">{{ r.title }}</span>
+          <span style="font-size:12.5px;color:rgba(26,46,31,0.55)">{{ r.meta }}</span>
+        </span>
+        <span style="font-size:13px;color:#2E5A3B;font-weight:600">Log again</span>
+      </button>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isCamera }}" hint-placeholder-val="{{ false }}">
+<div style="padding:56px 18px 170px">
+  <button onClick="{{ goLog }}" style="background:none;border:none;font-family:inherit;font-size:15px;color:#2E5A3B;padding:0 0 16px;cursor:pointer">‹ Back</button>
+  <div style="font-size:26px;font-weight:700;letter-spacing:-0.5px;margin-bottom:6px">Take a photo</div>
+  <div style="font-size:14.5px;line-height:1.45;color:rgba(26,46,31,0.6);margin-bottom:16px">The meal itself, the packaging, or a nutrition label — any of the three works.</div>
+
+  <div style="position:relative;height:300px;border-radius:20px;overflow:hidden;background:repeating-linear-gradient(135deg,#E4DECB 0 10px,#EDE7D8 10px 20px);border:1px solid rgba(46,90,59,0.14);display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+    <span style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px;letter-spacing:0.4px;color:rgba(26,46,31,0.45)">camera viewfinder</span>
+    <div style="position:absolute;inset:16px;border-radius:12px;border:1.5px solid rgba(46,90,59,0.22)"></div>
+  </div>
+
+  <sc-if value="{{ camShoot }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+      <button onClick="{{ shoot }}" style="width:72px;height:72px;border-radius:36px;border:4px solid rgba(46,90,59,0.25);background:#2E5A3B;cursor:pointer" aria-label="Take photo"></button>
+      <span style="font-size:12.5px;color:rgba(26,46,31,0.5)">Photos are used for this estimate only.</span>
+    </div>
+  </sc-if>
+  <sc-if value="{{ camThinking }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;color:#2E5A3B;padding:8px 0"><div style="width:14px;height:14px;border-radius:7px;background:#9EB88A"></div>Reading the photo…</div>
+  </sc-if>
+  <sc-if value="{{ camFound }}" hint-placeholder-val="{{ false }}">
+    <div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:12px">I found:</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+        <sc-for list="{{ camFoods }}" as="food" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:10px;background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:14px;padding:12px 13px">
+            <span style="flex:1;font-size:15px">{{ food.name }}</span>
+            <button onClick="{{ food.remove }}" style="width:28px;height:28px;border-radius:14px;border:none;background:rgba(176,110,77,0.13);color:#B06E4D;font-family:inherit;font-size:14px;cursor:pointer" aria-label="Remove">✕</button>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ adding }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <input onChange="{{ onCamAdd }}" value="{{ camAdd }}" placeholder="What was missed?" style="flex:1;background:#FFFCF5;border:1px solid rgba(46,90,59,0.2);border-radius:14px;padding:12px 13px;font-family:inherit;font-size:15px;color:#1A2E1F;outline:none">
+          <button onClick="{{ commitAdd }}" style="padding:0 16px;border-radius:14px;border:none;background:#2E5A3B;color:#fff;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer">Add</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ notAdding }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ startAdd }}" style="width:100%;border:1px dashed rgba(46,90,59,0.35);background:none;border-radius:14px;padding:12px;font-family:inherit;font-size:15px;font-weight:600;color:#2E5A3B;cursor:pointer;margin-bottom:14px">＋ Add a food</button>
+      </sc-if>
+      <button onClick="{{ analyze }}" style="width:100%;height:52px;border-radius:26px;border:none;background:#2E5A3B;color:#fff;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer">Continue</button>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isReview }}" hint-placeholder-val="{{ false }}">
+<div style="padding:56px 18px 170px">
+  <button onClick="{{ goLog }}" style="background:none;border:none;font-family:inherit;font-size:15px;color:#2E5A3B;padding:0 0 16px;cursor:pointer">‹ Back</button>
+  <div style="font-size:12px;font-weight:600;letter-spacing:1.4px;color:#2E5A3B;margin-bottom:7px">FRI, AUG 21 · 8:42 PM</div>
+  <div style="font-size:29px;font-weight:700;letter-spacing:-0.6px;line-height:1.1;margin-bottom:18px;text-wrap:pretty">{{ reviewTitle }}</div>
+
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:20px;padding:16px;margin-bottom:14px">
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:6px"><div style="width:4px;height:16px;border-radius:2px;background:#598F9C"></div><span style="font-size:14px;font-weight:500;color:rgba(26,46,31,0.68)">Calories</span></div>
+      <span style="font-size:32px;font-weight:700;letter-spacing:-0.8px;line-height:1">610 kcal</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;align-items:center;gap:6px"><div style="width:4px;height:14px;border-radius:2px;background:#B06E4D"></div><span style="font-size:13px;color:rgba(26,46,31,0.68)">Protein</span></div><span style="font-size:18px;font-weight:700">38 g</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;align-items:center;gap:6px"><div style="width:4px;height:14px;border-radius:2px;background:#D6BA82"></div><span style="font-size:13px;color:rgba(26,46,31,0.68)">Carbs</span></div><span style="font-size:18px;font-weight:700">54 g</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;align-items:center;gap:6px"><div style="width:4px;height:14px;border-radius:2px;background:#9EB88A"></div><span style="font-size:13px;color:rgba(26,46,31,0.68)">Fat</span></div><span style="font-size:18px;font-weight:700">22 g</span></div>
+    </div>
+  </div>
+
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:20px;padding:16px;margin-bottom:14px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:4px">Foods &amp; portions</div>
+    <sc-for list="{{ reviewFoods }}" as="food" hint-placeholder-count="3">
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid rgba(46,90,59,0.08)">
+        <span style="flex:1;font-size:14.5px">{{ food.label }}</span>
+        <button onClick="{{ food.edit }}" style="width:28px;height:28px;border-radius:14px;border:none;background:rgba(158,184,138,0.3);color:#2E5A3B;font-family:inherit;font-size:12px;cursor:pointer" aria-label="Edit">✎</button>
+      </div>
+    </sc-for>
+    <sc-if value="{{ editing }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;gap:8px;padding-top:12px">
+        <input onChange="{{ onEditText }}" value="{{ editText }}" style="flex:1;background:#F6F1E3;border:1px solid rgba(46,90,59,0.2);border-radius:12px;padding:10px 12px;font-family:inherit;font-size:14.5px;color:#1A2E1F;outline:none">
+        <button onClick="{{ commitEdit }}" style="padding:0 14px;border-radius:12px;border:none;background:#2E5A3B;color:#fff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">Redo</button>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:20px;padding:15px 16px;margin-bottom:18px;display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="width:4px;height:13px;border-radius:2px;background:#9EB88A"></div>
+      <span style="font-size:11px;font-weight:700;letter-spacing:1.2px;color:#2E5A3B">NOTES</span>
+    </div>
+    <span style="font-size:13.5px;line-height:1.55;color:rgba(26,46,31,0.7)">Assumed a restaurant-sized portion and oil in the pan. Edit any line to re-estimate.</span>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <button onClick="{{ save }}" style="width:100%;height:52px;border-radius:26px;border:none;background:#2E5A3B;color:#fff;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer">Save meal</button>
+    <button onClick="{{ goLog }}" style="width:100%;height:50px;border-radius:25px;border:1px solid rgba(46,90,59,0.3);background:none;font-family:inherit;font-size:16px;font-weight:600;color:#2E5A3B;cursor:pointer">Edit description</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isHistory }}" hint-placeholder-val="{{ false }}">
+<div style="padding:56px 18px 170px">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px">
+    <span style="font-size:31px;font-weight:700;letter-spacing:-0.6px">August 2026</span>
+    <button onClick="{{ goSearch }}" style="width:42px;height:42px;border-radius:21px;border:1px solid rgba(46,90,59,0.18);background:#FFFCF5;cursor:pointer;display:flex;align-items:center;justify-content:center" aria-label="Search meals">
+      <svg width="17" height="17" viewBox="0 0 17 17"><circle cx="7" cy="7" r="5.6" fill="none" stroke="#2E5A3B" stroke-width="1.7"></circle><path d="M11.3 11.3 16 16" stroke="#2E5A3B" stroke-width="1.7" stroke-linecap="round"></path></svg>
+    </button>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:4px;margin-bottom:14px">
+    <button onClick="{{ prevWeek }}" style="width:26px;height:44px;background:none;border:none;font-family:inherit;font-size:17px;color:rgba(26,46,31,0.4);cursor:pointer">‹</button>
+    <div style="flex:1;display:flex;justify-content:space-between;gap:4px">
+      <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
+        <button onClick="{{ d.select }}" style="{{ d.style }}">
+          <span style="font-size:10.5px;font-weight:600;letter-spacing:0.5px;opacity:0.65">{{ d.dow }}</span>
+          <span style="font-size:16px;font-weight:700">{{ d.num }}</span>
+        </button>
+      </sc-for>
+    </div>
+    <button onClick="{{ nextWeek }}" style="width:26px;height:44px;background:none;border:none;font-family:inherit;font-size:17px;color:rgba(26,46,31,0.4);cursor:pointer">›</button>
+  </div>
+
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;overflow:hidden;margin-bottom:24px">
+    <button onClick="{{ toggleSelDay }}" style="width:100%;text-align:left;background:none;border:none;padding:14px;font-family:inherit;color:inherit;cursor:pointer;display:flex;align-items:center;gap:10px">
+      <span style="flex:1;display:flex;flex-direction:column;gap:6px">
+        <span style="font-size:15.5px;font-weight:600">{{ selectedDayLabel }}</span>
+        <span style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;flex-wrap:wrap">
+          <span style="color:#598F9C">{{ selDayKcal }}</span>
+          <span style="width:3px;height:3px;border-radius:2px;background:rgba(26,46,31,0.25)"></span>
+          <span style="color:#B06E4D">{{ selDayP }}</span>
+          <span style="width:3px;height:3px;border-radius:2px;background:rgba(26,46,31,0.25)"></span>
+          <span style="color:#B08A3E">{{ selDayC }}</span>
+          <span style="width:3px;height:3px;border-radius:2px;background:rgba(26,46,31,0.25)"></span>
+          <span style="color:#6E8C58">{{ selDayF }}</span>
+        </span>
+      </span>
+      <span style="font-size:12px;color:rgba(26,46,31,0.4)">{{ selDayChevron }}</span>
+    </button>
+    <sc-if value="{{ selDayOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:0 14px 12px;display:flex;flex-direction:column">
+        <sc-for list="{{ selDayMeals }}" as="m" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid rgba(46,90,59,0.1)">
+            <span style="font-size:11px;font-weight:600;color:rgba(26,46,31,0.45);white-space:nowrap;min-width:46px">{{ m.time }}</span>
+            <span style="font-size:16px">{{ m.emoji }}</span>
+            <span style="flex:1;font-size:14px;font-weight:500">{{ m.title }}</span>
+            <span style="font-size:13px;font-weight:600;color:#598F9C;white-space:nowrap">{{ m.kcal }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="font-size:12px;font-weight:600;letter-spacing:1.4px;color:#2E5A3B;margin-bottom:12px">{{ earlierLabel }}</div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <sc-for list="{{ historyDays }}" as="day" hint-placeholder-count="3">
+      <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;overflow:hidden">
+        <button onClick="{{ day.toggle }}" style="width:100%;text-align:left;background:none;border:none;padding:14px;font-family:inherit;color:inherit;cursor:pointer;display:flex;align-items:center;gap:10px">
+          <span style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <span style="font-size:15.5px;font-weight:600">{{ day.label }}</span>
+            <span style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600">
+              <span style="color:#598F9C">{{ day.kcal }}</span>
+              <span style="width:3px;height:3px;border-radius:2px;background:rgba(26,46,31,0.22)"></span>
+              <span style="color:#B06E4D">{{ day.p }}</span>
+              <span style="width:3px;height:3px;border-radius:2px;background:rgba(26,46,31,0.22)"></span>
+              <span style="color:#B08A3E">{{ day.c }}</span>
+              <span style="width:3px;height:3px;border-radius:2px;background:rgba(26,46,31,0.22)"></span>
+              <span style="color:#6E8C58">{{ day.f }}</span>
+            </span>
+          </span>
+          <span style="font-size:12px;color:rgba(26,46,31,0.4)">{{ day.chevron }}</span>
+        </button>
+        <sc-if value="{{ day.open }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:0 14px 12px;display:flex;flex-direction:column">
+            <sc-for list="{{ day.meals }}" as="m" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid rgba(46,90,59,0.1)">
+                <span style="font-size:11px;font-weight:600;color:rgba(26,46,31,0.45);white-space:nowrap;min-width:46px">{{ m.time }}</span>
+                <span style="font-size:16px">{{ m.emoji }}</span>
+                <span style="flex:1;font-size:14px;font-weight:500">{{ m.title }}</span>
+                <span style="font-size:13px;font-weight:600;color:#598F9C">{{ m.kcal }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSearch }}" hint-placeholder-val="{{ false }}">
+<div style="padding:56px 18px 170px">
+  <button onClick="{{ goHistory }}" style="background:none;border:none;font-family:inherit;font-size:15px;color:#2E5A3B;padding:0 0 16px;cursor:pointer">‹ History</button>
+  <div style="font-size:26px;font-weight:700;letter-spacing:-0.5px;margin-bottom:14px">Ask about your history</div>
+  <input onChange="{{ onQuery }}" value="{{ query }}" placeholder="When did I last eat salmon?" style="width:100%;box-sizing:border-box;background:#FFFCF5;border:1px solid rgba(46,90,59,0.2);border-radius:16px;padding:14px;font-family:inherit;font-size:16px;color:#1A2E1F;outline:none;margin-bottom:12px">
+  <sc-if value="{{ hasAnswer }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;padding:15px;font-size:15px;line-height:1.5;margin-bottom:16px">{{ answer }}</div>
+  </sc-if>
+  <div style="font-size:12px;font-weight:600;letter-spacing:1.4px;color:#2E5A3B;margin:8px 0 10px">TRY</div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <sc-for list="{{ examples }}" as="ex" hint-placeholder-count="3">
+      <button onClick="{{ ex.ask }}" style="width:100%;text-align:left;background:none;border:1px solid rgba(46,90,59,0.18);border-radius:14px;padding:12px 13px;font-family:inherit;font-size:14.5px;color:#1A2E1F;cursor:pointer">{{ ex.text }}</button>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isInsights }}" hint-placeholder-val="{{ false }}">
+<div style="padding:56px 18px 170px">
+  <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:20px">
+    <span style="font-size:31px;font-weight:700;letter-spacing:-0.6px">Insights</span>
+    <span style="font-size:13.5px;color:rgba(26,46,31,0.55)">{{ windowLabel }}</span>
+  </div>
+
+  <!-- Averages 2x2 -->
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:20px;padding:16px;margin-bottom:14px">
+    <div style="font-size:12px;font-weight:600;letter-spacing:1.4px;color:#2E5A3B;margin-bottom:16px">DAILY AVERAGE</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px 16px">
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;gap:6px"><div style="width:4px;height:16px;border-radius:2px;background:#598F9C"></div><span style="font-size:13px;font-weight:700;color:rgba(26,46,31,0.6)">Calories</span></div>
+        <span style="font-size:24px;font-weight:700;letter-spacing:-0.4px">{{ avgKcal }}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;gap:6px"><div style="width:4px;height:16px;border-radius:2px;background:#B06E4D"></div><span style="font-size:13px;font-weight:700;color:rgba(26,46,31,0.6)">Protein</span></div>
+        <span style="font-size:24px;font-weight:700;letter-spacing:-0.4px">{{ avgP }}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;gap:6px"><div style="width:4px;height:16px;border-radius:2px;background:#D6BA82"></div><span style="font-size:13px;font-weight:700;color:rgba(26,46,31,0.6)">Carbs</span></div>
+        <span style="font-size:24px;font-weight:700;letter-spacing:-0.4px">{{ avgC }}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="display:flex;align-items:center;gap:6px"><div style="width:4px;height:16px;border-radius:2px;background:#9EB88A"></div><span style="font-size:13px;font-weight:700;color:rgba(26,46,31,0.6)">Fat</span></div>
+        <span style="font-size:24px;font-weight:700;letter-spacing:-0.4px">{{ avgF }}</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px;padding-top:14px;border-top:1px solid rgba(46,90,59,0.1)">
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:center;background:rgba(46,90,59,0.06);border-radius:12px;padding:10px 6px">
+        <span style="font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(26,46,31,0.5)">FIBER</span>
+        <span style="font-size:17px;font-weight:700">27 g</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:center;background:rgba(176,110,77,0.08);border-radius:12px;padding:10px 6px">
+        <span style="font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(26,46,31,0.5)">SODIUM</span>
+        <span style="font-size:17px;font-weight:700">1,980 mg</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:center;background:rgba(89,143,156,0.1);border-radius:12px;padding:10px 6px">
+        <span style="font-size:10px;font-weight:700;letter-spacing:1px;color:rgba(26,46,31,0.5)">SUGAR</span>
+        <span style="font-size:17px;font-weight:700">58 g</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calorie chart -->
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:20px;padding:16px;margin-bottom:14px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
+      <span style="font-size:12px;font-weight:600;letter-spacing:1.4px;color:#2E5A3B">CALORIES BY DAY</span>
+      
+    </div>
+    <div style="font-size:13px;font-weight:600;min-height:20px;margin-bottom:10px;color:rgba(26,46,31,0.38)">{{ barCalloutPre }}<span style="color:#598F9C">{{ barCalloutKcal }}</span></div>
+    <div style="display:flex;gap:8px">
+      <div style="width:38px;height:132px;position:relative;flex:none">
+        <span style="position:absolute;top:-6px;right:6px;font-size:10px;color:rgba(26,46,31,0.42)">2,600</span>
+        <span style="position:absolute;top:39px;right:6px;font-size:10px;color:rgba(26,46,31,0.42)">1,950</span>
+        <span style="position:absolute;top:84px;right:6px;font-size:10px;color:rgba(26,46,31,0.42)">1,300</span>
+        <span style="position:absolute;bottom:-5px;right:6px;font-size:10px;color:rgba(26,46,31,0.42)">0</span>
+      </div>
+      <div style="flex:1;position:relative;height:132px">
+        <div style="position:absolute;left:0;right:0;top:0;height:1px;background:rgba(46,90,59,0.1)"></div>
+        <div style="position:absolute;left:0;right:0;top:45px;height:1px;background:rgba(46,90,59,0.1)"></div>
+        <div style="position:absolute;left:0;right:0;top:90px;height:1px;background:rgba(46,90,59,0.1)"></div>
+        <div style="position:absolute;left:0;right:0;bottom:0;height:1px;background:rgba(46,90,59,0.22)"></div>
+        <div style="position:absolute;inset:0;display:flex;align-items:flex-end;gap:7px">
+          <sc-for list="{{ bars }}" as="bar" hint-placeholder-count="7">
+            <button onClick="{{ bar.select }}" style="{{ bar.wrapStyle }}">
+              <div style="{{ bar.style }}"></div>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:7px;padding-left:46px;padding-top:7px">
+      <sc-for list="{{ bars }}" as="bar" hint-placeholder-count="7">
+        <span style="{{ bar.labelStyle }}">{{ bar.day }}</span>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- Weight from Apple Health -->
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:20px;padding:16px;margin-bottom:14px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px">
+      <span style="font-size:12px;font-weight:600;letter-spacing:1.4px;color:#2E5A3B">WEIGHT</span>
+      <span style="font-size:11.5px;color:rgba(26,46,31,0.4)">lbs</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:12px">
+      <span style="font-size:26px;font-weight:700;letter-spacing:-0.5px">179.2</span>
+      <span style="font-size:13px;color:rgba(26,46,31,0.55)">today</span>
+      <span style="font-size:13px;font-weight:600;color:#2E5A3B;margin-left:4px">↓ 2.0 lbs this week</span>
+    </div>
+    <svg viewBox="0 0 280 72" style="width:100%;height:72px;overflow:visible">
+      <line x1="0" y1="72" x2="280" y2="72" stroke="rgba(46,90,59,0.1)" stroke-width="1"></line>
+      <polyline points="0,52 47,44 93,32 140,38 187,22 233,14 280,8" fill="none" stroke="#9EB88A" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline>
+      <circle cx="0" cy="52" r="3.5" fill="#9EB88A"></circle>
+      <circle cx="47" cy="44" r="3.5" fill="#9EB88A"></circle>
+      <circle cx="93" cy="32" r="3.5" fill="#9EB88A"></circle>
+      <circle cx="140" cy="38" r="3.5" fill="#9EB88A"></circle>
+      <circle cx="187" cy="22" r="3.5" fill="#9EB88A"></circle>
+      <circle cx="233" cy="14" r="3.5" fill="#9EB88A"></circle>
+      <circle cx="280" cy="8" r="4.5" fill="#2E5A3B"></circle>
+    </svg>
+    <div style="display:flex;justify-content:space-between;padding-top:6px">
+      <span style="font-size:10.5px;color:rgba(26,46,31,0.4)">Sat</span>
+      <span style="font-size:10.5px;color:rgba(26,46,31,0.4)">Sun</span>
+      <span style="font-size:10.5px;color:rgba(26,46,31,0.4)">Mon</span>
+      <span style="font-size:10.5px;color:rgba(26,46,31,0.4)">Tue</span>
+      <span style="font-size:10.5px;color:rgba(26,46,31,0.4)">Wed</span>
+      <span style="font-size:10.5px;color:rgba(26,46,31,0.4)">Thu</span>
+      <span style="font-size:10.5px;font-weight:700;color:#2E5A3B">Fri</span>
+    </div>
+  </div>
+
+  <!-- Per-day macro breakdown table (days as columns, P/C/F as rows) -->
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:20px;padding:16px;margin-bottom:14px">
+    <div style="font-size:12px;font-weight:600;letter-spacing:1.4px;color:#2E5A3B;margin-bottom:12px">MACROS BY DAY</div>
+    <div style="overflow-x:auto">
+      <div style="display:grid;grid-template-columns:18px repeat(7,1fr);min-width:260px;gap:0">
+        <div></div>
+        <sc-for list="{{ macroRows }}" as="row" hint-placeholder-count="7">
+          <div style="{{ row.headStyle }}">{{ row.day }}</div>
+        </sc-for>
+        <div style="font-size:10.5px;font-weight:700;color:#B06E4D;padding:7px 0;display:flex;align-items:center">P</div>
+        <sc-for list="{{ macroRows }}" as="row" hint-placeholder-count="7">
+          <div style="{{ row.pStyle }}">{{ row.p }}</div>
+        </sc-for>
+        <div style="font-size:10.5px;font-weight:700;color:#B08A3E;padding:7px 0;display:flex;align-items:center">C</div>
+        <sc-for list="{{ macroRows }}" as="row" hint-placeholder-count="7">
+          <div style="{{ row.cStyle }}">{{ row.c }}</div>
+        </sc-for>
+        <div style="font-size:10.5px;font-weight:700;color:#6E8C58;padding:7px 0;display:flex;align-items:center">F</div>
+        <sc-for list="{{ macroRows }}" as="row" hint-placeholder-count="7">
+          <div style="{{ row.fStyle }}">{{ row.f }}</div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <!-- Most-logged foods -->
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:20px;padding:16px;margin-bottom:14px">
+    <div style="font-size:12px;font-weight:600;letter-spacing:1.4px;color:#2E5A3B;margin-bottom:14px">MOST LOGGED THIS PERIOD</div>
+    <div style="display:flex;flex-direction:column;gap:0">
+      <sc-for list="{{ topFoods }}" as="food" hint-placeholder-count="5">
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(46,90,59,0.08)">
+          <span style="font-size:18px;width:28px;text-align:center">{{ food.emoji }}</span>
+          <span style="flex:1;font-size:14px;font-weight:500">{{ food.name }}</span>
+          <span style="font-size:13px;font-weight:600;color:rgba(26,46,31,0.5)">{{ food.count }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- Logging streak -->
+  
+
+  <!-- Goals / watching -->
+  <sc-if value="{{ goals }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:20px;padding:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <span style="font-size:12px;font-weight:700;letter-spacing:1.4px;color:#2E5A3B">WHAT YOU'RE WATCHING</span>
+        <button onClick="{{ hideGoals }}" style="background:none;border:none;font-family:inherit;font-size:13px;color:rgba(26,46,31,0.45);cursor:pointer;padding:0">Hide</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:500">Iron</span><span style="color:rgba(26,46,31,0.6)">14 mg avg · target 18 mg</span></div>
+          <div style="height:5px;border-radius:3px;background:rgba(46,90,59,0.12);overflow:hidden"><div style="width:78%;height:100%;background:#B06E4D"></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:500">Calcium</span><span style="color:rgba(26,46,31,0.6)">910 mg avg · target 1,000 mg</span></div>
+          <div style="height:5px;border-radius:3px;background:rgba(46,90,59,0.12);overflow:hidden"><div style="width:91%;height:100%;background:#598F9C"></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:500">Fiber</span><span style="color:rgba(26,46,31,0.6)">27 g avg · target 30 g</span></div>
+          <div style="height:5px;border-radius:3px;background:rgba(46,90,59,0.12);overflow:hidden"><div style="width:90%;height:100%;background:#9EB88A"></div></div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ noGoals }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed rgba(46,90,59,0.28);border-radius:20px;padding:16px;display:flex;align-items:center;gap:12px">
+      <span style="flex:1;font-size:13.5px;line-height:1.45;color:rgba(26,46,31,0.6)">Goals are disabled.</span>
+      <button onClick="{{ showGoalsBtn }}" style="background:none;border:none;font-family:inherit;font-size:13.5px;font-weight:600;color:#2E5A3B;cursor:pointer;padding:0">Turn on</button>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isHowItWorks }}" hint-placeholder-val="{{ false }}">
+<div style="padding:56px 18px 120px">
+  <button onClick="{{ goYou }}" style="background:none;border:none;font-family:inherit;font-size:15px;color:#2E5A3B;padding:0 0 18px;cursor:pointer">‹ You</button>
+  <div style="font-size:28px;font-weight:700;letter-spacing:-0.5px;margin-bottom:6px">How it works</div>
+  
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;padding:16px;display:flex;gap:13px">
+      <div style="width:36px;height:36px;border-radius:18px;background:rgba(46,90,59,0.1);display:flex;align-items:center;justify-content:center;flex:none;font-size:17px">✍️</div>
+      <div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:15px;font-weight:600">You describe the meal</span><span style="font-size:13.5px;line-height:1.5;color:rgba(26,46,31,0.62)">Write it as you'd say it out loud — "big bowl of oatmeal with peanut butter and a banana." No special format required.</span></div>
+    </div>
+    <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;padding:16px;display:flex;gap:13px">
+      <div style="width:36px;height:36px;border-radius:18px;background:rgba(46,90,59,0.1);display:flex;align-items:center;justify-content:center;flex:none;font-size:17px">🤖</div>
+      <div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:15px;font-weight:600">A model estimates the nutrition</span><span style="font-size:13.5px;line-height:1.5;color:rgba(26,46,31,0.62)">Dayplate sends your description to an AI model trained on nutrition databases and portion research. It identifies each food, infers a likely portion, and returns the macros and micros.</span></div>
+    </div>
+    <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;padding:16px;display:flex;gap:13px">
+      <div style="width:36px;height:36px;border-radius:18px;background:rgba(46,90,59,0.1);display:flex;align-items:center;justify-content:center;flex:none;font-size:17px">✏️</div>
+      <div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:15px;font-weight:600">You review and correct</span><span style="font-size:13.5px;line-height:1.5;color:rgba(26,46,31,0.62)">Before saving, you see every food item and its estimated portion. Tap the edit button on any line to re-describe it — the model re-estimates that item instantly.</span></div>
+    </div>
+    <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;padding:16px;display:flex;gap:13px">
+      <div style="width:36px;height:36px;border-radius:18px;background:rgba(46,90,59,0.1);display:flex;align-items:center;justify-content:center;flex:none;font-size:17px">📸</div>
+      <div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:15px;font-weight:600">Photos and voice add context</span><span style="font-size:13.5px;line-height:1.5;color:rgba(26,46,31,0.62)">A photo of your plate, the packaging, or a nutrition label gives the model more to work with. Voice input is transcribed and treated as text. Either can be used alone or alongside a written description.</span></div>
+    </div>
+    <div style="background:rgba(214,186,130,0.2);border:1px solid rgba(214,186,130,0.4);border-radius:18px;padding:14px 16px">
+      <span style="font-size:13px;line-height:1.55;color:rgba(26,46,31,0.7)"><strong>On accuracy:</strong> Estimates vary — restaurant portions, home cooking, and packaging all introduce uncertainty. Dayplate shows you what it assumed so you can correct anything that's off. Over time, your corrections make the log more useful.</span>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isDataHandled }}" hint-placeholder-val="{{ false }}">
+<div style="padding:56px 18px 120px">
+  <button onClick="{{ goYou }}" style="background:none;border:none;font-family:inherit;font-size:15px;color:#2E5A3B;padding:0 0 18px;cursor:pointer">‹ You</button>
+  <div style="font-size:28px;font-weight:700;letter-spacing:-0.5px;margin-bottom:6px">How your data is handled</div>
+  <div style="font-size:14.5px;line-height:1.55;color:rgba(26,46,31,0.6);margin-bottom:22px">Plain language, no hidden tracking.</div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;padding:16px;display:flex;gap:13px">
+      <div style="width:36px;height:36px;border-radius:18px;background:rgba(46,90,59,0.1);display:flex;align-items:center;justify-content:center;flex:none;font-size:17px">☁️</div>
+      <div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:15px;font-weight:600">Meal descriptions leave your device</span><span style="font-size:13.5px;line-height:1.5;color:rgba(26,46,31,0.62)">When you log a meal, the text you wrote is sent to an AI model to estimate nutrition. This is the only time your description leaves your device. The text is not stored by the model provider after processing.</span></div>
+    </div>
+    <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;padding:16px;display:flex;gap:13px">
+      <div style="width:36px;height:36px;border-radius:18px;background:rgba(46,90,59,0.1);display:flex;align-items:center;justify-content:center;flex:none;font-size:17px">📸</div>
+      <div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:15px;font-weight:600">Photos are not stored</span><span style="font-size:13.5px;line-height:1.5;color:rgba(26,46,31,0.62)">A photo you take is sent to the model for the single purpose of identifying the food. It is not saved anywhere — not on our servers, not in your log.</span></div>
+    </div>
+    <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;padding:16px;display:flex;gap:13px">
+      <div style="width:36px;height:36px;border-radius:18px;background:rgba(46,90,59,0.1);display:flex;align-items:center;justify-content:center;flex:none;font-size:17px">📱</div>
+      <div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:15px;font-weight:600">Your log lives on your device</span><span style="font-size:13.5px;line-height:1.5;color:rgba(26,46,31,0.62)">All saved meals are stored locally and optionally synced to your private iCloud. Dayplate has no server-side meal database for your account.</span></div>
+    </div>
+    <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;padding:16px;display:flex;gap:13px">
+      <div style="width:36px;height:36px;border-radius:18px;background:rgba(46,90,59,0.1);display:flex;align-items:center;justify-content:center;flex:none;font-size:17px">🚫</div>
+      <div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:15px;font-weight:600">No selling, no ads</span><span style="font-size:13.5px;line-height:1.5;color:rgba(26,46,31,0.62)">Dayplate does not sell your data, does not run ads, and does not share your meal history with third parties. The app is supported by a direct purchase or subscription — your data is not the product.</span></div>
+    </div>
+    <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;padding:16px;display:flex;gap:13px">
+      <div style="width:36px;height:36px;border-radius:18px;background:rgba(46,90,59,0.1);display:flex;align-items:center;justify-content:center;flex:none;font-size:17px">🗑️</div>
+      <div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:15px;font-weight:600">You control deletion</span><span style="font-size:13.5px;line-height:1.5;color:rgba(26,46,31,0.62)">You can export your full history as CSV or JSON, or delete all data from Settings → Account at any time. Deletion is permanent and immediate.</span></div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isYou }}" hint-placeholder-val="{{ false }}">
+<div style="padding:56px 18px 170px">
+  <sc-if value="{{ fromProfile }}" hint-placeholder-val="{{ false }}">
+    
+  </sc-if>
+  <button onClick="{{ goToday }}" style="background:none;border:none;font-family:inherit;font-size:15px;color:#2E5A3B;padding:0 0 14px;cursor:pointer"><b style="font-weight: 700; font-size: 18px">‹</b>&nbsp;</button><div style="display:flex;align-items:center;gap:14px;margin-bottom:24px">
+    <div style="position:relative;width:58px;height:58px;flex:none">
+      <div style="width:58px;height:58px;border-radius:29px;background:#DEEBD6;border:1px solid rgba(46,90,59,0.18);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:#2E5A3B">JR</div>
+      <button style="position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;border-radius:11px;background:#2E5A3B;border:2px solid #F6F1E3;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">
+        <svg width="10" height="10" viewBox="0 0 10 10"><path d="M7.2 1.2 L8.8 2.8 L3 8.6 L1 9 L1.4 7 Z" fill="white"></path><path d="M6 2.4 L7.6 4" stroke="white" stroke-width="0.8" fill="none"></path></svg>
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:3px">
+      <span style="font-size:22px;font-weight:700;letter-spacing:-0.3px">Jordan Reyes</span>
+      <span style="font-size:13.5px;color:rgba(26,46,31,0.55)">Logging since March 2026</span>
+    </div>
+  </div>
+
+  <div style="font-size:12px;font-weight:600;letter-spacing:1.4px;color:#2E5A3B;margin-bottom:10px">NUTRITION</div>
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;padding:4px 14px;margin-bottom:22px">
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(46,90,59,0.08)">
+      <span style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:15.5px;font-weight:500">Show goals &amp; targets</span><span style="font-size:12.5px;color:rgba(26,46,31,0.55)">Turn off to remove targets everywhere</span></span>
+      <button onClick="{{ toggleGoals }}" style="{{ goalSwitch }}"><div style="{{ goalKnob }}"></div></button>
+    </div>
+    <sc-if value="{{ goals }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(46,90,59,0.08)"><span style="flex:1;font-size:15.5px">Calorie target</span><span style="font-size:14.5px;color:rgba(26,46,31,0.5)">Off ›</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(46,90,59,0.08)"><span style="flex:1;font-size:15.5px">Macro targets</span><span style="font-size:14.5px;color:rgba(26,46,31,0.5)">Protein 120 g ›</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:13px 0"><span style="flex:1;font-size:15.5px">Micronutrients to watch</span><span style="font-size:14.5px;color:rgba(26,46,31,0.5)">Iron, calcium ›</span></div>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="font-size:12px;font-weight:600;letter-spacing:1.4px;color:#2E5A3B;margin-bottom:10px">LOGGING</div>
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;padding:4px 14px;margin-bottom:22px">
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(46,90,59,0.08)"><span style="flex:1;font-size:15.5px">Units</span><span style="font-size:14.5px;color:rgba(26,46,31,0.5)">U.S. ›</span></div>
+    
+    <button onClick="{{ toggleWindow }}" style="width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(46,90,59,0.08);padding:13px 0;font-family:inherit;color:inherit;cursor:pointer;display:flex;align-items:center;gap:12px">
+      <span style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:15.5px;font-weight:500">Insights period</span><span style="font-size:12.5px;color:rgba(26,46,31,0.55)">How averages and the chart are grouped</span></span>
+      <span style="font-size:14.5px;color:rgba(26,46,31,0.5)">{{ windowSetting }} ›</span>
+    </button>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(46,90,59,0.08)">
+      <span style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-size:15.5px;font-weight:500">Water logging</span><span style="font-size:12.5px;color:rgba(26,46,31,0.55)">Adds a quick-add button to Today</span></span>
+      <button onClick="{{ toggleWater }}" style="{{ waterSwitch }}"><div style="{{ waterKnob }}"></div></button>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(46,90,59,0.08)"><span style="flex:1;font-size:15.5px">Appearance</span><span style="font-size:14.5px;color:rgba(26,46,31,0.5)">System ›</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0"><span style="flex:1;font-size:15.5px">Language</span><span style="font-size:14.5px;color:rgba(26,46,31,0.5)">English ›</span></div>
+  </div>
+
+  <div style="font-size:12px;font-weight:600;letter-spacing:1.4px;color:#2E5A3B;margin-bottom:10px">DATA</div>
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;padding:4px 14px;margin-bottom:22px">
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(46,90,59,0.08)"><span style="flex:1;font-size:15.5px">Apple Health</span><span style="font-size:14.5px;color:rgba(26,46,31,0.5)">Connected ›</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(46,90,59,0.08)"><span style="flex:1;font-size:15.5px">Strava</span><span style="font-size:14.5px;color:rgba(26,46,31,0.5)">Not connected ›</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(46,90,59,0.08)"><span style="flex:1;font-size:15.5px">Export your data</span><span style="font-size:14.5px;color:rgba(26,46,31,0.5)">CSV, JSON ›</span></div>
+    <button onClick="{{ goHowItWorks }}" style="width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(46,90,59,0.08);padding:13px 0;font-family:inherit;color:inherit;cursor:pointer;display:flex;align-items:center;gap:12px"><span style="flex:1;font-size:15.5px">How it works</span><span style="font-size:14.5px;color:rgba(26,46,31,0.5)">›</span></button>
+    <button onClick="{{ goDataHandled }}" style="width:100%;text-align:left;background:none;border:none;padding:13px 0;font-family:inherit;color:inherit;cursor:pointer;display:flex;align-items:center;gap:12px"><span style="flex:1;font-size:15.5px">How your meal data is handled</span><span style="font-size:14.5px;color:rgba(26,46,31,0.5)">›</span></button>
+  </div>
+
+  <div style="font-size:12px;font-weight:600;letter-spacing:1.4px;color:#2E5A3B;margin-bottom:10px">ACCOUNT</div>
+  <div style="background:#FFFCF5;border:1px solid rgba(46,90,59,0.12);border-radius:18px;padding:4px 14px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(46,90,59,0.08)"><span style="flex:1;font-size:15.5px">Name &amp; photo</span><span style="font-size:14.5px;color:rgba(26,46,31,0.5)">Jordan Reyes ›</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(46,90,59,0.08)"><span style="flex:1;font-size:15.5px">iCloud sync</span><span style="font-size:14.5px;color:rgba(26,46,31,0.5)">On ›</span></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 0"><span style="flex:1;font-size:15.5px;color:#B06E4D">Delete all data</span></div>
+  </div>
+  <div style="font-size:12px;color:rgba(26,46,31,0.4);text-align:center">Nutrition data v2026.7 · Dayplate 1.0</div>
+</div>
+</sc-if>
+
+</div>
+
+<sc-if value="{{ showFab }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;left:0;right:0;bottom:110px;display:flex;justify-content:center;gap:10px;pointer-events:none">
+  <sc-if value="{{ water }}" hint-placeholder-val="{{ false }}">
+    <button onClick="{{ logWater }}" style="pointer-events:auto;width:48px;height:48px;border-radius:24px;border:none;background:#598F9C;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(89,143,156,0.4)" aria-label="Log water">
+      <svg width="18" height="22" viewBox="0 0 18 22"><path d="M9 1 C9 1 2 9.5 2 14.5 a7 7 0 0 0 14 0 C16 9.5 9 1 9 1 Z" fill="white" opacity="0.95"></path></svg>
+    </button>
+  </sc-if>
+  <button onClick="{{ goLog }}" style="pointer-events:auto;height:52px;padding:0 26px;border-radius:26px;border:none;background:#2E5A3B;color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(26,46,31,0.25)">＋ Log meal</button>
+</div>
+</sc-if>
+
+<div style="position:absolute;left:0;right:0;bottom:0;background:rgba(246,241,227,0.94);backdrop-filter:blur(12px);border-top:1px solid rgba(46,90,59,0.13);padding:9px 10px 30px;display:flex">
+  <button onClick="{{ tabToday }}" style="{{ tabTodayStyle }}">
+    <svg width="21" height="21" viewBox="0 0 21 21"><circle cx="10.5" cy="10.5" r="4.6" fill="currentColor"></circle><circle cx="10.5" cy="10.5" r="8.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2.2 3.4"></circle></svg>
+    <span style="font-size:10.5px;font-weight:500">Today</span>
+  </button>
+  <button onClick="{{ tabHistory }}" style="{{ tabHistoryStyle }}">
+    <svg width="21" height="21" viewBox="0 0 21 21"><rect x="2.2" y="3.8" width="16.6" height="14.4" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"></rect><rect x="2.2" y="7.6" width="16.6" height="1.6" fill="currentColor"></rect><rect x="6.4" y="11.4" width="3.2" height="3.2" rx="0.8" fill="currentColor"></rect></svg>
+    <span style="font-size:10.5px;font-weight:500">History</span>
+  </button>
+  <button onClick="{{ tabInsights }}" style="{{ tabInsightsStyle }}">
+    <svg width="21" height="21" viewBox="0 0 21 21"><rect x="2.4" y="11" width="3.6" height="7.6" rx="1.2" fill="currentColor"></rect><rect x="8.7" y="6.4" width="3.6" height="12.2" rx="1.2" fill="currentColor"></rect><rect x="15" y="2.4" width="3.6" height="16.2" rx="1.2" fill="currentColor"></rect></svg>
+    <span style="font-size:10.5px;font-weight:500">Insights</span>
+  </button>
+  <button onClick="{{ tabYou }}" style="{{ tabYouStyle }}">
+    <svg width="21" height="21" viewBox="0 0 21 21"><circle cx="10.5" cy="7.3" r="3.9" fill="none" stroke="currentColor" stroke-width="1.6"></circle><path d="M3.4 19c0-3.9 3.2-6.2 7.1-6.2s7.1 2.3 7.1 6.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>
+    <span style="font-size:10.5px;font-weight:500">You</span>
+  </button>
+</div>
+
+</div>
+</x-import></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:482,&quot;height&quot;:954},&quot;showGoals&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Optional UI&quot;},&quot;showWater&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Optional UI&quot;}}">
+const MEALS = [
+  { time: '7:20 AM', emoji: '☕', title: 'Coffee & yogurt bowl', kcal: 410, p: 28, c: 44, f: 12,
+    items: [ {name:'Greek yogurt, 2%', portion:'6 oz'}, {name:'Blueberries', portion:'2.6 oz'}, {name:'Granola', portion:'1.4 oz'}, {name:'Oat latte', portion:'12 oz'} ],
+    note: 'Assumed plain yogurt and no added honey. Latte estimated with oat milk.' },
+  { time: '10:05 AM', emoji: '🍌', title: 'Banana and almonds', kcal: 265, p: 7, c: 29, f: 15,
+    items: [ {name:'Banana, medium', portion:'4.2 oz'}, {name:'Almonds, raw', portion:'1 oz'} ],
+    note: 'Portion estimated from a typical handful.' },
+  { time: '12:45 PM', emoji: '🥗', title: 'Chicken burrito bowl', kcal: 720, p: 46, c: 71, f: 27,
+    items: [ {name:'Grilled chicken', portion:'5 oz'}, {name:'White rice', portion:'6 oz'}, {name:'Black beans', portion:'3 oz'}, {name:'Pico de gallo', portion:'2 oz'}, {name:'Guacamole', portion:'2 oz'} ],
+    note: 'Assumed a restaurant-sized bowl with oil in the pan.' },
+  { time: '7:10 PM', emoji: '🍜', title: 'Miso salmon with rice', kcal: 640, p: 42, c: 58, f: 24,
+    items: [ {name:'Salmon fillet', portion:'6 oz'}, {name:'Short-grain rice', portion:'5.5 oz'}, {name:'Bok choy, sautéed', portion:'3.5 oz'}, {name:'Miso glaze', portion:'1 oz'} ],
+    note: 'Glaze estimated at one tablespoon of miso with mirin.' }
+];
+
+const RECENTS = [
+  { emoji: '🥗', title: 'Chicken burrito bowl', meta: '720 kcal · yesterday, 1:05 PM' },
+  { emoji: '☕', title: 'Coffee & yogurt bowl', meta: '410 kcal · this morning' },
+  { emoji: '🍜', title: 'Miso salmon with rice', meta: '640 kcal · Tue, Aug 18' },
+  { emoji: '🥪', title: 'Turkey sandwich, chips', meta: '580 kcal · Mon, Aug 17' }
+];
+
+const HISTORY_ALL = [
+  { num: 21, label: 'Friday, Aug. 21', kcal: '2,035 kcal', p: '123 g protein', c: '202 g carbs', f: '78 g fat',
+    meals: [ {time:'7:20 AM', emoji:'☕', title:'Coffee & yogurt bowl', kcal:'410 kcal'}, {time:'10:05 AM', emoji:'🍌', title:'Banana and almonds', kcal:'265 kcal'}, {time:'12:45 PM', emoji:'🥗', title:'Chicken burrito bowl', kcal:'720 kcal'}, {time:'7:10 PM', emoji:'🍜', title:'Miso salmon with rice', kcal:'640 kcal'} ] },
+  { num: 20, label: 'Thursday, Aug. 20', kcal: '2,480 kcal', p: '118 g protein', c: '347 g carbs', f: '72 g fat',
+    meals: [ {time:'7:40 AM', emoji:'🍳', title:'Eggs and toast', kcal:'430 kcal'}, {time:'12:20 PM', emoji:'🥪', title:'Turkey sandwich, chips', kcal:'580 kcal'}, {time:'4:15 PM', emoji:'🍪', title:'Two oatmeal cookies', kcal:'290 kcal'}, {time:'7:50 PM', emoji:'🍝', title:'Pasta with sausage ragu', kcal:'1,180 kcal'} ] },
+  { num: 19, label: 'Wednesday, Aug. 19', kcal: '1,940 kcal', p: '96 g protein', c: '214 g carbs', f: '61 g fat',
+    meals: [ {time:'8:05 AM', emoji:'☕', title:'Latte and a banana', kcal:'240 kcal'}, {time:'1:00 PM', emoji:'🥗', title:'Big salad with tuna', kcal:'610 kcal'}, {time:'8:20 PM', emoji:'🌮', title:'Three street tacos', kcal:'1,090 kcal'} ] },
+  { num: 18, label: 'Tuesday, Aug. 18', kcal: '2,260 kcal', p: '131 g protein', c: '236 g carbs', f: '78 g fat',
+    meals: [ {time:'7:15 AM', emoji:'🥣', title:'Oatmeal with peanut butter', kcal:'480 kcal'}, {time:'12:40 PM', emoji:'🍲', title:'Chicken pho', kcal:'640 kcal'}, {time:'6:55 PM', emoji:'🍜', title:'Miso salmon with rice', kcal:'640 kcal'}, {time:'9:30 PM', emoji:'🍦', title:'Vanilla ice cream', kcal:'500 kcal'} ] },
+  { num: 17, label: 'Monday, Aug. 17', kcal: '2,260 kcal', p: '121 g protein', c: '264 g carbs', f: '71 g fat',
+    meals: [ {time:'8:00 AM', emoji:'🥐', title:'Croissant and coffee', kcal:'380 kcal'}, {time:'1:10 PM', emoji:'🥪', title:'Turkey sandwich, chips', kcal:'580 kcal'}, {time:'7:30 PM', emoji:'🍔', title:'Burger and fries', kcal:'1,300 kcal'} ] },
+  { num: 16, label: 'Sunday, Aug. 16', kcal: '1,940 kcal', p: '88 g protein', c: '219 g carbs', f: '74 g fat',
+    meals: [ {time:'10:30 AM', emoji:'🥞', title:'Pancakes and fruit', kcal:'690 kcal'}, {time:'3:00 PM', emoji:'🫐', title:'Smoothie bowl', kcal:'450 kcal'}, {time:'7:00 PM', emoji:'🍕', title:'Two slices pizza', kcal:'800 kcal'} ] },
+  { num: 15, label: 'Saturday, Aug. 15', kcal: '2,180 kcal', p: '104 g protein', c: '251 g carbs', f: '69 g fat',
+    meals: [ {time:'9:00 AM', emoji:'🍳', title:'Eggs, avocado toast', kcal:'520 kcal'}, {time:'1:30 PM', emoji:'🌮', title:'Chicken tacos', kcal:'780 kcal'}, {time:'7:45 PM', emoji:'🥩', title:'Steak and roasted veg', kcal:'880 kcal'} ] },
+];
+
+const WEEK = [
+  { dow: 'S', num: '15' }, { dow: 'S', num: '16' }, { dow: 'M', num: '17' }, { dow: 'T', num: '18' },
+  { dow: 'W', num: '19' }, { dow: 'T', num: '20' }, { dow: 'F', num: '21' }
+];
+
+
+
+const SERIES = {
+  rolling: {
+    bars: [['Sat', 2180, 'Sat, Aug 16'], ['Sun', 1940, 'Sun, Aug 16'], ['Mon', 2260, 'Mon, Aug 17'], ['Tue', 2260, 'Tue, Aug 18'], ['Wed', 1940, 'Wed, Aug 19'], ['Thu', 2480, 'Thu, Aug 20'], ['Fri', 2035, 'Fri, Aug 21']],
+    avg: ['2,156 kcal', '116 g', '276 g', '71 g'], range: 'Aug 15 – 21', label: 'Rolling 7 day period · Aug 15 – 21'
+  },
+  week: {
+    bars: [['Mon', 2260, 'Mon, Aug 17'], ['Tue', 2260, 'Tue, Aug 18'], ['Wed', 1940, 'Wed, Aug 19'], ['Thu', 2480, 'Thu, Aug 20'], ['Fri', 2035, 'Fri, Aug 21'], ['Sat', null, 'Sat, Aug 22'], ['Sun', null, 'Sun, Aug 23']],
+    avg: ['2,195 kcal', '122 g', '292 g', '73 g'], range: 'Mon – Sun', label: 'This week · Mon – Sun'
+  }
+};
+
+class Component extends DCLogic {
+  state = {
+    screen: 'today',
+    fromProfile: false,
+    goals: this.props.showGoals ?? true,
+    water: this.props.showWater ?? false,
+    nutrientsOpen: false,
+    mealIndex: 0,
+    logText: '',
+    recording: false,
+    analyzing: false,
+    reviewFoods: ['Grilled salmon fillet · 6 oz', 'Short-grain rice · 5.5 oz', 'Bok choy, sautéed · 3.5 oz'],
+    reviewTitle: 'Miso salmon with rice',
+    editIndex: null,
+    editText: '',
+    camStage: 'shoot',
+    camFoods: ['Grilled salmon fillet', 'Steamed white rice', 'Bok choy', 'Ceramic plate'],
+    adding: false,
+    camAdd: '',
+    window: 'rolling',
+    barIndex: null,
+    day: '21',
+    openDay: null,
+    selDayOpen: false,
+    query: '',
+    answer: null
+  };
+
+  go = (screen) => this.setState({ screen, fromProfile: false });
+
+  titleFrom(text) {
+    const t = text.trim();
+    if (!t) return 'Miso salmon with rice';
+    const words = t.split(/\s+/).slice(0, 5).join(' ');
+    return words.charAt(0).toUpperCase() + words.slice(1);
+  }
+
+  analyze = () => {
+    this.setState({ analyzing: true });
+    setTimeout(() => this.setState({
+      analyzing: false,
+      screen: 'review',
+      reviewTitle: this.state.camStage === 'found' ? 'Salmon, rice and bok choy' : this.titleFrom(this.state.logText),
+      reviewFoods: this.state.camStage === 'found'
+        ? this.state.camFoods.map(f => f + ' · est. portion')
+        : this.state.reviewFoods
+    }), 1300);
+  };
+
+  shoot = () => {
+    this.setState({ camStage: 'thinking' });
+    setTimeout(() => this.setState({ camStage: 'found' }), 1200);
+  };
+
+  tabStyle(active) {
+    return {
+      flex: 1, minHeight: 48, display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer',
+      fontFamily: 'inherit', color: active ? '#2E5A3B' : 'rgba(26,46,31,0.5)'
+    };
+  }
+
+  switchStyle(on) {
+    return { width: 48, height: 29, borderRadius: 15, border: 'none', cursor: 'pointer', padding: 2,
+      background: on ? '#2E5A3B' : 'rgba(26,46,31,0.18)', display: 'flex',
+      justifyContent: on ? 'flex-end' : 'flex-start', alignItems: 'center', transition: 'background .18s' };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const screen = s.screen;
+    const barMax = 2600;
+    const series = SERIES[s.window];
+    const meal = MEALS[s.mealIndex];
+    const dayEntry = HISTORY_ALL.find(d => d.num === parseInt(s.day)) || HISTORY_ALL[0];
+    const daySum = [dayEntry.label + (s.day === '21' ? ' (today)' : ''), dayEntry.kcal, dayEntry.p, dayEntry.c, dayEntry.f];
+    const picked = s.barIndex !== null ? series.bars[s.barIndex] : null;
+
+    return {
+      isToday: screen === 'today', isMeal: screen === 'meal', isLog: screen === 'log',
+      isCamera: screen === 'camera', isReview: screen === 'review', isHistory: screen === 'history',
+      isSearch: screen === 'search', isInsights: screen === 'insights', isYou: screen === 'you',
+      isHowItWorks: screen === 'howItWorks', isDataHandled: screen === 'dataHandled',
+      showFab: screen === 'today',
+      fromProfile: s.fromProfile,
+      goals: s.goals, noGoals: !s.goals, water: s.water,
+      nutrientsOpen: s.nutrientsOpen, nutrientChevron: s.nutrientsOpen ? '▲' : '▼',
+      toggleNutrients: () => this.setState({ nutrientsOpen: !s.nutrientsOpen }),
+      toggleGoals: () => this.setState({ goals: !s.goals }),
+      toggleWater: () => this.setState({ water: !s.water }),
+      hideGoals: () => this.setState({ goals: false }),
+      showGoalsBtn: () => this.setState({ goals: true }),
+      goalSwitch: this.switchStyle(s.goals),
+      goalKnob: { width: 25, height: 25, borderRadius: 13, background: '#fff' },
+      waterSwitch: this.switchStyle(s.water),
+      waterKnob: { width: 25, height: 25, borderRadius: 13, background: '#fff' },
+
+      entryCountLabel: s.water ? '4 meals · 3 waters' : '4 meals',
+      allEntries: (() => {
+        const dot = (color) => ({ position: 'absolute', left: -20, top: 14, width: 11, height: 11, borderRadius: 6, background: color, border: '3px solid #F6F1E3' });
+        const timeParts = (t) => { const p = t.split(' '); return { timeLine1: p[0], timeLine2: p[1] || '' }; };
+        const meals = MEALS.map((m, i) => ({ ...timeParts(m.time), time: m.time, emoji: m.emoji, title: m.title, kcal: m.kcal + ' kcal', p: m.p + 'p', c: m.c + 'c', f: m.f + 'f', isMeal: true, isWater: false, dotStyle: dot('#2E5A3B'), open: () => this.setState({ screen: 'meal', mealIndex: i, fromProfile: false }) }));
+        const waters = s.water ? [
+          { time: '8:45 AM', waterLabel: '16 oz water', isMeal: false, isWater: true, dotStyle: dot('#598F9C'), ...{ timeLine1: '8:45', timeLine2: 'AM' } },
+          { time: '1:30 PM', waterLabel: '12 oz water', isMeal: false, isWater: true, dotStyle: dot('#598F9C'), ...{ timeLine1: '1:30', timeLine2: 'PM' } },
+          { time: '5:15 PM', waterLabel: '16 oz water', isMeal: false, isWater: true, dotStyle: dot('#598F9C'), ...{ timeLine1: '5:15', timeLine2: 'PM' } },
+        ] : [];
+        const all = [...meals, ...waters];
+        const toMin = (t) => { const [hm, ap] = t.split(' '); const [h, m] = hm.split(':').map(Number); return (ap === 'PM' && h !== 12 ? h + 12 : (ap === 'AM' && h === 12 ? 0 : h)) * 60 + m; };
+        return all.sort((a, b) => toMin(a.time) - toMin(b.time));
+      })(),
+      logWater: () => {},
+
+      mealTimeLabel: 'FRI, AUG 21 · ' + meal.time,
+      mealEmoji: meal.emoji, mealTitle: meal.title,
+      mealKcal: meal.kcal + ' kcal',
+      mealP: meal.p + ' g', mealC: meal.c + ' g', mealF: meal.f + ' g',
+      mealItems: meal.items, mealNote: meal.note,
+
+      logText: s.logText,
+      onLogText: (e) => this.setState({ logText: e.target.value }),
+      recording: s.recording,
+      toggleMic: () => this.setState({ recording: !s.recording }),
+      micStyle: { width: 38, height: 38, borderRadius: 19, border: 'none', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: s.recording ? '#B06E4D' : '#2E5A3B' },
+      analyze: this.analyze,
+      analyzeLabel: s.analyzing ? 'Working on it…' : 'Estimate this meal',
+      analyzeStyle: { width: '100%', height: 54, borderRadius: 27, border: 'none',
+        background: s.analyzing ? 'rgba(46,90,59,0.55)' : '#2E5A3B', color: '#fff',
+        fontFamily: 'inherit', fontSize: 17, fontWeight: 600, cursor: 'pointer' },
+      recents: RECENTS.map(r => ({ ...r, use: () => this.setState({ screen: 'today' }) })),
+
+      camShoot: s.camStage === 'shoot', camThinking: s.camStage === 'thinking', camFound: s.camStage === 'found',
+      shoot: this.shoot,
+      camFoods: s.camFoods.map((name, i) => ({ name, remove: () => this.setState({ camFoods: s.camFoods.filter((_, j) => j !== i) }) })),
+      adding: s.adding, notAdding: !s.adding,
+      startAdd: () => this.setState({ adding: true }),
+      camAdd: s.camAdd,
+      onCamAdd: (e) => this.setState({ camAdd: e.target.value }),
+      commitAdd: () => this.setState({
+        camFoods: s.camAdd.trim() ? [...s.camFoods, s.camAdd.trim()] : s.camFoods,
+        camAdd: '', adding: false
+      }),
+
+      reviewTitle: s.reviewTitle,
+      reviewFoods: s.reviewFoods.map((label, i) => ({
+        label, edit: () => this.setState({ editIndex: i, editText: label })
+      })),
+      editing: s.editIndex !== null, editText: s.editText,
+      onEditText: (e) => this.setState({ editText: e.target.value }),
+      commitEdit: () => this.setState({
+        reviewFoods: s.reviewFoods.map((f, i) => i === s.editIndex ? s.editText : f),
+        editIndex: null, editText: ''
+      }),
+      save: () => this.setState({ screen: 'today', logText: '', camStage: 'shoot' }),
+
+      // macro arrows: today vs yesterday (Aug 20: p118 c347 f72)
+      arrowP: { icon: '↑', style: { fontSize: 11, fontWeight: 700, color: '#2E5A3B' } },
+      arrowC: { icon: '↓', style: { fontSize: 11, fontWeight: 700, color: '#B06E4D' } },
+      arrowF: { icon: '↑', style: { fontSize: 11, fontWeight: 700, color: '#2E5A3B' } },
+
+      weekDays: WEEK.map(d => ({
+        dow: d.dow, num: d.num,
+        select: () => this.setState({ day: d.num, selDayOpen: false, openDay: null }),
+        style: { flex: 1, minWidth: 0, height: 52, borderRadius: 14, cursor: 'pointer',
+          fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: 'center', gap: 2,
+          border: d.num === s.day ? 'none' : '1px solid rgba(46,90,59,0.14)',
+          background: d.num === s.day ? '#2E5A3B' : 'transparent',
+          color: d.num === s.day ? '#FFFCF5' : '#1A2E1F' }
+      })),
+      prevWeek: () => this.setState({ day: '15', selDayOpen: false, openDay: null }),
+      nextWeek: () => this.setState({ day: '21', selDayOpen: false, openDay: null }),
+      selectedDayLabel: daySum[0], selDayKcal: daySum[1],
+      selDayOpen: s.selDayOpen,
+      selDayChevron: s.selDayOpen ? '▲' : '▼',
+      toggleSelDay: () => this.setState({ selDayOpen: !s.selDayOpen }),
+      selDayP: daySum[2].replace(' g protein', 'p'),
+      selDayC: daySum[3].replace(' g carbs', 'c'),
+      selDayF: daySum[4].replace(' g fat', 'f'),
+      selDayMeals: (HISTORY_ALL.find(d => d.num === parseInt(s.day)) || HISTORY_ALL[0]).meals,
+      earlierLabel: parseInt(s.day) > 15 ? 'EARLIER' : 'NO EARLIER DAYS',
+      historyDays: HISTORY_ALL.filter(d => d.num < parseInt(s.day)).slice(0, 4).map((d, i) => ({
+        label: d.label, kcal: d.kcal,
+        p: d.p.replace(' g protein', 'p'),
+        c: d.c.replace(' g carbs', 'c'),
+        f: d.f.replace(' g fat', 'f'),
+        meals: d.meals,
+        open: s.openDay === i, chevron: s.openDay === i ? '▲' : '▼',
+        toggle: () => this.setState({ openDay: s.openDay === i ? null : i })
+      })),
+
+      query: s.query, answer: s.answer, hasAnswer: !!s.answer,
+      onQuery: (e) => this.setState({ query: e.target.value }),
+      examples: [
+        { text: 'When did I last eat salmon?', answer: 'Tuesday, Aug. 18 — miso salmon with rice, 640 kcal at 6:55 PM. Before that, Aug. 11.' },
+        { text: 'Show all days I had less than 100 g protein', answer: 'Two days in the last three weeks: Sunday Aug. 16 (88 g) and Wednesday Aug. 19 (96 g).' },
+        { text: 'What did I eat on my birthday?', answer: 'Saturday, Aug. 8 — brunch hash, an iced coffee, and a slice of carrot cake. 2,720 kcal total.' }
+      ].map(ex => ({ text: ex.text, ask: () => this.setState({ query: ex.text, answer: ex.answer }) })),
+
+      windowLabel: series.label,
+      windowSetting: s.window === 'rolling' ? 'Rolling 7 days' : 'This week',
+      toggleWindow: () => this.setState({ window: s.window === 'rolling' ? 'week' : 'rolling', barIndex: null }),
+      avgKcal: series.avg[0], avgP: series.avg[1], avgC: series.avg[2], avgF: series.avg[3],
+      chartRange: series.range,
+      barCalloutPre: picked ? picked[2] + (picked[1] === null ? ' · ' : ' · ') : 'Tap a bar for that day\'s total',
+      barCalloutKcal: picked ? (picked[1] === null ? 'nothing logged yet' : picked[1].toLocaleString() + ' kcal') : '',
+      bars: series.bars.map(([day, v], i) => ({
+        day,
+        select: () => this.setState({ barIndex: s.barIndex === i ? null : i }),
+        wrapStyle: { flex: 1, minWidth: 0, height: '100%', padding: 0, border: 'none',
+          background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'flex-end' },
+        style: { width: '100%', borderRadius: '6px 6px 0 0',
+          height: v === null ? 4 : Math.round((v / barMax) * 100) + '%',
+          background: v === null ? 'rgba(46,90,59,0.15)' : (s.barIndex === i ? '#2E5A3B' : '#598F9C') },
+        labelStyle: { flex: 1, minWidth: 0, textAlign: 'center', fontSize: 11,
+          fontWeight: s.barIndex === i ? 700 : 400,
+          color: s.barIndex === i ? '#2E5A3B' : 'rgba(26,46,31,0.5)' }
+      })),
+
+      macroRows: [
+        { day: 'Sat', p: '104', c: '251', f: '69' },
+        { day: 'Sun', p: '88',  c: '219', f: '74' },
+        { day: 'Mon', p: '121', c: '264', f: '71' },
+        { day: 'Tue', p: '131', c: '236', f: '78' },
+        { day: 'Wed', p: '96',  c: '214', f: '61' },
+        { day: 'Thu', p: '118', c: '347', f: '72' },
+        { day: 'Fri', p: '123', c: '202', f: '78' },
+      ].map(r => ({
+        ...r,
+        headStyle: { fontSize: 10.5, fontWeight: 700, color: r.day === 'Fri' ? '#2E5A3B' : 'rgba(26,46,31,0.45)', textAlign: 'center', paddingBottom: 6, background: r.day === 'Fri' ? 'rgba(46,90,59,0.08)' : 'none', borderRadius: 6, padding: '2px 0 6px' },
+        pStyle: { fontSize: 12, fontWeight: 600, color: '#B06E4D', textAlign: 'center', padding: '5px 0', borderTop: '1px solid rgba(46,90,59,0.08)' },
+        cStyle: { fontSize: 12, fontWeight: 600, color: '#B08A3E', textAlign: 'center', padding: '5px 0', borderTop: '1px solid rgba(46,90,59,0.08)' },
+        fStyle: { fontSize: 12, fontWeight: 600, color: '#6E8C58', textAlign: 'center', padding: '5px 0', borderTop: '1px solid rgba(46,90,59,0.08)' },
+      })),
+      topFoods: [
+        { emoji: '🥗', name: 'Chicken burrito bowl', count: '4×' },
+        { emoji: '🍜', name: 'Miso salmon with rice', count: '3×' },
+        { emoji: '☕', name: 'Coffee & yogurt bowl', count: '5×' },
+        { emoji: '🥪', name: 'Turkey sandwich', count: '2×' },
+        { emoji: '🌮', name: 'Street tacos', count: '2×' },
+      ],
+
+      goToday: () => this.go('today'), goLog: () => this.go('log'),
+      goCamera: () => this.setState({ screen: 'camera', camStage: 'shoot' }),
+      goHistory: () => this.go('history'), goSearch: () => this.go('search'), goYou: () => this.go('you'),
+      goHowItWorks: () => this.go('howItWorks'), goDataHandled: () => this.go('dataHandled'),
+      openProfile: () => this.setState({ screen: 'you', fromProfile: true }),
+      back: () => this.go('today'),
+      tabToday: () => this.go('today'), tabHistory: () => this.go('history'),
+      tabInsights: () => this.go('insights'), tabYou: () => this.go('you'),
+      tabTodayStyle: this.tabStyle(['today', 'meal', 'log', 'camera', 'review'].includes(screen)),
+      tabHistoryStyle: this.tabStyle(screen === 'history' || screen === 'search'),
+      tabInsightsStyle: this.tabStyle(screen === 'insights'),
+      tabYouStyle: this.tabStyle(['you', 'howItWorks', 'dataHandled'].includes(screen))
+    };
+  }
+}
+</script>
+</body>
+</html>

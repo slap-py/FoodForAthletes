@@ -27,4 +27,12 @@ Set OPENAI_API_KEY in your shell, then run:
     cd catalog-service
     python3 tools/curate_menu_products.py
 
-It defaults to gpt-5.6-luna with high reasoning for research, then independently checks every result with gpt-5.6-sol at xhigh reasoning before writing the JSON. Use --reasoning xhigh for a deeper research pass, --review-model to select another verifier, or --max-products 50 when you want a larger batch. The JSON is written to the directory from which you run the command, never overwriting an existing default-named file. Review each output before copying records into src/menuProducts.js; the generated schema keeps unknown optional nutrients as null instead of treating them as zero.
+It defaults to gpt-5.6-luna with high reasoning for research, then independently checks every result with gpt-5.6-terra at xhigh reasoning before writing the JSON. The terminal streams model-provided reasoning summaries and web-search progress as each pass runs; this is a debugging summary rather than private chain-of-thought. The catalog is food-only: all drinks are excluded. A normal run defaults to 12 products, six research searches, four review searches, and a 100,000-token response budget per pass. For a full food-menu attempt in one pass, run:
+
+    python3 tools/curate_menu_products.py --full-menu
+
+Full-menu mode asks for up to 200 food products and raises each search cap to 14. You can instead choose a specific size with --max-products 100, increase the response budget with --max-output-tokens 120000, or adjust either verifier setting with its corresponding --review flag. The JSON is written to the directory from which you run the command, never overwriting an existing default-named file. It includes short curator and verifier notes, and keeps unknown optional nutrients as null instead of treating them as zero.
+
+To fill a missed category into an existing catalog, use append mode. It asks for the category, excludes products already present, verifies the new batch, merges only new product names, and creates a timestamped backup before replacing the file.
+
+    python3 tools/curate_menu_products.py --append tools/starbucks-usa-nutrition-candidates.json --category Treats
