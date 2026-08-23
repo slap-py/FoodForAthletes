@@ -32,8 +32,8 @@ struct MealAnalysisInput {
     }
 }
 
-struct MealClarification: Equatable, Decodable, Identifiable {
-    struct Option: Equatable, Decodable, Identifiable {
+struct MealClarification: Equatable, Codable, Identifiable {
+    struct Option: Equatable, Codable, Identifiable {
         let id: String
         let label: String
         let value: String
@@ -46,16 +46,10 @@ struct MealClarification: Equatable, Decodable, Identifiable {
     let options: [Option]
 }
 
-enum MealAnalysisOutcome {
-    case draft(MealDraft)
-    case needsClarification([MealClarification])
-}
-
 enum MealAnalysisError: LocalizedError {
     case needsTextOrPhoto
     case noRecognizedFood
     case malformedServiceResponse
-    case clarificationRequired
 
     var errorDescription: String? {
         switch self {
@@ -65,8 +59,6 @@ enum MealAnalysisError: LocalizedError {
             return "I couldn’t match foods from that description. Try naming the main foods and portions, or add the nutrition-label photo."
         case .malformedServiceResponse:
             return "The food analysis service returned an unreadable meal estimate. Please try again."
-        case .clarificationRequired:
-            return "This meal needs one more detail before its nutrition can be confirmed. Open it while online and answer the serving question."
         }
     }
 }
@@ -84,11 +76,4 @@ struct MealAnalysisService {
         return try await DayplateService.shared.analyze(input)
     }
 
-    func analyzeOutcome(_ input: MealAnalysisInput) async throws -> MealAnalysisOutcome {
-        let trimmedDescription = input.description.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedDescription.isEmpty || !input.photoData.isEmpty else {
-            throw MealAnalysisError.needsTextOrPhoto
-        }
-        return try await DayplateService.shared.analyzeOutcome(input)
-    }
 }

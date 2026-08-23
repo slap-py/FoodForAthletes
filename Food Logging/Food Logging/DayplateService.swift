@@ -30,18 +30,6 @@ struct DayplateService {
         return url
     }
 
-    func searchFoods(query: String) async throws -> [CatalogFood] {
-        guard let baseURL else { throw DayplateServiceError.notConfigured }
-        var components = URLComponents(url: baseURL.appending(path: "/v1/foods/search"), resolvingAgainstBaseURL: false)!
-        components.queryItems = [URLQueryItem(name: "q", value: query)]
-        let (data, response) = try await perform(URLRequest(url: components.url!))
-        try validate(response, data: data)
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        guard let result = try? decoder.decode(FoodSearchResponse.self, from: data) else { throw DayplateServiceError.invalidResponse }
-        return result.foods
-    }
-
     func transcribe(audioData: Data, mimeType: String = "audio/m4a") async throws -> String {
         guard let baseURL else { throw DayplateServiceError.notConfigured }
         var request = URLRequest(url: baseURL.appending(path: "/v1/transcribe"))
@@ -69,13 +57,6 @@ struct DayplateService {
     }
 
     func analyze(_ input: MealAnalysisInput) async throws -> MealDraft {
-        switch try await analyzeOutcome(input) {
-        case .draft(let draft): return draft
-        case .needsClarification: throw MealAnalysisError.clarificationRequired
-        }
-    }
-
-    func analyzeOutcome(_ input: MealAnalysisInput) async throws -> MealAnalysisOutcome {
         guard let baseURL else { throw DayplateServiceError.notConfigured }
         var request = URLRequest(url: baseURL.appending(path: "/v1/meal-analysis"))
         request.httpMethod = "POST"
@@ -83,12 +64,8 @@ struct DayplateService {
         request.httpBody = try JSONEncoder().encode(RemoteMealRequest(input: input))
         let (data, response) = try await perform(request, timeout: 300, retryTimeouts: false, maxAttempts: 1)
         try validate(response, data: data)
-        if let clarification = try? JSONDecoder().decode(RemoteClarificationResponse.self, from: data),
-           clarification.status == "needs_clarification", !clarification.questions.isEmpty {
-            return .needsClarification(clarification.questions)
-        }
         guard let result = try? JSONDecoder().decode(RemoteMealDraft.self, from: data) else { throw DayplateServiceError.invalidResponse }
-        return .draft(result.mealDraft)
+        return result.mealDraft
     }
 
     private func validate(_ response: URLResponse, data: Data) throws {
@@ -135,7 +112,6 @@ struct DayplateService {
     }
 }
 
-private struct FoodSearchResponse: Decodable { let foods: [CatalogFood] }
 private struct ServiceError: Decodable { let error: String }
 
 private struct RemoteMealRequest: Encodable {
@@ -164,10 +140,13 @@ private struct TranscriptionRequest: Encodable { let audioBase64: String; let mi
 private struct TranscriptionResponse: Decodable { let text: String }
 private struct PhotoFoodsRequest: Encodable { let photoBase64: String }
 private struct PhotoFoodsResponse: Decodable { let foods: [String] }
-private struct RemoteClarificationResponse: Decodable { let status: String; let questions: [MealClarification] }
-
 private struct RemoteMealDraft: Decodable {
-    struct Food: Decodable { let name: String; let portion: String; let sourceName: String? }
+    struct Food: Decodable {
+        let name: String
+        let portion: String
+        let sourceName: String?
+        let sourceTier: NutritionSourceTier?
+    }
     let title: String
     let calories: Double
     let carbohydrates: Double
@@ -182,10 +161,29 @@ private struct RemoteMealDraft: Decodable {
     let vitaminD: Double
     let assumptions: String
     let foods: [Food]
+    let clarifications: [MealClarification]?
     let analysisVersion: String
     let catalogVersion: String
 
     var mealDraft: MealDraft {
-        MealDraft(title: title, calories: calories, carbohydrates: carbohydrates, protein: protein, fat: fat, fiber: fiber, calcium: calcium, iron: iron, magnesium: magnesium, potassium: potassium, sodium: sodium, vitaminD: vitaminD, assumptions: assumptions, foods: foods.map { ($0.name, $0.portion) }, ingredientSources: Dictionary(foods.compactMap { food in food.sourceName.map { (food.name, $0) } }, uniquingKeysWith: { first, _ in first }), analysisVersion: analysisVersion, catalogVersion: catalogVersion)
+        MealDraft(
+            title: title,
+            calories: calories,
+            carbohydrates: carbohydrates,
+            protein: protein,
+            fat: fat,
+            fiber: fiber,
+            calcium: calcium,
+            iron: iron,
+            magnesium: magnesium,
+            potassium: potassium,
+            sodium: sodium,
+            vitaminD: vitaminD,
+            assumptions: assumptions,
+            foods: foods.map { MealDraftFood(name: $0.name, portion: $0.portion, sourceName: $0.sourceName, sourceTier: $0.sourceTier) },
+            clarifications: clarifications ?? [],
+            analysisVersion: analysisVersion,
+            catalogVersion: catalogVersion
+        )
     }
 }

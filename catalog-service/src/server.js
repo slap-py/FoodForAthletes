@@ -1,5 +1,4 @@
 import http from "node:http";
-import { search as searchCatalog } from "./catalog.js";
 import { manufacturerNutrition, mealClarifications, nutritionPlausibilityIssue, NutritionSourceError, sourceIngredient, totals } from "./nutrition.js";
 import { namedMenuProducts, productIngredient } from "./menuProducts.js";
 
@@ -14,10 +13,6 @@ export const server = http.createServer(async (request, response) => {
     response.setHeader("content-type", "application/json; charset=utf-8");
     response.setHeader("cache-control", "no-store");
 
-    if (request.method === "GET" && url.pathname === "/v1/foods/search") {
-      const foods = searchCatalog(url.searchParams.get("q") ?? "").slice(0, 20).map(catalogFoodResponse);
-      return json(response, 200, { foods });
-    }
     if (request.method === "POST" && url.pathname === "/v1/meal-analysis") {
       const input = await requestBody(request);
       return json(response, 200, await cachedMealAnalysis(input));
@@ -82,10 +77,6 @@ async function analyzeMeal(input) {
   if (!mealIngredients.length) throw new ServiceError("no_recognized_food");
   const limitedMealIngredients = mealIngredients.slice(0, 12);
   let ingredients = await mapWithConcurrency(limitedMealIngredients, 3, ingredient => sourceIngredient(ingredient, credentials, manufacturerLookup));
-  if (input.allowClarifications === true && clarificationRound(input) < 2) {
-    const questions = mealClarifications(limitedMealIngredients, ingredients, clarificationAnswers);
-    if (questions.length) return { status: "needs_clarification", questions };
-  }
   let nutrients = totals(ingredients);
   let verification = await verifyNutrition(interpretation.title, ingredients, nutrients);
   if (!verification.isPlausible) {
@@ -114,7 +105,25 @@ async function analyzeMeal(input) {
     }
   }
   if (!verification.isPlausible) throw new ServiceError(`nutrition_verification_failed: ${verification.reason}`);
-  return { status: "complete", title: interpretation.title, ...nutrients, assumptions: interpretation.assumptions, foods: ingredients.map(item => ({ name: item.name, portion: item.portion, sourceName: item.sourceName, sourceID: item.sourceID })), analysisVersion: "meal-level-sourced-v5", catalogVersion: "bounded USDA FoodData Central; Open Food Facts; AI web research; deterministic serving-unit checks; targeted GPT sanity check and repair" };
+  const clarifications = input.allowClarifications === true && clarificationRound(input) < 2
+    ? mealClarifications(limitedMealIngredients, ingredients, clarificationAnswers)
+    : [];
+  return {
+    status: "complete",
+    title: interpretation.title,
+    ...nutrients,
+    assumptions: interpretation.assumptions,
+    foods: ingredients.map(item => ({
+      name: item.name,
+      portion: item.portion,
+      sourceName: item.sourceName,
+      sourceID: item.sourceID,
+      sourceTier: item.sourceTier
+    })),
+    clarifications,
+    analysisVersion: "meal-level-sourced-v6",
+    catalogVersion: "bounded USDA FoodData Central; Open Food Facts; AI web research; deterministic serving-unit checks; targeted GPT sanity check and repair"
+  };
 }
 
 async function verifyNutrition(title, ingredients, nutrients, priorIssue = null) {
@@ -264,26 +273,6 @@ function requestBody(request) {
 }
 
 function json(response, status, value) { response.writeHead(status); response.end(JSON.stringify(value)); }
-function catalogFoodResponse(food) {
-  const nutrients = Object.fromEntries(
-    ["calories", "carbohydrates", "protein", "fat", "fiber", "calcium", "iron", "magnesium", "potassium", "sodium", "vitaminD"]
-      .map(key => [key, Number(food.nutrients?.[key]) || 0])
-  );
-  return {
-    id: food.id,
-    canonicalName: food.name,
-    brandName: food.brand ?? null,
-    searchAliases: [],
-    servings: asArray(food.servings).map((serving, index) => ({ id: `${food.id}_${index}`, label: serving.label, gramWeight: serving.grams, nutrients })),
-    provenance: asArray(food.sourceRecords).map(record => ({
-      source: record.source,
-      sourceID: String(record.sourceID),
-      sourceDescription: record.name,
-      importedAt: record.importedAt
-    })),
-    catalogVersion: food.catalogVersion
-  };
-}
 function asArray(value) { return Array.isArray(value) ? value : value ? [value] : []; }
 function positiveNumber(value, fallback) { const parsed = Number(value); return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback; }
 function clarificationRound(input) { return Math.min(2, Math.max(0, Math.floor(Number(input?.clarificationRound) || 0))); }

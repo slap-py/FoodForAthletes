@@ -717,7 +717,7 @@ struct MealReestimateView: View {
     private func updateMeal(with draft: MealDraft) {
         (meal.items ?? []).forEach(modelContext.delete)
         let items = draft.foods.map {
-            MealItem(canonicalName: $0.name, portion: $0.portion, sourceName: draft.ingredientSources[$0.name])
+            MealItem(canonicalName: $0.name, portion: $0.portion, sourceName: $0.sourceName, sourceTier: $0.sourceTier)
         }
         items.forEach { $0.meal = meal }
         meal.items = items

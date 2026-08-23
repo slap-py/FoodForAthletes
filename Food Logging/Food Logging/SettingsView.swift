@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import CloudKit
+import PhotosUI
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
@@ -13,7 +14,8 @@ struct SettingsView: View {
     @AppStorage("appearance") private var appearance = "system"
     @AppStorage("appLanguage") private var appLanguage = "system"
     @AppStorage("defaultWaterML") private var defaultWaterML = 240.0
-    @AppStorage("profileName") private var profileName = "Jordan Reyes"
+    @AppStorage("profileName") private var profileName = ""
+    @AppStorage("profilePhotoPath") private var profilePhotoPath = ""
     @AppStorage("insightsWindow") private var insightsWindow = "rolling"
     @AppStorage("waterLoggingEnabled") private var waterLoggingEnabled = false
     @State private var showsPrivacy = false
@@ -22,28 +24,35 @@ struct SettingsView: View {
     @State private var showsExport = false
     @State private var showsProfileEditor = false
     @State private var profileNameDraft = ""
+    @State private var profilePhotoDraft: UIImage?
+    @State private var selectedProfilePhoto: PhotosPickerItem?
+    @State private var profileError: String?
+    @State private var exportURLs: [URL] = []
+    @State private var exportError: String?
+    @State private var isExporting = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 24) {
+                    Button {
+                        beginProfileEdit()
+                    } label: {
                     HStack(spacing: 14) {
                         ZStack(alignment: .bottomTrailing) {
-                            Text(profileInitials)
-                                .font(.title3.bold()).foregroundStyle(JournalTheme.moss)
-                                .frame(width: 58, height: 58)
-                                .background(JournalTheme.mint, in: Circle())
-                                .overlay(Circle().stroke(JournalTheme.moss.opacity(0.18)))
+                            ProfileAvatar(name: profileName, photoPath: profilePhotoPath, size: 58)
                             Image(systemName: "pencil")
                                 .font(.system(size: 9, weight: .bold)).foregroundStyle(.white)
                                 .frame(width: 22, height: 22).background(JournalTheme.moss, in: Circle())
                                 .overlay(Circle().stroke(JournalTheme.paper, lineWidth: 2))
                         }
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(profileName).font(.title2.bold()).foregroundStyle(JournalTheme.ink)
+                            Text(profileDisplayName).font(.title2.bold()).foregroundStyle(JournalTheme.ink)
                             Text("Your Dayplate").font(.subheadline).foregroundStyle(JournalTheme.ink.opacity(0.55))
                         }
                     }
+                    }
+                    .buttonStyle(.plain)
 
                     DayplateSettingsGroup("LOGGING") {
                         DayplateSettingsPickerRow(title: "Units") {
@@ -125,7 +134,8 @@ struct SettingsView: View {
                                     .foregroundStyle(JournalTheme.moss)
                                 Spacer()
                                 Button("Retry") {
-                                    Task { await offlineMealQueue.processPending(into: modelContext) }
+                                    offlineMealQueue.retryAll(in: modelContext)
+                                    Task { await offlineMealQueue.processPending(into: modelContext, networkAvailable: networkMonitor.isConnected) }
                                 }
                                 .buttonStyle(.bordered)
                                 .disabled(!networkMonitor.isConnected || offlineMealQueue.isProcessing)
@@ -135,9 +145,8 @@ struct SettingsView: View {
 
                     DayplateSettingsGroup("ACCOUNT") {
                         Button {
-                            profileNameDraft = profileName
-                            showsProfileEditor = true
-                        } label: { DayplateSettingsValueRow(title: "Name & photo", value: profileName) }
+                            beginProfileEdit()
+                        } label: { DayplateSettingsValueRow(title: "Name & photo", value: profileDisplayName) }
                         .buttonStyle(.plain)
                         Divider()
                         ICloudStatusRow()
@@ -163,22 +172,68 @@ struct SettingsView: View {
             .sheet(isPresented: $showsHowItWorks) { howItWorksSheet }
             .sheet(isPresented: $showsExport) {
                 NavigationStack {
-                    ContentUnavailableView("Export outline", systemImage: "square.and.arrow.up", description: Text("A portable export will be added before release. Your records remain in your private app store."))
+                    VStack(alignment: .leading, spacing: 18) {
+                        Label("A copy you control", systemImage: "doc.on.doc")
+                            .font(.title2.bold()).foregroundStyle(JournalTheme.ink)
+                        Text("Generate JSON plus separate CSV files for meals, meal items, and water. Your profile photo is included when set. Everything is created entirely on this iPhone in Dayplate Exports.")
+                            .font(.body).foregroundStyle(JournalTheme.ink.opacity(0.68))
+                        if exportURLs.isEmpty {
+                            Button {
+                                generateExport()
+                            } label: {
+                                HStack {
+                                    if isExporting { ProgressView().tint(.white) }
+                                    Text(isExporting ? "Creating files…" : "Create export files")
+                                }
+                                .frame(maxWidth: .infinity, minHeight: 50)
+                            }
+                            .buttonStyle(.borderedProminent).disabled(isExporting)
+                        } else {
+                            JournalCard {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Label("Export created", systemImage: "checkmark.circle.fill").foregroundStyle(JournalTheme.moss)
+                                    ForEach(exportURLs, id: \.self) { Text($0.lastPathComponent).font(.caption).foregroundStyle(.secondary) }
+                                }
+                            }
+                            ShareLink(items: exportURLs) {
+                                Label("Share or save files", systemImage: "square.and.arrow.up")
+                                    .frame(maxWidth: .infinity, minHeight: 50)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            Button("Create a new export", action: generateExport)
+                                .frame(maxWidth: .infinity)
+                        }
+                        Spacer()
+                    }
+                    .padding(22)
+                    .background(JournalTheme.paper.ignoresSafeArea())
                         .navigationTitle("Export data")
                         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showsExport = false } } }
                 }
-                .presentationDetents([.medium])
+                .presentationDetents([.medium, .large])
             }
             .sheet(isPresented: $showsProfileEditor) {
                 NavigationStack {
                     Form {
                         Section("Profile") {
                             TextField("Name", text: $profileNameDraft)
-                            HStack {
-                                Text("Initials")
-                                Spacer()
-                                Text(profileNameDraft.split(separator: " ").prefix(2).compactMap(\.first).map(String.init).joined().uppercased())
-                                    .font(.headline).foregroundStyle(JournalTheme.moss)
+                            HStack(spacing: 16) {
+                                Group {
+                                    if let profilePhotoDraft {
+                                        Image(uiImage: profilePhotoDraft).resizable().scaledToFill()
+                                    } else {
+                                        ProfileAvatar(name: profileNameDraft, photoPath: "", size: 68)
+                                    }
+                                }
+                                .frame(width: 68, height: 68).clipShape(Circle())
+                                VStack(alignment: .leading, spacing: 8) {
+                                    PhotosPicker(selection: $selectedProfilePhoto, matching: .images) {
+                                        Label(profilePhotoDraft == nil ? "Choose photo" : "Change photo", systemImage: "photo")
+                                    }
+                                    if profilePhotoDraft != nil {
+                                        Button("Remove photo", role: .destructive) { profilePhotoDraft = nil }
+                                    }
+                                }
                             }
                         }
                     }
@@ -190,14 +245,24 @@ struct SettingsView: View {
                         ToolbarItem(placement: .cancellationAction) { Button("Cancel") { showsProfileEditor = false } }
                         ToolbarItem(placement: .confirmationAction) {
                             Button("Save") {
-                                let trimmed = profileNameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
-                                if !trimmed.isEmpty { profileName = trimmed }
-                                showsProfileEditor = false
+                                saveProfile()
                             }
+                            .disabled(profileNameDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         }
                     }
                 }
                 .presentationDetents([.medium])
+                .onChange(of: selectedProfilePhoto) { _, item in
+                    guard let item else { return }
+                    Task {
+                        defer { selectedProfilePhoto = nil }
+                        guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
+                            profileError = "That photo couldn’t be opened."
+                            return
+                        }
+                        profilePhotoDraft = image
+                    }
+                }
             }
             .confirmationDialog("Delete all meal and water logs?", isPresented: $showsDeleteConfirmation, titleVisibility: .visible) {
                 Button("Delete all data", role: .destructive, action: deleteAllData)
@@ -206,10 +271,48 @@ struct SettingsView: View {
                 Text("This cannot be undone.")
             }
         }
+        .alert("Couldn’t update profile", isPresented: Binding(get: { profileError != nil }, set: { if !$0 { profileError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: { Text(profileError ?? "Please try again.") }
+        .alert("Couldn’t create export", isPresented: Binding(get: { exportError != nil }, set: { if !$0 { exportError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: { Text(exportError ?? "Please try again.") }
     }
 
-    private var profileInitials: String {
-        profileName.split(separator: " ").prefix(2).compactMap(\.first).map(String.init).joined().uppercased()
+    private var profileDisplayName: String { profileName.isEmpty ? "Your profile" : profileName }
+
+    private func beginProfileEdit() {
+        profileNameDraft = profileName
+        profilePhotoDraft = ProfilePhotoStore.image(at: profilePhotoPath)
+        selectedProfilePhoto = nil
+        showsProfileEditor = true
+    }
+
+    private func saveProfile() {
+        let trimmed = profileNameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        do {
+            if let profilePhotoDraft {
+                profilePhotoPath = try ProfilePhotoStore.save(profilePhotoDraft, replacing: profilePhotoPath)
+            } else {
+                ProfilePhotoStore.remove(profilePhotoPath)
+                profilePhotoPath = ""
+            }
+            profileName = trimmed
+            showsProfileEditor = false
+        } catch {
+            profileError = error.localizedDescription
+        }
+    }
+
+    private func generateExport() {
+        isExporting = true
+        defer { isExporting = false }
+        do {
+            exportURLs = try DataExportService.generate(meals: meals, water: water, profileName: profileName, profilePhotoPath: profilePhotoPath)
+        } catch {
+            exportError = error.localizedDescription
+        }
     }
 
     private var privacySheet: some View {
@@ -248,13 +351,13 @@ struct SettingsView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("A fast, ingredient-level estimate with source checks before you save.")
+                    Text("A fast log now, followed by ingredient-level source checks in the background.")
                         .font(.body)
                         .foregroundStyle(JournalTheme.ink.opacity(0.72))
                     howItWorksRow(number: "1", title: "Understand your meal", message: "Text, up to three photos, and an optional voice note identify meal-level foods—even when a product or flavor name is approximate.")
                     howItWorksRow(number: "2", title: "Find nutrition", message: "Every food checks USDA first, then Open Food Facts, then AI-assisted web research. Failed or unit-mismatched results automatically move to the next source.")
-                    howItWorksRow(number: "3", title: "Check the result", message: "Serving labels are checked separately from the amount eaten. If identity or portion remains ambiguous, Dayplate asks up to two quick questions before showing the review.")
-                    howItWorksRow(number: "4", title: "You stay in control", message: "Review each food and portion before saving. Photos and recordings are used only to make that estimate; your saved meal keeps the resulting nutrition and source details.")
+                    howItWorksRow(number: "3", title: "Finish in the background", message: "The meal appears immediately while nutrition is resolved. Exact text-only results can be reused from the private on-device cache when you are offline.")
+                    howItWorksRow(number: "4", title: "You stay in control", message: "If identity or portion remains ambiguous, the saved meal can show a quiet optional correction. Photos and recordings are used only to make the estimate; the saved result keeps nutrition and source details.")
                 }
                 .padding(22)
             }

@@ -28,14 +28,13 @@ final class Food_LoggingUITests: XCTestCase {
         app.launchArguments.append("-ui-testing")
         app.launch()
 
-        XCTAssertTrue(app.staticTexts["Nutrition so far"].waitForExistence(timeout: 3))
-        XCTAssertTrue(app.staticTexts["No meals logged today"].exists)
+        XCTAssertTrue(app.staticTexts["TODAY"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Meals and water will appear here in the order you log them."].exists)
 
         app.buttons["Log meal"].firstMatch.tap()
-        XCTAssertTrue(app.navigationBars["Log food"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.buttons["Search foods"].exists)
-        XCTAssertTrue(app.buttons["AI estimate"].exists)
-        XCTAssertTrue(app.staticTexts["REPEAT A MEAL"].exists)
+        XCTAssertTrue(app.staticTexts["Log a meal"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.textFields["Rice bowl with chicken, avocado, and salsa"].exists)
+        XCTAssertTrue(app.buttons["Log meal"].exists)
     }
 
     @MainActor

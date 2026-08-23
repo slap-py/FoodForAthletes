@@ -46,21 +46,18 @@ struct ContentView: View {
                 UserDefaults.standard.removeObject(forKey: "dayplate.openLogFood")
                 showsLogFood = true
             }
-            guard networkMonitor.isConnected else { return }
-            await offlineMealQueue.processPending(into: modelContext)
+            await offlineMealQueue.processPending(into: modelContext, networkAvailable: networkMonitor.isConnected)
         }
         .task(id: offlineMealQueue.pendingCount) {
             guard offlineMealQueue.pendingCount > 0 else { return }
             while !Task.isCancelled && offlineMealQueue.pendingCount > 0 {
-                if networkMonitor.isConnected {
-                    await offlineMealQueue.processPending(into: modelContext)
-                }
+                await offlineMealQueue.processPending(into: modelContext, networkAvailable: networkMonitor.isConnected)
                 try? await Task.sleep(nanoseconds: 60_000_000_000)
             }
         }
         .onChange(of: networkMonitor.isConnected) { _, isConnected in
             guard isConnected else { return }
-            Task { await offlineMealQueue.processPending(into: modelContext) }
+            Task { await offlineMealQueue.processPending(into: modelContext, networkAvailable: true) }
         }
         .fullScreenCover(isPresented: $showsLogFood) {
             MealCaptureView(loggingDate: loggingDate)

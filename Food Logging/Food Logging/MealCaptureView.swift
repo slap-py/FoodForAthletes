@@ -6,7 +6,7 @@ import UIKit
 import Combine
 
 struct MealCaptureView: View {
-    enum Step { case capture, camera, clarify, review }
+    enum Step { case capture, camera }
     enum PhotoSource { case camera, library }
 
     @Environment(\.dismiss) private var dismiss
@@ -33,18 +33,12 @@ struct MealCaptureView: View {
     @State private var newCameraFood = ""
     @State private var photoSource: PhotoSource = .camera
     @State private var isLoadingLibraryPhoto = false
-    @State private var draft: MealDraft?
-    @State private var clarificationQuestions: [MealClarification] = []
-    @State private var clarificationIndex = 0
-    @State private var clarificationAnswers: [String: String] = [:]
-    @State private var clarificationRound = 0
     @State private var isPreparingPreview = false
     @State private var showsCameraDenied = false
     @State private var audioRecorder: AVAudioRecorder?
     @State private var isRecording = false
     @State private var isTranscribing = false
     @State private var analysisError: String?
-    @State private var showsOfflineQueuedConfirmation = false
     @FocusState private var descriptionFocused: Bool
     @AppStorage("unitSystem") private var unitSystem = "us"
     let loggingDate: Date
@@ -62,6 +56,7 @@ struct MealCaptureView: View {
     private var usualMeals: [MealLog] {
         var seen = Set<String>()
         return previousMeals.filter { meal in
+            guard meal.analysisStatus == .resolved else { return false }
             let key = meal.title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             return seen.insert(key).inserted
         }.prefix(4).map { $0 }
@@ -73,8 +68,6 @@ struct MealCaptureView: View {
                 switch step {
                 case .capture: captureStep
                 case .camera: cameraStep
-                case .clarify: clarificationStep
-                case .review: reviewStep
                 }
             }
             .background(JournalTheme.paper.ignoresSafeArea())
@@ -104,11 +97,6 @@ struct MealCaptureView: View {
         } message: {
             Text(analysisError ?? "Please try again.")
         }
-        .alert("Meal queued", isPresented: $showsOfflineQueuedConfirmation) {
-            Button("Done") { dismiss() }
-        } message: {
-            Text("Your meal and photos are saved securely on this iPhone. They’ll be analyzed automatically when your connection returns.")
-        }
     }
 
     private var captureStep: some View {
@@ -118,7 +106,7 @@ struct MealCaptureView: View {
                     .font(.body).foregroundStyle(JournalTheme.moss)
                 Text("Log a meal")
                     .font(.system(size: 31, weight: .bold)).tracking(-0.6)
-                Text("Say it however you'd say it out loud. You'll see the estimate before it's saved.")
+                Text("Say it however you'd say it out loud. It saves now and fills in nutrition in the background.")
                     .font(.body).foregroundStyle(JournalTheme.ink.opacity(0.60))
                     .padding(.top, -10)
 
@@ -168,17 +156,17 @@ struct MealCaptureView: View {
                     .font(.caption)
                     .foregroundStyle(JournalTheme.ink.opacity(0.58))
 
-                Button { preparePreview() } label: {
+                Button { savePendingMeal() } label: {
                     HStack {
                         if isPreparingPreview { ProgressView().tint(.white) }
-                    Text(isPreparingPreview ? "Reviewing meal…" : "Analyze meal")
+                    Text(isPreparingPreview ? "Saving meal…" : "Log meal")
                     }
                     .frame(maxWidth: .infinity, minHeight: 54)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .disabled(!canAnalyze)
-                .accessibilityHint(canAnalyze ? "Creates an approximate nutrition review" : "Add a description, a meal photo, or a nutrition-label photo first")
+                .accessibilityHint(canAnalyze ? "Saves immediately and calculates nutrition in the background" : "Add a description, a meal photo, or a nutrition-label photo first")
 
                 if !usualMeals.isEmpty { usualRow }
             }
@@ -387,7 +375,7 @@ struct MealCaptureView: View {
                 Button(action: continueFromCamera) {
                     HStack(spacing: 9) {
                         if isPreparingPreview { ProgressView().tint(.white) }
-                        Text(isPreparingPreview ? "Reviewing meal…" : "Continue")
+                        Text(isPreparingPreview ? "Saving meal…" : "Log meal")
                     }
                     .font(.body.weight(.semibold))
                     .foregroundStyle(.white)
@@ -425,157 +413,6 @@ struct MealCaptureView: View {
                 }
             }
         }
-    }
-
-    private var reviewStep: some View {
-        ScrollView {
-            if let draft {
-                VStack(alignment: .leading, spacing: 18) {
-                    Button("‹ Back") { step = .capture }
-                        .font(.body).foregroundStyle(JournalTheme.moss)
-                    Text(loggingDate, format: .dateTime.weekday(.short).month(.abbreviated).day().hour().minute())
-                        .font(.caption.bold()).tracking(1.4).foregroundStyle(JournalTheme.moss)
-                    Text(draft.title).font(.system(size: 29, weight: .bold)).tracking(-0.6).foregroundStyle(JournalTheme.ink)
-                    JournalCard {
-                        VStack(alignment: .leading, spacing: 16) {
-                            HStack {
-                                reviewNutrient("Calories", draft.calories, JournalTheme.blue, unit: "kcal")
-                            }
-                            HStack {
-                                reviewNutrient("Protein", draft.protein, JournalTheme.clay)
-                                reviewNutrient("Carbs", draft.carbohydrates, JournalTheme.oat)
-                                reviewNutrient("Fat", draft.fat, JournalTheme.sage)
-                            }
-                        }
-                    }
-
-                    JournalCard {
-                        VStack(alignment: .leading, spacing: 11) {
-                            Text("Foods & portions").font(.headline)
-                            ForEach(Array(draft.foods.enumerated()), id: \.offset) { _, food in
-                                HStack(alignment: .firstTextBaseline) {
-                                    Text(food.name)
-                                    Spacer()
-                                    Text(PortionDisplay.text(food.portion, unitSystem: unitSystem)).foregroundStyle(.secondary)
-                                    Button {
-                                        step = .capture
-                                        descriptionFocused = true
-                                    } label: {
-                                        Image(systemName: "pencil").font(.caption.bold()).foregroundStyle(JournalTheme.moss)
-                                            .frame(width: 28, height: 28).background(JournalTheme.sage.opacity(0.30), in: Circle())
-                                    }.buttonStyle(.plain).accessibilityLabel("Edit \(food.name)")
-                                }
-                                .font(.subheadline)
-                            }
-                        }
-                    }
-
-                    Button("Edit description") {
-                        step = .capture
-                        descriptionFocused = true
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
-                    .frame(maxWidth: .infinity)
-
-                    Button("Save meal") { saveMeal(draft) }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
-                        .frame(maxWidth: .infinity)
-                        .accessibilityHint("Saves the nutrient snapshot, then permanently discards both temporary photos")
-                }
-                .padding(18)
-            }
-        }
-    }
-
-    private var clarificationStep: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                Button("‹ Back") {
-                    step = .capture
-                    descriptionFocused = true
-                }
-                .font(.body)
-                .foregroundStyle(JournalTheme.moss)
-
-                Text("One quick check")
-                    .font(.system(size: 31, weight: .bold))
-                    .tracking(-0.6)
-                    .foregroundStyle(JournalTheme.ink)
-
-                if clarificationQuestions.indices.contains(clarificationIndex) {
-                    let question = clarificationQuestions[clarificationIndex]
-                    Text("Question \(clarificationIndex + 1) of \(clarificationQuestions.count)")
-                        .font(.caption.bold())
-                        .tracking(1.2)
-                        .foregroundStyle(JournalTheme.moss)
-
-                    JournalCard {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text(question.prompt)
-                                .font(.title3.bold())
-                                .foregroundStyle(JournalTheme.ink)
-                            Text(question.detail)
-                                .font(.subheadline)
-                                .foregroundStyle(JournalTheme.ink.opacity(0.62))
-                        }
-                    }
-
-                    VStack(spacing: 10) {
-                        ForEach(question.options) { option in
-                            Button {
-                                answerClarification(question, with: option)
-                            } label: {
-                                HStack {
-                                    Text(option.label)
-                                        .multilineTextAlignment(.leading)
-                                    Spacer()
-                                    Image(systemName: option.action == "edit" ? "pencil" : "chevron.right")
-                                }
-                                .font(.body.weight(.semibold))
-                                .foregroundStyle(option.action == "edit" ? JournalTheme.ink.opacity(0.68) : JournalTheme.moss)
-                                .padding(.horizontal, 16)
-                                .frame(maxWidth: .infinity, minHeight: 58, alignment: .leading)
-                                .background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 17, style: .continuous)
-                                        .stroke(JournalTheme.moss.opacity(0.14), lineWidth: 1)
-                                }
-                            }
-                            .buttonStyle(.plain)
-                            .disabled(isPreparingPreview)
-                        }
-                    }
-
-                    if isPreparingPreview {
-                        HStack(spacing: 10) {
-                            ProgressView().tint(JournalTheme.moss)
-                            Text("Checking sources again…")
-                        }
-                        .font(.subheadline)
-                        .foregroundStyle(JournalTheme.ink.opacity(0.58))
-                        .frame(maxWidth: .infinity)
-                    }
-                }
-            }
-            .padding(18)
-            .padding(.bottom, 28)
-        }
-        .scrollIndicators(.hidden)
-    }
-
-    private func reviewNutrient(_ label: String, _ value: Double, _ color: Color, unit: String = "g") -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack(spacing: 5) {
-                Circle().fill(color).frame(width: 7, height: 7)
-                Text(label).font(.caption).foregroundStyle(.secondary)
-            }
-            Text("\(Int(value)) \(unit)").font(label == "Calories" ? .title.bold() : .title3.bold())
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(label), \(Int(value)) grams")
     }
 
     private var photoSection: some View {
@@ -702,7 +539,7 @@ struct MealCaptureView: View {
             }
             cameraPhotoAddedToMeal = true
         }
-        preparePreview()
+        savePendingMeal()
     }
 
     private func retakePhoto() {
@@ -787,133 +624,57 @@ struct MealCaptureView: View {
         }
     }
 
-    private func preparePreview(usingClarifications: Bool = false) {
+    private func savePendingMeal() {
         guard canAnalyze else { return }
-        descriptionFocused = false
-        if !usingClarifications {
-            clarificationAnswers = [:]
-            clarificationQuestions = []
-            clarificationIndex = 0
-            clarificationRound = 0
-        }
-        guard networkMonitor.isConnected else {
-            queueCurrentMealForLater()
-            return
-        }
         isPreparingPreview = true
-        Task {
-            defer { isPreparingPreview = false }
-            do {
-                let result = try await MealAnalysisService.shared.analyzeOutcome(
-                    MealAnalysisInput(
-                        description: descriptionText,
-                        photoData: photoData,
-                        identifiedFoods: identifiedPhotoFoods,
-                        allowsClarification: true,
-                        clarificationAnswers: clarificationAnswers,
-                        clarificationRound: clarificationRound
-                    )
-                )
-                guard !Task.isCancelled else { return }
-                switch result {
-                case .draft(let completedDraft):
-                    draft = completedDraft
-                    clarificationQuestions = []
-                    clarificationIndex = 0
-                    step = .review
-                case .needsClarification(let questions):
-                    clarificationQuestions = Array(questions.prefix(2))
-                    clarificationIndex = 0
-                    step = .clarify
-                }
-            } catch {
-                if shouldQueue(error) {
-                    queueCurrentMealForLater()
-                } else {
-                    analysisError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                }
-            }
-        }
-    }
-
-    private func answerClarification(_ question: MealClarification, with option: MealClarification.Option) {
-        if option.action == "edit" {
-            step = .capture
-            descriptionFocused = true
-            return
-        }
-        clarificationAnswers[question.id] = option.value
-        if clarificationIndex + 1 < clarificationQuestions.count {
-            clarificationIndex += 1
-        } else {
-            clarificationRound += 1
-            preparePreview(usingClarifications: true)
-        }
-    }
-
-    private func queueCurrentMealForLater() {
+        descriptionFocused = false
+        let trimmed = descriptionText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let pendingMeal = MealLog(
+            timestamp: loggingDate,
+            title: pendingTitle(from: trimmed),
+            descriptionText: trimmed,
+            calories: 0,
+            carbohydrates: 0,
+            protein: 0,
+            fat: 0,
+            fiber: 0,
+            assumptions: "",
+            loggingMethod: .ai,
+            analysisStatus: .pending
+        )
+        modelContext.insert(pendingMeal)
         do {
+            try modelContext.save()
             try offlineMealQueue.enqueue(
-                description: descriptionText,
+                description: trimmed,
                 photoData: photoData,
                 identifiedFoods: identifiedPhotoFoods,
-                clarificationAnswers: clarificationAnswers,
-                clarificationRound: clarificationRound
+                capturedAt: loggingDate,
+                targetMealID: pendingMeal.id
             )
             clearPhotos()
-            showsOfflineQueuedConfirmation = true
+            onCompleted()
+            dismiss()
+            Task {
+                await offlineMealQueue.processPending(into: modelContext, networkAvailable: networkMonitor.isConnected)
+            }
         } catch {
-            analysisError = "Couldn’t save this meal for offline analysis: \(error.localizedDescription)"
+            modelContext.delete(pendingMeal)
+            try? modelContext.save()
+            isPreparingPreview = false
+            analysisError = "Couldn’t save this meal: \(error.localizedDescription)"
         }
     }
 
-    private func shouldQueue(_ error: Error) -> Bool {
-        guard !networkMonitor.isConnected else {
-            let nsError = error as NSError
-            guard nsError.domain == NSURLErrorDomain else { return false }
-            return [
-                URLError.notConnectedToInternet,
-                .networkConnectionLost,
-                .timedOut,
-                .cannotConnectToHost,
-                .cannotFindHost,
-                .dnsLookupFailed
-            ].contains(URLError.Code(rawValue: nsError.code))
-        }
-        return true
-    }
-
-    private func saveMeal(_ draft: MealDraft) {
-        let items = draft.foods.map { MealItem(canonicalName: $0.name, portion: $0.portion, sourceName: draft.ingredientSources[$0.name]) }
-        let meal = MealLog(
-            timestamp: loggingDate,
-            title: draft.title,
-            descriptionText: descriptionText,
-            calories: draft.calories,
-            carbohydrates: draft.carbohydrates,
-            protein: draft.protein,
-            fat: draft.fat,
-            fiber: draft.fiber,
-            calcium: draft.calcium,
-            iron: draft.iron,
-            magnesium: draft.magnesium,
-            potassium: draft.potassium,
-            sodium: draft.sodium,
-            vitaminD: draft.vitaminD,
-            assumptions: draft.assumptions,
-            loggingMethod: .ai,
-            catalogVersion: draft.catalogVersion,
-            items: items
-        )
-        modelContext.insert(meal)
-        try? modelContext.save()
-        clearPhotos()
-        onCompleted()
-        dismiss()
+    private func pendingTitle(from description: String) -> String {
+        guard !description.isEmpty else { return "Photo meal" }
+        let words = description.split(whereSeparator: \.isWhitespace).prefix(7)
+        let title = words.joined(separator: " ")
+        return title.prefix(1).uppercased() + String(title.dropFirst())
     }
 
     private func repeatMeal(_ source: MealLog) {
-        let items = (source.items ?? []).map { MealItem(canonicalName: $0.canonicalName, portion: $0.portion, quantity: $0.quantity, catalogFoodID: $0.catalogFoodID, sourceRecordIDs: $0.sourceRecordIDs, brandName: $0.brandName, sourceName: $0.sourceName) }
+        let items = (source.items ?? []).map { MealItem(canonicalName: $0.canonicalName, portion: $0.portion, quantity: $0.quantity, catalogFoodID: $0.catalogFoodID, sourceRecordIDs: $0.sourceRecordIDs, brandName: $0.brandName, sourceName: $0.sourceName, sourceTier: $0.sourceTier) }
         let meal = MealLog(
             timestamp: loggingDate,
             title: source.title,

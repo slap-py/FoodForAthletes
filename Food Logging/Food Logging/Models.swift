@@ -24,6 +24,11 @@ final class MealLog {
     /// Historical totals remain authoritative and are never recalculated.
     var loggingMethodRaw: String = LoggingMethod.ai.rawValue
     var catalogVersion: String?
+    /// Analysis lifecycle is separate from how the meal was logged. Existing
+    /// meals default to resolved during lightweight migration.
+    var analysisStatusRaw: String = MealAnalysisStatus.resolved.rawValue
+    var analysisError: String?
+    var clarificationSuggestionsData: Data?
 
     @Relationship(deleteRule: .cascade, inverse: \MealItem.meal)
     var items: [MealItem]? = []
@@ -47,6 +52,9 @@ final class MealLog {
         sourceMealID: UUID? = nil,
         loggingMethod: LoggingMethod = .ai,
         catalogVersion: String? = nil,
+        analysisStatus: MealAnalysisStatus = .resolved,
+        analysisError: String? = nil,
+        clarificationSuggestionsData: Data? = nil,
         items: [MealItem] = []
     ) {
         self.timestamp = timestamp
@@ -67,6 +75,9 @@ final class MealLog {
         self.sourceMealID = sourceMealID
         self.loggingMethodRaw = loggingMethod.rawValue
         self.catalogVersion = catalogVersion
+        self.analysisStatusRaw = analysisStatus.rawValue
+        self.analysisError = analysisError
+        self.clarificationSuggestionsData = clarificationSuggestionsData
         self.items = items
     }
 
@@ -74,10 +85,27 @@ final class MealLog {
         get { LoggingMethod(rawValue: loggingMethodRaw) ?? .ai }
         set { loggingMethodRaw = newValue.rawValue }
     }
+
+    var analysisStatus: MealAnalysisStatus {
+        get { MealAnalysisStatus(rawValue: analysisStatusRaw) ?? .resolved }
+        set { analysisStatusRaw = newValue.rawValue }
+    }
+
+    var clarificationSuggestions: [MealClarification] {
+        get {
+            guard let clarificationSuggestionsData else { return [] }
+            return (try? JSONDecoder().decode([MealClarification].self, from: clarificationSuggestionsData)) ?? []
+        }
+        set { clarificationSuggestionsData = try? JSONEncoder().encode(newValue) }
+    }
 }
 
 enum LoggingMethod: String, Codable, CaseIterable {
-    case search, ai, repeatMeal = "repeat"
+    case ai, repeatMeal = "repeat"
+}
+
+enum MealAnalysisStatus: String, Codable {
+    case pending, resolved, failed
 }
 
 @Model
@@ -90,6 +118,7 @@ final class MealItem {
     var sourceRecordIDs: [String] = []
     var brandName: String?
     var sourceName: String?
+    var sourceTierRaw: String?
     var meal: MealLog?
 
     init(
@@ -99,7 +128,8 @@ final class MealItem {
         catalogFoodID: String? = nil,
         sourceRecordIDs: [String] = [],
         brandName: String? = nil,
-        sourceName: String? = nil
+        sourceName: String? = nil,
+        sourceTier: NutritionSourceTier? = nil
     ) {
         self.canonicalName = canonicalName
         self.portion = portion
@@ -108,6 +138,29 @@ final class MealItem {
         self.sourceRecordIDs = sourceRecordIDs
         self.brandName = brandName
         self.sourceName = sourceName
+        self.sourceTierRaw = sourceTier?.rawValue
+    }
+
+
+    var sourceTier: NutritionSourceTier? {
+        get { sourceTierRaw.flatMap(NutritionSourceTier.init(rawValue:)) }
+        set { sourceTierRaw = newValue?.rawValue }
+    }
+}
+
+enum NutritionSourceTier: String, Codable {
+    case usda
+    case openFoodFacts = "open_food_facts"
+    case brand
+    case web
+
+    var shortLabel: String {
+        switch self {
+        case .usda: "USDA"
+        case .openFoodFacts: "Open Food Facts"
+        case .brand: "Brand source"
+        case .web: "Web source"
+        }
     }
 }
 
@@ -138,6 +191,7 @@ final class QueuedMeal {
     var identifiedFoods: [String] = []
     var clarificationAnswersData: Data?
     var clarificationRound: Int = 0
+    var targetMealID: UUID?
     var attemptCount: Int = 0
     var lastError: String?
 
@@ -150,7 +204,8 @@ final class QueuedMeal {
         photoPaths: [String] = [],
         identifiedFoods: [String] = [],
         clarificationAnswersData: Data? = nil,
-        clarificationRound: Int = 0
+        clarificationRound: Int = 0,
+        targetMealID: UUID? = nil
     ) {
         self.id = id
         self.capturedAt = capturedAt
@@ -161,6 +216,7 @@ final class QueuedMeal {
         self.identifiedFoods = identifiedFoods
         self.clarificationAnswersData = clarificationAnswersData
         self.clarificationRound = clarificationRound
+        self.targetMealID = targetMealID
     }
 }
 
@@ -174,7 +230,14 @@ final class AppPreference {
     init() {}
 }
 
-struct MealDraft: Equatable {
+struct MealDraftFood: Equatable, Codable {
+    var name: String
+    var portion: String
+    var sourceName: String?
+    var sourceTier: NutritionSourceTier?
+}
+
+struct MealDraft: Equatable, Codable {
     var title: String
     var calories: Double
     var carbohydrates: Double
@@ -188,10 +251,9 @@ struct MealDraft: Equatable {
     var sodium: Double = 0
     var vitaminD: Double = 0
     var assumptions: String
-    var foods: [(name: String, portion: String)]
-    var ingredientSources: [String: String] = [:]
+    var foods: [MealDraftFood]
+    var clarifications: [MealClarification] = []
     var loggingMethod: LoggingMethod = .ai
-    var catalogItems: [CatalogMealItem] = []
     var analysisVersion: String = "local-catalog-v1"
     var catalogVersion: String = "USDA Foundation Foods + FNDDS fallback v1"
 
@@ -208,18 +270,7 @@ struct MealDraft: Equatable {
         lhs.potassium == rhs.potassium &&
         lhs.sodium == rhs.sodium &&
         lhs.vitaminD == rhs.vitaminD &&
-        lhs.ingredientSources == rhs.ingredientSources &&
-        lhs.foods.elementsEqual(rhs.foods, by: { $0.name == $1.name && $0.portion == $1.portion })
+        lhs.foods == rhs.foods &&
+        lhs.clarifications == rhs.clarifications
     }
-}
-
-struct CatalogMealItem: Equatable, Codable, Identifiable {
-    var id: UUID = UUID()
-    var food: CatalogFood
-    var servingIndex: Int = 0
-    var quantity: Double = 1
-
-    var serving: CatalogServing { food.servings[min(max(servingIndex, 0), food.servings.count - 1)] }
-    var displayPortion: String { quantity == 1 ? serving.label : "\(quantity.formatted(.number.precision(.fractionLength(0...2)))) × \(serving.label)" }
-    var nutrients: CatalogNutrients { serving.nutrients.scaled(by: quantity) }
 }

@@ -10,7 +10,8 @@ struct DayplateTodayView: View {
     @Query(sort: \MealLog.timestamp) private var allMeals: [MealLog]
     @Query(sort: \WaterLog.timestamp) private var allWater: [WaterLog]
     @AppStorage("unitSystem") private var unitSystem = "us"
-    @AppStorage("profileName") private var profileName = "Jordan Reyes"
+    @AppStorage("profileName") private var profileName = ""
+    @AppStorage("profilePhotoPath") private var profilePhotoPath = ""
     @State private var nutrientsOpen = false
     let onOpenProfile: () -> Void
 
@@ -62,12 +63,7 @@ struct DayplateTodayView: View {
             }
             Spacer(minLength: 4)
             Button(action: onOpenProfile) {
-                Text(profileName.split(separator: " ").prefix(2).compactMap(\.first).map(String.init).joined().uppercased())
-                    .font(.subheadline.bold())
-                    .foregroundStyle(JournalTheme.moss)
-                    .frame(width: 46, height: 46)
-                    .background(JournalTheme.mint, in: Circle())
-                    .overlay(Circle().stroke(JournalTheme.moss.opacity(0.18)))
+                ProfileAvatar(name: profileName, photoPath: profilePhotoPath, size: 46)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Open profile")
@@ -233,15 +229,23 @@ private struct DayplateMealRow: View {
             Text(mealEmoji(meal.title)).font(.title3).frame(width: 36, height: 36).background(JournalTheme.sage.opacity(0.24), in: Circle())
             VStack(alignment: .leading, spacing: 5) {
                 Text(meal.title).font(.subheadline.weight(.semibold)).lineLimit(1)
-                HStack(spacing: 6) {
-                    Text("\(Int(meal.calories)) kcal").foregroundStyle(JournalTheme.blue)
-                    Text("·")
-                    Text("\(Int(meal.protein))p").foregroundStyle(JournalTheme.clay)
-                    Text("·")
-                    Text("\(Int(meal.carbohydrates))c").foregroundStyle(Color(red: 0.69, green: 0.54, blue: 0.24))
-                    Text("·")
-                    Text("\(Int(meal.fat))f").foregroundStyle(Color(red: 0.43, green: 0.55, blue: 0.35))
-                }.font(.caption2.bold()).lineLimit(1)
+                if meal.analysisStatus == .pending {
+                    Label("Calculating nutrition…", systemImage: "clock")
+                        .font(.caption2.weight(.semibold)).foregroundStyle(JournalTheme.moss)
+                } else if meal.analysisStatus == .failed {
+                    Label("Nutrition needs a retry", systemImage: "exclamationmark.circle")
+                        .font(.caption2.weight(.semibold)).foregroundStyle(JournalTheme.clay)
+                } else {
+                    HStack(spacing: 6) {
+                        Text("\(Int(meal.calories)) kcal").foregroundStyle(JournalTheme.blue)
+                        Text("·")
+                        Text("\(Int(meal.protein))p").foregroundStyle(JournalTheme.clay)
+                        Text("·")
+                        Text("\(Int(meal.carbohydrates))c").foregroundStyle(Color(red: 0.69, green: 0.54, blue: 0.24))
+                        Text("·")
+                        Text("\(Int(meal.fat))f").foregroundStyle(Color(red: 0.43, green: 0.55, blue: 0.35))
+                    }.font(.caption2.bold()).lineLimit(1)
+                }
             }
             Spacer(minLength: 2)
             Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(JournalTheme.ink.opacity(0.28))
@@ -253,6 +257,9 @@ private struct DayplateMealRow: View {
 }
 
 struct DayplateMealDetailView: View {
+    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var offlineMealQueue: OfflineMealQueueStore
+    @EnvironmentObject private var networkMonitor: NetworkMonitor
     let meal: MealLog
     @State private var showsReestimate = false
     @AppStorage("unitSystem") private var unitSystem = "us"
@@ -265,26 +272,73 @@ struct DayplateMealDetailView: View {
                     Text(mealEmoji(meal.title)).font(.system(size: 30))
                     Text(meal.title).font(.system(size: 29, weight: .bold)).tracking(-0.6)
                 }
-                JournalCard {
-                    VStack(alignment: .leading, spacing: 18) {
-                        DayplateDetailMetric(label: "Calories", value: "\(Int(meal.calories)) kcal", color: JournalTheme.blue, large: true)
-                        HStack {
-                            DayplateDetailMetric(label: "Protein", value: "\(Int(meal.protein)) g", color: JournalTheme.clay)
-                            DayplateDetailMetric(label: "Carbs", value: "\(Int(meal.carbohydrates)) g", color: JournalTheme.oat)
-                            DayplateDetailMetric(label: "Fat", value: "\(Int(meal.fat)) g", color: JournalTheme.sage)
+                if meal.analysisStatus == .pending {
+                    JournalCard {
+                        Label("Calculating nutrition in the background", systemImage: "clock")
+                            .font(.subheadline.weight(.semibold)).foregroundStyle(JournalTheme.moss)
+                    }
+                } else if meal.analysisStatus == .failed {
+                    JournalCard {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Label("Nutrition could not be completed", systemImage: "exclamationmark.circle")
+                                .font(.headline).foregroundStyle(JournalTheme.clay)
+                            if let error = meal.analysisError { Text(error).font(.caption).foregroundStyle(.secondary) }
+                            Button("Try again") {
+                                offlineMealQueue.retry(meal: meal, in: modelContext)
+                                Task { await offlineMealQueue.processPending(into: modelContext, networkAvailable: networkMonitor.isConnected) }
+                            }
+                            .buttonStyle(.bordered)
                         }
                     }
-                }
-                JournalCard {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Foods & portions").font(.headline)
-                        ForEach(meal.items ?? []) { item in
-                            HStack(alignment: .firstTextBaseline) {
-                                Text(item.canonicalName)
-                                Spacer()
-                                Text(PortionDisplay.text(item.portion, unitSystem: unitSystem)).foregroundStyle(.secondary)
-                            }.font(.subheadline)
-                            Divider().opacity(0.5)
+                } else {
+                    JournalCard {
+                        VStack(alignment: .leading, spacing: 18) {
+                            DayplateDetailMetric(label: "Calories", value: "\(Int(meal.calories)) kcal", color: JournalTheme.blue, large: true)
+                            HStack {
+                                DayplateDetailMetric(label: "Protein", value: "\(Int(meal.protein)) g", color: JournalTheme.clay)
+                                DayplateDetailMetric(label: "Carbs", value: "\(Int(meal.carbohydrates)) g", color: JournalTheme.oat)
+                                DayplateDetailMetric(label: "Fat", value: "\(Int(meal.fat)) g", color: JournalTheme.sage)
+                            }
+                        }
+                    }
+                    if let question = meal.clarificationSuggestions.first {
+                        JournalCard {
+                            VStack(alignment: .leading, spacing: 9) {
+                                Text(question.prompt).font(.subheadline.weight(.semibold))
+                                Text(question.detail).font(.caption).foregroundStyle(.secondary)
+                                HStack {
+                                    Menu("Change") {
+                                        ForEach(question.options.filter { $0.action == "answer" }) { option in
+                                            Button(option.label) { answer(question, with: option) }
+                                        }
+                                    }
+                                    .font(.caption.weight(.semibold))
+                                    Spacer()
+                                    Button("Not now") {
+                                        meal.clarificationSuggestions = []
+                                        try? modelContext.save()
+                                    }
+                                    .font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                    JournalCard {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Foods & portions").font(.headline)
+                            ForEach(meal.items ?? []) { item in
+                                VStack(alignment: .leading, spacing: 3) {
+                                    HStack(alignment: .firstTextBaseline) {
+                                        Text(item.canonicalName)
+                                        Spacer()
+                                        Text(PortionDisplay.text(item.portion, unitSystem: unitSystem)).foregroundStyle(.secondary)
+                                    }.font(.subheadline)
+                                    if let tier = item.sourceTier {
+                                        Text(tier.shortLabel).font(.caption2).foregroundStyle(JournalTheme.ink.opacity(0.42))
+                                    }
+                                }
+                                Divider().opacity(0.5)
+                            }
                         }
                     }
                 }
@@ -297,15 +351,28 @@ struct DayplateMealDetailView: View {
                         }
                     }
                 }
-                Button("Edit & re-estimate") { showsReestimate = true }
+                if meal.analysisStatus == .resolved {
+                    Button("Edit & re-estimate") { showsReestimate = true }
                     .font(.body.weight(.semibold)).foregroundStyle(JournalTheme.moss)
                     .frame(maxWidth: .infinity).frame(height: 50)
                     .overlay(Capsule().stroke(JournalTheme.moss.opacity(0.30)))
+                }
             }
             .padding(18).padding(.bottom, 40)
         }
         .background(JournalTheme.paper).navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showsReestimate) { MealReestimateView(meal: meal) }
+    }
+
+    private func answer(_ question: MealClarification, with option: MealClarification.Option) {
+        do {
+            try offlineMealQueue.answer(option, questionID: question.id, for: meal, in: modelContext)
+            Task { await offlineMealQueue.processPending(into: modelContext, networkAvailable: networkMonitor.isConnected) }
+        } catch {
+            meal.analysisStatus = .failed
+            meal.analysisError = error.localizedDescription
+            try? modelContext.save()
+        }
     }
 }
 

@@ -1,4 +1,5 @@
 import Combine
+import CryptoKit
 import Foundation
 import Network
 import SwiftData
@@ -47,7 +48,8 @@ final class OfflineMealQueueStore: ObservableObject {
         identifiedFoods: [String] = [],
         clarificationAnswers: [String: String] = [:],
         clarificationRound: Int = 0,
-        capturedAt: Date = .now
+        capturedAt: Date = .now,
+        targetMealID: UUID? = nil
     ) throws {
         let id = UUID()
         var storedPaths: [String] = []
@@ -65,7 +67,8 @@ final class OfflineMealQueueStore: ObservableObject {
                 photoPaths: photoPaths,
                 identifiedFoods: identifiedFoods,
                 clarificationAnswersData: try JSONEncoder().encode(clarificationAnswers),
-                clarificationRound: clarificationRound
+                clarificationRound: clarificationRound,
+                targetMealID: targetMealID
             ))
             try context.save()
             reloadCount()
@@ -75,7 +78,7 @@ final class OfflineMealQueueStore: ObservableObject {
         }
     }
 
-    func processPending(into mealContext: ModelContext) async {
+    func processPending(into mealContext: ModelContext, networkAvailable: Bool = true) async {
         guard !isProcessing else { return }
         isProcessing = true
         defer { isProcessing = false; reloadCount() }
@@ -85,6 +88,12 @@ final class OfflineMealQueueStore: ObservableObject {
 
         for queuedMeal in queuedMeals {
             guard queuedMeal.attemptCount < 3 else { continue }
+            if queuedMeal.allPhotoPaths.isEmpty,
+               let cached = MealAnalysisDiskCache.shared.value(for: queuedMeal.cacheKey) {
+                finish(queuedMeal, with: cached, in: mealContext)
+                continue
+            }
+            guard networkAvailable else { continue }
             do {
                 let draft = try await MealAnalysisService.shared.analyze(
                     MealAnalysisInput(
@@ -92,21 +101,82 @@ final class OfflineMealQueueStore: ObservableObject {
                         photoData: queuedMeal.allPhotoPaths.compactMap(OfflineMealPhotoStore.data),
                         identifiedFoods: queuedMeal.identifiedFoods,
                         capturedAt: queuedMeal.capturedAt,
+                        allowsClarification: true,
                         clarificationAnswers: queuedMeal.clarificationAnswers,
                         clarificationRound: queuedMeal.clarificationRound
                     )
                 )
-                mealContext.insert(MealLog(draft: draft, descriptionText: queuedMeal.descriptionText, timestamp: queuedMeal.capturedAt))
-                try mealContext.save()
-                queuedMeal.allPhotoPaths.forEach(OfflineMealPhotoStore.remove)
-                context.delete(queuedMeal)
-                try context.save()
+                if queuedMeal.allPhotoPaths.isEmpty {
+                    MealAnalysisDiskCache.shared.insert(draft, for: queuedMeal.cacheKey)
+                }
+                finish(queuedMeal, with: draft, in: mealContext)
             } catch {
                 queuedMeal.attemptCount += 1
                 queuedMeal.lastError = error.localizedDescription
                 try? context.save()
+                if queuedMeal.attemptCount >= 3,
+                   let target = fetchMeal(id: queuedMeal.targetMealID, in: mealContext) {
+                    target.analysisStatus = .failed
+                    target.analysisError = error.localizedDescription
+                    try? mealContext.save()
+                }
             }
         }
+    }
+
+    func retry(meal: MealLog, in mealContext: ModelContext) {
+        let id = meal.id
+        let descriptor = FetchDescriptor<QueuedMeal>(predicate: #Predicate { $0.targetMealID == id })
+        guard let queued = try? context.fetch(descriptor).first else { return }
+        queued.attemptCount = 0
+        queued.lastError = nil
+        meal.analysisStatus = .pending
+        meal.analysisError = nil
+        try? context.save()
+        try? mealContext.save()
+        reloadCount()
+    }
+
+    func retryAll(in mealContext: ModelContext) {
+        let descriptor = FetchDescriptor<QueuedMeal>()
+        guard let queuedMeals = try? context.fetch(descriptor) else { return }
+        for queued in queuedMeals {
+            queued.attemptCount = 0
+            queued.lastError = nil
+            if let meal = fetchMeal(id: queued.targetMealID, in: mealContext) {
+                meal.analysisStatus = .pending
+                meal.analysisError = nil
+            }
+        }
+        try? context.save()
+        try? mealContext.save()
+        reloadCount()
+    }
+
+    func answer(
+        _ option: MealClarification.Option,
+        questionID: String,
+        for meal: MealLog,
+        in mealContext: ModelContext
+    ) throws {
+        let id = meal.id
+        let existingDescriptor = FetchDescriptor<QueuedMeal>(predicate: #Predicate { $0.targetMealID == id })
+        if let existing = try context.fetch(existingDescriptor).first {
+            context.delete(existing)
+        }
+        let answers = [questionID: option.value]
+        meal.analysisStatus = .pending
+        meal.analysisError = nil
+        meal.clarificationSuggestions = []
+        try mealContext.save()
+        try enqueue(
+            description: meal.descriptionText,
+            photoData: [],
+            clarificationAnswers: answers,
+            clarificationRound: 1,
+            capturedAt: meal.timestamp,
+            targetMealID: meal.id
+        )
     }
 
     func deleteAll() {
@@ -122,6 +192,35 @@ final class OfflineMealQueueStore: ObservableObject {
 
     private func reloadCount() {
         pendingCount = (try? context.fetchCount(FetchDescriptor<QueuedMeal>())) ?? 0
+    }
+
+    private func finish(_ queuedMeal: QueuedMeal, with draft: MealDraft, in mealContext: ModelContext) {
+        if let target = fetchMeal(id: queuedMeal.targetMealID, in: mealContext) {
+            (target.items ?? []).forEach(mealContext.delete)
+            target.apply(draft: draft, descriptionText: queuedMeal.descriptionText)
+        } else if queuedMeal.targetMealID == nil {
+            mealContext.insert(MealLog(draft: draft, descriptionText: queuedMeal.descriptionText, timestamp: queuedMeal.capturedAt))
+        } else {
+            queuedMeal.allPhotoPaths.forEach(OfflineMealPhotoStore.remove)
+            context.delete(queuedMeal)
+            try? context.save()
+            return
+        }
+        do {
+            try mealContext.save()
+            queuedMeal.allPhotoPaths.forEach(OfflineMealPhotoStore.remove)
+            context.delete(queuedMeal)
+            try context.save()
+        } catch {
+            queuedMeal.lastError = error.localizedDescription
+            try? context.save()
+        }
+    }
+
+    private func fetchMeal(id: UUID?, in mealContext: ModelContext) -> MealLog? {
+        guard let id else { return nil }
+        let descriptor = FetchDescriptor<MealLog>(predicate: #Predicate { $0.id == id })
+        return try? mealContext.fetch(descriptor).first
     }
 }
 
@@ -170,8 +269,35 @@ extension MealLog {
             sodium: draft.sodium,
             vitaminD: draft.vitaminD,
             assumptions: draft.assumptions,
-            items: draft.foods.map { MealItem(canonicalName: $0.name, portion: $0.portion, sourceName: draft.ingredientSources[$0.name]) }
+            clarificationSuggestionsData: try? JSONEncoder().encode(draft.clarifications),
+            items: draft.foods.map { MealItem(canonicalName: $0.name, portion: $0.portion, sourceName: $0.sourceName, sourceTier: $0.sourceTier) }
         )
+    }
+
+    func apply(draft: MealDraft, descriptionText: String) {
+        title = draft.title
+        self.descriptionText = descriptionText
+        calories = draft.calories
+        carbohydrates = draft.carbohydrates
+        protein = draft.protein
+        fat = draft.fat
+        fiber = draft.fiber
+        calcium = draft.calcium
+        iron = draft.iron
+        magnesium = draft.magnesium
+        potassium = draft.potassium
+        sodium = draft.sodium
+        vitaminD = draft.vitaminD
+        assumptions = draft.assumptions
+        catalogVersion = draft.catalogVersion
+        analysisStatus = .resolved
+        analysisError = nil
+        clarificationSuggestions = draft.clarifications
+        items = draft.foods.map {
+            let item = MealItem(canonicalName: $0.name, portion: $0.portion, sourceName: $0.sourceName, sourceTier: $0.sourceTier)
+            item.meal = self
+            return item
+        }
     }
 }
 
@@ -180,5 +306,78 @@ private extension QueuedMeal {
     var clarificationAnswers: [String: String] {
         guard let clarificationAnswersData else { return [:] }
         return (try? JSONDecoder().decode([String: String].self, from: clarificationAnswersData)) ?? [:]
+    }
+
+    var cacheKey: String {
+        MealAnalysisDiskCache.key(
+            description: descriptionText,
+            identifiedFoods: identifiedFoods,
+            clarificationAnswers: clarificationAnswers,
+            clarificationRound: clarificationRound
+        )
+    }
+}
+
+private final class MealAnalysisDiskCache {
+    struct Entry: Codable {
+        let draft: MealDraft
+        let expiresAt: Date
+        let lastAccessedAt: Date
+    }
+
+    static let shared = MealAnalysisDiskCache()
+    private let url: URL
+    private var entries: [String: Entry]
+    private let maximumEntries = 100
+    private let lifetime: TimeInterval = 180 * 24 * 60 * 60
+
+    private init() {
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let directory = base.appendingPathComponent("MealAnalysisCache", isDirectory: true)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        url = directory.appendingPathComponent("cache.json")
+        entries = (try? Data(contentsOf: url)).flatMap { try? JSONDecoder().decode([String: Entry].self, from: $0) } ?? [:]
+        sweep()
+    }
+
+    func value(for key: String) -> MealDraft? {
+        guard let entry = entries[key], entry.expiresAt > .now else {
+            entries.removeValue(forKey: key)
+            persist()
+            return nil
+        }
+        entries[key] = Entry(draft: entry.draft, expiresAt: entry.expiresAt, lastAccessedAt: .now)
+        persist()
+        return entry.draft
+    }
+
+    func insert(_ draft: MealDraft, for key: String) {
+        entries[key] = Entry(draft: draft, expiresAt: .now.addingTimeInterval(lifetime), lastAccessedAt: .now)
+        sweep()
+        persist()
+    }
+
+    static func key(description: String, identifiedFoods: [String], clarificationAnswers: [String: String], clarificationRound: Int) -> String {
+        let normalized = [
+            description.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+            identifiedFoods.map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }.sorted().joined(separator: "|"),
+            clarificationAnswers.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: "|"),
+            String(clarificationRound)
+        ].joined(separator: "\n")
+        return SHA256.hash(data: Data(normalized.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private func sweep() {
+        entries = entries.filter { $0.value.expiresAt > .now }
+        if entries.count > maximumEntries {
+            for key in entries.sorted(by: { $0.value.lastAccessedAt < $1.value.lastAccessedAt }).prefix(entries.count - maximumEntries).map(\.key) {
+                entries.removeValue(forKey: key)
+            }
+        }
+    }
+
+    private func persist() {
+        guard let data = try? JSONEncoder().encode(entries) else { return }
+        try? data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
     }
 }

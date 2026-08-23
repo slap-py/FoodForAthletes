@@ -18,6 +18,7 @@ test("generic ingredients search the full USDA corpus and scale detail nutrients
   assert.equal(calls.length, 2);
   assert.doesNotMatch(calls[0], /dataType=/);
   assert.equal(item.sourceName, "USDA FoodData Central");
+  assert.equal(item.sourceTier, "usda");
   assert.equal(item.nutrients.calories, 247.5);
   assert.equal(item.nutrients.protein, 46.5);
 });
@@ -32,6 +33,7 @@ test("branded ingredients try USDA Branded before other sources", async () => {
   const item = await sourceIngredient({ name: "snack", brand: "Example", kind: "branded", grams: 25 }, { foodDataCentralKey: "key" }, async () => { throw new Error("manufacturer fallback should not run"); }, request);
   assert.match(calls[0], /dataType=Branded/);
     assert.equal(item.sourceName, "USDA FoodData Central — Branded");
+    assert.equal(item.sourceTier, "usda");
     assert.equal(item.nutrients.calories, 100);
     assert.equal(item.nutrients.carbohydrates, 10, "USDA Total Carbohydrate must not add fiber or sugars again");
     assert.equal(item.nutrients.fiber, 3);
@@ -53,6 +55,7 @@ test("manufacturer serving facts keep an exact menu product whole", () => {
   assert.equal(product.name, "Double-Smoked Bacon, Cheddar & Egg Sandwich");
   assert.equal(product.portion, "1 sandwich");
   assert.equal(product.sourceName, "Starbucks nutrition");
+  assert.equal(product.sourceTier, "web");
   assert.equal(product.nutrients.calories, 500);
   assert.equal(product.nutrients.carbohydrates, 42);
   assert.equal(product.nutrients.protein, 24);
@@ -107,6 +110,7 @@ test("curated menu products are used in the final research tier after USDA and O
   assert.equal(item.nutrients.carbohydrates, 43);
   assert.equal(item.nutrients.protein, 21);
   assert.equal(item.nutrients.fat, 27);
+  assert.equal(item.sourceTier, "brand");
 });
 
 test("a USDA outage falls through to Open Food Facts before AI research", async () => {
@@ -132,6 +136,7 @@ test("a USDA outage falls through to Open Food Facts before AI research", async 
   assert.match(calls[1], /api\.nal\.usda\.gov/);
   assert.match(calls[2], /openfoodfacts\.org/);
   assert.equal(item.sourceName, "Open Food Facts");
+  assert.equal(item.sourceTier, "open_food_facts");
   assert.equal(item.nutrients.calories, 200);
   assert.equal(item.nutrients.carbohydrates, 30);
 });
