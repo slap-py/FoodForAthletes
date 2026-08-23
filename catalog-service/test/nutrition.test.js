@@ -138,6 +138,32 @@ test("the reported two Pop-Tarts count is preserved before nutrition sourcing", 
   assert.equal(ingredient.quantityWasExplicit, true);
 });
 
+test("official serving evidence prevents a USDA package from becoming two packages", async () => {
+  const item = await sourceIngredient(
+    { name: "Frosted Chocolate Fudge Pop-Tarts", brand: "Pop-Tarts", kind: "branded", grams: 96, quantity: 2, quantityUnit: "pastry", quantityWasExplicit: true, amountConfidence: "high" },
+    { foodDataCentralKey: "key" },
+    async () => { throw new Error("USDA result is corroborated by the official record"); },
+    async url => url.includes("foods/search")
+      ? response({ foods: [{ fdcId: 751110, description: "KELLOGG POP-TARTS CHOCOLATE FUDGE 3.67OZ" }] })
+      : response({
+          description: "KELLOGG POP-TARTS CHOCOLATE FUDGE 3.67OZ",
+          servingSize: 104,
+          servingSizeUnit: "g",
+          householdServingFullText: "1 Package",
+          labelNutrients: {
+            calories: { value: 401 }, carbohydrates: { value: 74 }, protein: { value: 5.1 }, fat: { value: 9.7 }
+          }
+        })
+  );
+
+  assert.equal(item.sourceTier, "usda");
+  assert.equal(item.referenceServing.label, "2 pastries");
+  assert.deepEqual(mealClarifications(
+    [{ name: "Frosted Chocolate Fudge Pop-Tarts", grams: 96, quantity: 2, quantityUnit: "pastry", quantityWasExplicit: true, amountConfidence: "high" }],
+    [item]
+  ), []);
+});
+
 test("a USDA outage falls through to Open Food Facts before AI research", async () => {
   const calls = [];
   const item = await sourceIngredient(

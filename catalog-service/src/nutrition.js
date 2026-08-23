@@ -47,6 +47,7 @@ async function sourceIngredientUncached(ingredient, credentials, manufacturerLoo
   const query = [ingredient.brand, ingredient.name].filter(Boolean).join(" ");
   const grams = positiveNumber(ingredient.grams, 100);
   const failures = [];
+  const curated = ingredient.kind === "branded" ? curatedMenuProduct(ingredient) : null;
 
   const usda = await trySource("USDA", failures, () => usdaIngredient(
     query,
@@ -55,13 +56,18 @@ async function sourceIngredientUncached(ingredient, credentials, manufacturerLoo
     request,
     ingredient.kind === "branded" ? "Branded" : undefined
   ));
-  if (isTrustworthyNutrition(usda, grams, failures)) return finalizeSourcedItem(usda, ingredient, grams);
+  if (isTrustworthyNutrition(usda, grams, failures)) {
+    const corroborated = corroborateKnownProduct(usda, curated, grams, failures);
+    if (corroborated) return finalizeSourcedItem(corroborated, ingredient, grams);
+  }
 
   const off = await trySource("Open Food Facts", failures, () => openFoodFactsIngredient(query, grams, request, ingredient.kind === "branded"));
-  if (isTrustworthyNutrition(off, grams, failures)) return finalizeSourcedItem(off, ingredient, grams);
+  if (isTrustworthyNutrition(off, grams, failures)) {
+    const corroborated = corroborateKnownProduct(off, curated, grams, failures);
+    if (corroborated) return finalizeSourcedItem(corroborated, ingredient, grams);
+  }
 
-  if (ingredient.kind === "branded") {
-    const curated = curatedMenuProduct(ingredient);
+  if (curated) {
     const exactProduct = curated ? curatedProductNutrition(curated, grams) : null;
     if (isTrustworthyNutrition(exactProduct, grams, failures)) return finalizeSourcedItem(exactProduct, ingredient, grams);
   }
@@ -214,6 +220,26 @@ function curatedProductNutrition(product, grams) {
     identityMatch: { score: 1, literalScore: 1, needsConfirmation: false, candidates: [product.name] },
     referenceServing: referenceServing(product.servingLabel, product.servingGrams),
     nutrients: normalizeNutrients(product.nutrientsPerServing, servings)
+  };
+}
+
+function corroborateKnownProduct(item, product, grams, failures) {
+  if (!product) return item;
+  const official = curatedProductNutrition(product, grams);
+  const materiallyDifferent = ["calories", "carbohydrates", "protein", "fat"].some(key => {
+    const left = nonnegativeNumber(item.nutrients?.[key], 0);
+    const right = nonnegativeNumber(official.nutrients?.[key], 0);
+    return Math.abs(left - right) / Math.max(left, right, 1) > 0.25;
+  });
+  if (materiallyDifferent) {
+    failures.push(`${item.sourceName}: core nutrients conflict with ${product.sourceName}`);
+    return null;
+  }
+  return {
+    ...item,
+    identityMatch: official.identityMatch,
+    referenceServing: official.referenceServing,
+    corroboratedBy: [{ sourceName: product.sourceName, sourceURL: product.sourceURL }]
   };
 }
 

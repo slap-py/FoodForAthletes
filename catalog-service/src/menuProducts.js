@@ -11,7 +11,6 @@ const products = [
     aliases: [
       "frosted chocolate fudge pop tarts",
       "chocolate fudge pop tarts",
-      "double chocolate pop tarts",
       "chocolate chocolate pop tarts",
       "one container of chocolate pop tarts"
     ],
