@@ -1,4 +1,5 @@
 import http from "node:http";
+import { search as searchCatalog } from "./catalog.js";
 import { manufacturerNutrition, mealClarifications, nutritionPlausibilityIssue, NutritionSourceError, sourceIngredient, totals } from "./nutrition.js";
 import { namedMenuProducts, productIngredient } from "./menuProducts.js";
 
@@ -13,6 +14,10 @@ export const server = http.createServer(async (request, response) => {
     response.setHeader("content-type", "application/json; charset=utf-8");
     response.setHeader("cache-control", "no-store");
 
+    if (request.method === "GET" && url.pathname === "/v1/foods/search") {
+      const foods = searchCatalog(url.searchParams.get("q") ?? "").slice(0, 20).map(catalogFoodResponse);
+      return json(response, 200, { foods });
+    }
     if (request.method === "POST" && url.pathname === "/v1/meal-analysis") {
       const input = await requestBody(request);
       return json(response, 200, await cachedMealAnalysis(input));
@@ -259,6 +264,26 @@ function requestBody(request) {
 }
 
 function json(response, status, value) { response.writeHead(status); response.end(JSON.stringify(value)); }
+function catalogFoodResponse(food) {
+  const nutrients = Object.fromEntries(
+    ["calories", "carbohydrates", "protein", "fat", "fiber", "calcium", "iron", "magnesium", "potassium", "sodium", "vitaminD"]
+      .map(key => [key, Number(food.nutrients?.[key]) || 0])
+  );
+  return {
+    id: food.id,
+    canonicalName: food.name,
+    brandName: food.brand ?? null,
+    searchAliases: [],
+    servings: asArray(food.servings).map((serving, index) => ({ id: `${food.id}_${index}`, label: serving.label, gramWeight: serving.grams, nutrients })),
+    provenance: asArray(food.sourceRecords).map(record => ({
+      source: record.source,
+      sourceID: String(record.sourceID),
+      sourceDescription: record.name,
+      importedAt: record.importedAt
+    })),
+    catalogVersion: food.catalogVersion
+  };
+}
 function asArray(value) { return Array.isArray(value) ? value : value ? [value] : []; }
 function positiveNumber(value, fallback) { const parsed = Number(value); return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback; }
 function clarificationRound(input) { return Math.min(2, Math.max(0, Math.floor(Number(input?.clarificationRound) || 0))); }
