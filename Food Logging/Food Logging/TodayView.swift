@@ -255,6 +255,7 @@ private struct WaterMacroValue: View {
 }
 
 struct MealRhythmView: View {
+    @Environment(\.locale) private var locale
     let meals: [MealLog]
     let water: [WaterLog]
     var workouts: [HealthWorkout] = []
