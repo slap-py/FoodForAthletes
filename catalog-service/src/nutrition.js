@@ -200,10 +200,14 @@ export function manufacturerNutrition(ingredient, result) {
 }
 
 function curatedProductNutrition(product, grams) {
-  const servings = Math.max(1, Math.round(grams / product.servingGrams));
+  const servings = grams / product.servingGrams;
+  const consumedCount = servings * (product.servingCount ?? 1);
+  const unit = /pastr/i.test(product.servingLabel) ? "pastry" : null;
   return {
     name: product.name,
-    portion: servings === 1 ? product.servingLabel : String(servings) + " × " + product.servingLabel,
+    portion: servings === 1
+      ? product.servingLabel
+      : unit ? `${formatQuantity(consumedCount)} ${pluralizedUnit(unit, consumedCount)}` : portionLabel(grams),
     sourceName: product.sourceName,
     sourceTier: "brand",
     sourceID: product.sourceURL,
@@ -330,7 +334,7 @@ async function requestJSON(request, url, options, errorMessage) {
   for (let attempt = 0; attempt < maximumAttempts; attempt += 1) {
     if (attempt > 0 && lastStatus !== undefined) await delay(750);
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8_000);
+    const timeout = setTimeout(() => controller.abort(), 6_000);
     try {
       const response = await request(url, { ...options, signal: controller.signal });
       if (response.ok) return await response.json();

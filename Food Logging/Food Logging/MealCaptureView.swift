@@ -132,6 +132,15 @@ struct MealCaptureView: View {
                         .onSubmit { descriptionFocused = false }
                     HStack {
                         Spacer()
+                        if descriptionFocused {
+                            Button {
+                                descriptionFocused = false
+                            } label: {
+                                Image(systemName: "keyboard.chevron.compact.down").frame(width: 38, height: 38)
+                                    .background(JournalTheme.moss.opacity(0.10), in: Circle())
+                            }
+                            .accessibilityLabel("Hide keyboard")
+                        }
                         Button(action: requestCamera) {
                             Image(systemName: "camera").frame(width: 38, height: 38)
                                 .background(JournalTheme.moss.opacity(0.10), in: Circle())
@@ -396,7 +405,7 @@ struct MealCaptureView: View {
                 ForEach(usualMeals) { meal in
                     Button { repeatMeal(meal) } label: {
                         HStack(spacing: 11) {
-                            Text(mealEmojiForCapture(meal.title)).font(.title3)
+                            Text(MealEmoji.symbol(for: meal)).font(.title3)
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(meal.title).font(.subheadline.bold()).lineLimit(1)
                                 Text("\(Int(meal.calories)) kcal · \(meal.timestamp.formatted(.relative(presentation: .named).locale(locale)))")
@@ -444,16 +453,6 @@ struct MealCaptureView: View {
                 }
             }
         }
-    }
-
-    private func mealEmojiForCapture(_ title: String) -> String {
-        let value = title.lowercased()
-        if value.contains("coffee") || value.contains("latte") { return "☕" }
-        if value.contains("salmon") || value.contains("miso") || value.contains("noodle") { return "🍜" }
-        if value.contains("bowl") || value.contains("salad") { return "🥗" }
-        if value.contains("sandwich") || value.contains("toast") { return "🥪" }
-        if value.contains("banana") { return "🍌" }
-        return "🍽️"
     }
 
     private func requestCamera() {

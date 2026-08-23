@@ -15,7 +15,7 @@ export const server = http.createServer(async (request, response) => {
 
     if (request.method === "POST" && url.pathname === "/v1/meal-analysis") {
       const input = await requestBody(request);
-      return json(response, 200, await cachedMealAnalysis(input));
+      return json(response, 200, await withTimeout(cachedMealAnalysis(input), 65_000));
     }
     if (request.method === "POST" && url.pathname === "/v1/transcribe") return json(response, 200, await transcribe(await requestBody(request)));
     if (request.method === "POST" && url.pathname === "/v1/photo-foods") return json(response, 200, await detectFoods(await requestBody(request)));
@@ -70,6 +70,7 @@ async function analyzeMeal(input) {
 
   const interpretation = await structuredResponse({
     model: process.env.OPENAI_MODEL ?? "gpt-5.6-terra", reasoning: "low", content,
+    timeoutMs: 30_000,
     instructions: "Identify only foods at the level the person ordered or ate. Foods identified during photo review are explicit user-visible hints: use them together with the photos and description, correct them only when the image clearly contradicts them, and do not discard them silently. Treat consumer descriptions as approximate: resolve ordinary synonyms, abbreviated flavor names, and remembered marketing names to a searchable product name, but do not silently choose between materially different products. Apply any user clarification answers as authoritative. A named branded restaurant/menu product or packaged product MUST be exactly one branded ingredient and must never be split into recipe components. grams MUST be the total estimated weight actually consumed, not the weight of one unit: multiply an explicit count by the per-item weight (for example, two 48 g pastries means grams=96). quantity is the number of discrete units eaten; use 1 when not applicable or unknown. quantityUnit is a singular food unit such as pastry, bar, slice, or sandwich, or null when not applicable. quantityWasExplicit is true only when the user supplied the count. amountConfidence is low when the amount or per-unit weight is materially uncertain. Keep the ingredient name as the searchable product or food name without putting the count into it. Only split an unbranded homemade/composed meal into familiar top-level components. Infer brands only when visible, explicitly named, or unambiguous from a protected trademark such as Pop-Tarts. Return no duplicate, speculative, or unrelated ingredients.",
     name: "meal_ingredients", schema: ingredientSchema
   });
@@ -129,6 +130,7 @@ async function analyzeMeal(input) {
 async function verifyNutrition(title, ingredients, nutrients, priorIssue = null) {
   return structuredResponse({
     model: process.env.OPENAI_VERIFY_MODEL ?? "gpt-5.4-mini", reasoning: "medium",
+    timeoutMs: 20_000,
     content: [{ type: "input_text", text: JSON.stringify({ title, ingredients, nutrients, priorIssue }) }],
     instructions: "Perform a conservative nutrition sanity check after a food log. Flag clearly implausible source or unit errors, especially values copied per 100 g but presented as one smaller serving. Use the source and corroboration metadata as evidence. Do not invent or modify nutrients. When implausible, return the zero-based indexes of only the ingredients that need new source research; when plausible, return an empty array.",
     name: "nutrition_sanity_check", schema: verificationSchema
@@ -142,6 +144,7 @@ async function detectFoods(input) {
   const result = await structuredResponse({
     model: process.env.OPENAI_PHOTO_MODEL ?? "gpt-5.4-mini",
     reasoning: "low",
+    timeoutMs: 30_000,
     content: [
       { type: "input_text", text: "what foods do you see in the photo" },
       { type: "input_image", image_url: `data:image/jpeg;base64,${photo}`, detail: "high" }
@@ -158,6 +161,7 @@ async function manufacturerLookup(ingredient, context = null) {
   const foodName = [ingredient.brand, ingredient.name].filter(Boolean).join(" ");
   const result = await structuredResponse({
     model: process.env.OPENAI_MANUFACTURER_MODEL ?? "gpt-5.4-nano", reasoning: "medium",
+    timeoutMs: 35_000,
     content: [{ type: "input_text", text: JSON.stringify({ request: `Find nutrition facts for ${foodName}.`, requestedGrams: ingredient.grams, foodKind: ingredient.kind, repairContext: context }) }],
     instructions: "Use web search to resolve the food after direct USDA and Open Food Facts lookups were unavailable, insufficient, or suspect. The user's title may be approximate, abbreviated, or a remembered flavor description; identify a likely marketed product when the brand, product family, flavor semantics, and region support it. Report matchConfidence from 0 to 1 and set identityNeedsConfirmation=true when a reasonable person could mean a materially different product. For branded foods prefer the brand's official nutrition or product page, then another reputable product database. For generic foods prefer an authoritative composition database. Use one primary source and, when available, up to two independent sources to corroborate identity, labeled serving count, serving grams, calories, and macros. Never invent data, average conflicts, or split a named product into ingredients. Explicitly identify whether nutrients are per serving or per 100 g. servingGrams and servingCount describe one labeled serving; servingUnit is singular. Do not confuse a source's labeled serving with the amount the user ate. carbohydrates must be Total Carbohydrate exactly. Use null for an optional micronutrient not reported. Return found=false unless identity and complete calories, carbs, protein, and fat are sufficiently supported. If repairContext is present, independently investigate the suspected result rather than repeating it.",
     tools: [{ type: "web_search" }], name: "manufacturer_nutrition", schema: manufacturerSchema
@@ -178,9 +182,9 @@ async function transcribe(input) {
   return { text: String(payload?.text ?? "") };
 }
 
-async function structuredResponse({ model, reasoning, content, instructions, tools, name, schema }) {
+async function structuredResponse({ model, reasoning, content, instructions, tools, name, schema, timeoutMs = 45_000 }) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 90_000);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST", headers: { Authorization: `Bearer ${credentials.openAIKey}`, "content-type": "application/json" }, signal: controller.signal,
@@ -191,6 +195,9 @@ async function structuredResponse({ model, reasoning, content, instructions, too
     const output = payload.output_text ?? payload.output?.flatMap(item => item.content ?? []).find(item => item.type === "output_text")?.text;
     if (!output) throw new ServiceError("openai_analysis_failed");
     return JSON.parse(output);
+  } catch (error) {
+    if (error?.name === "AbortError") throw new ServiceError("analysis_timed_out");
+    throw error;
   } finally {
     clearTimeout(timeout);
   }
@@ -214,7 +221,21 @@ function preserveNamedProducts(description, candidates) {
     return [...candidateWords].some(word => descriptionWords.has(word) && !productWords.has(word));
   });
 
-  return [...products.map(productIngredient), ...extras];
+  return [...products.map(product => productIngredient(product, description)), ...extras];
+}
+
+async function withTimeout(promise, timeoutMs) {
+  let timeout;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timeout = setTimeout(() => reject(new ServiceError("analysis_timed_out")), timeoutMs);
+      })
+    ]);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function words(value) {

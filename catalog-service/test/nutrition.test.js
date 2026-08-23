@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { manufacturerNutrition, mealClarifications, nutritionPlausibilityIssue, sourceIngredient } from "../src/nutrition.js";
+import { namedMenuProducts, productIngredient } from "../src/menuProducts.js";
 
 test("generic ingredients search the full USDA corpus and scale detail nutrients", async () => {
   const calls = [];
@@ -111,6 +112,30 @@ test("curated menu products are used in the final research tier after USDA and O
   assert.equal(item.nutrients.protein, 21);
   assert.equal(item.nutrients.fat, 27);
   assert.equal(item.sourceTier, "brand");
+});
+
+test("remembered chocolate Pop-Tarts names resolve to the official two-pastry serving", async () => {
+  const item = await sourceIngredient(
+    { name: "chocolate chocolate pop tarts", brand: "Pop-Tarts", kind: "branded", grams: 96 },
+    { foodDataCentralKey: "key" },
+    async () => { throw new Error("curated product should not need AI research"); },
+    async url => url.includes("foods/search") ? response({ foods: [] }) : response({ products: [] })
+  );
+
+  assert.equal(item.name, "Frosted Chocolate Fudge Pop-Tarts");
+  assert.equal(item.portion, "2 pastries");
+  assert.equal(item.nutrients.calories, 370);
+  assert.equal(item.nutrients.carbohydrates, 69);
+  assert.equal(item.sourceTier, "brand");
+});
+
+test("the reported two Pop-Tarts count is preserved before nutrition sourcing", () => {
+  const [product] = namedMenuProducts("2 pop tarts / one container of the chocolate chocolate pop tarts");
+  const ingredient = productIngredient(product, "2 pop tarts / one container of the chocolate chocolate pop tarts");
+
+  assert.equal(ingredient.quantity, 2);
+  assert.equal(ingredient.grams, 96);
+  assert.equal(ingredient.quantityWasExplicit, true);
 });
 
 test("a USDA outage falls through to Open Food Facts before AI research", async () => {

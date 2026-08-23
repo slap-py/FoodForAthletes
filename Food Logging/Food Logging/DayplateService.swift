@@ -15,6 +15,14 @@ enum DayplateServiceError: LocalizedError {
             return "This app is connected to an older Dayplate service. Deploy the current catalog service, then try again."
         case .server("service_not_configured"):
             return "Voice transcription is not configured on the Dayplate service yet."
+        case .server("analysis_timed_out"):
+            return "Nutrition lookup took too long. Your meal is still saved, and you can try it again when you're ready."
+        case .server("no_recognized_food"):
+            return "No food could be identified from this entry. Add a food name or a clearer photo, then try again."
+        case .server(let message) where message.hasPrefix("No trustworthy nutrition source found"):
+            return "Nutrition facts couldn't be verified for one of the foods. Your meal is still saved; edit the description with a brand or product name and try again."
+        case .server(let message) where message.hasPrefix("nutrition_verification_failed"):
+            return "The nutrition sources disagreed about the serving size, so Dayplate did not save uncertain numbers. Your meal is still saved and can be retried."
         case .server(let message):
             return message.replacingOccurrences(of: "_", with: " ")
         }
@@ -62,7 +70,7 @@ struct DayplateService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(RemoteMealRequest(input: input))
-        let (data, response) = try await perform(request, timeout: 300, retryTimeouts: false, maxAttempts: 1)
+        let (data, response) = try await perform(request, timeout: 75, retryTimeouts: false, maxAttempts: 1)
         try validate(response, data: data)
         guard let result = try? JSONDecoder().decode(RemoteMealDraft.self, from: data) else { throw DayplateServiceError.invalidResponse }
         return result.mealDraft

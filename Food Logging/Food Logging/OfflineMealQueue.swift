@@ -111,13 +111,14 @@ final class OfflineMealQueueStore: ObservableObject {
                 }
                 finish(queuedMeal, with: draft, in: mealContext)
             } catch {
-                queuedMeal.attemptCount += 1
-                queuedMeal.lastError = error.localizedDescription
+                let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+                queuedMeal.attemptCount = shouldRetryInBackground(error) ? queuedMeal.attemptCount + 1 : 3
+                queuedMeal.lastError = message
                 try? context.save()
                 if queuedMeal.attemptCount >= 3,
                    let target = fetchMeal(id: queuedMeal.targetMealID, in: mealContext) {
                     target.analysisStatus = .failed
-                    target.analysisError = error.localizedDescription
+                    target.analysisError = message
                     try? mealContext.save()
                 }
             }
@@ -221,6 +222,17 @@ final class OfflineMealQueueStore: ObservableObject {
         guard let id else { return nil }
         let descriptor = FetchDescriptor<MealLog>(predicate: #Predicate { $0.id == id })
         return try? mealContext.fetch(descriptor).first
+    }
+
+    private func shouldRetryInBackground(_ error: Error) -> Bool {
+        guard let code = (error as? URLError)?.code else { return false }
+        return [
+            .networkConnectionLost,
+            .notConnectedToInternet,
+            .cannotConnectToHost,
+            .cannotFindHost,
+            .dnsLookupFailed
+        ].contains(code)
     }
 }
 

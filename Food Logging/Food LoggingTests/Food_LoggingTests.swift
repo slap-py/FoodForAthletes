@@ -58,6 +58,14 @@ struct Food_LoggingTests {
         #expect(WaterDisplay.amount(240, unitSystem: "metric") == "240 mL")
     }
 
+    @Test func mealEmojiPrefersSpecificFoodOverGenericPlate() {
+        #expect(MealEmoji.symbol(for: "Bacon and eggs") == "🥓")
+        #expect(MealEmoji.symbol(for: "Frosted chocolate Pop-Tarts") == "🍫")
+        #expect(MealEmoji.symbol(for: "Something unknown") == "🍽️")
+        let meal = MealLog(title: "Breakfast", descriptionText: "I ate bacon", calories: 0, carbohydrates: 0, protein: 0, fat: 0, fiber: 0, assumptions: "")
+        #expect(MealEmoji.symbol(for: meal) == "🥓")
+    }
+
     @Test func historySummariesCombineDayLogsAndKeepWaterOnlyDaysDistinct() {
         let calendar = Calendar(identifier: .gregorian)
         let firstMeal = MealLog(

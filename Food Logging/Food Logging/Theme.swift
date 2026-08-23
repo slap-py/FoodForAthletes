@@ -64,12 +64,40 @@ struct JournalCard<Content: View>: View {
 
     var body: some View {
         content
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(16)
             .background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .stroke(JournalTheme.moss.opacity(0.12), lineWidth: 1)
             }
+    }
+}
+
+enum MealEmoji {
+    static func symbol(for meal: MealLog) -> String {
+        let itemNames = (meal.items ?? []).map(\.canonicalName)
+        return symbol(for: ([meal.title, meal.descriptionText] + itemNames).joined(separator: " "))
+    }
+
+    static func symbol(for title: String) -> String {
+        let value = title.lowercased()
+        let mappings: [(String, String)] = [
+            ("bacon", "🥓"), ("egg", "🍳"), ("pizza", "🍕"), ("burger", "🍔"),
+            ("hamburger", "🍔"), ("fries", "🍟"), ("taco", "🌮"), ("burrito", "🌯"),
+            ("steak", "🥩"), ("beef", "🥩"), ("chicken", "🍗"), ("turkey", "🍗"),
+            ("sushi", "🍣"), ("salmon", "🍣"), ("tuna", "🍣"), ("fish", "🐟"),
+            ("ramen", "🍜"), ("noodle", "🍜"), ("miso", "🍜"), ("pasta", "🍝"),
+            ("spaghetti", "🍝"), ("rice", "🍚"), ("salad", "🥗"), ("bowl", "🥗"),
+            ("sandwich", "🥪"), ("toast", "🥪"), ("hot dog", "🌭"), ("soup", "🥣"),
+            ("oatmeal", "🥣"), ("cereal", "🥣"), ("yogurt", "🥣"), ("coffee", "☕"),
+            ("latte", "☕"), ("tea", "🍵"), ("smoothie", "🥤"), ("banana", "🍌"),
+            ("apple", "🍎"), ("strawber", "🍓"), ("berry", "🫐"), ("fruit", "🍇"),
+            ("pop-tart", "🍫"), ("pop tart", "🍫"), ("chocolate", "🍫"), ("donut", "🍩"),
+            ("doughnut", "🍩"), ("croissant", "🥐"), ("pastry", "🥐"), ("pancake", "🥞"),
+            ("waffle", "🧇"), ("cookie", "🍪"), ("cake", "🍰"), ("ice cream", "🍨")
+        ]
+        return mappings.first(where: { value.contains($0.0) })?.1 ?? "🍽️"
     }
 }
 

@@ -226,7 +226,7 @@ private struct DayplateMealRow: View {
     let meal: MealLog
     var body: some View {
         HStack(spacing: 10) {
-            Text(mealEmoji(meal.title)).font(.title3).frame(width: 36, height: 36).background(JournalTheme.sage.opacity(0.24), in: Circle())
+            Text(MealEmoji.symbol(for: meal)).font(.title3).frame(width: 36, height: 36).background(JournalTheme.sage.opacity(0.24), in: Circle())
             VStack(alignment: .leading, spacing: 5) {
                 Text(meal.title).font(.subheadline.weight(.semibold)).lineLimit(1)
                 if meal.analysisStatus == .pending {
@@ -269,13 +269,17 @@ struct DayplateMealDetailView: View {
                 Text(meal.timestamp, format: .dateTime.weekday(.short).month(.abbreviated).day().hour().minute())
                     .font(.caption.weight(.semibold)).tracking(1.4).foregroundStyle(JournalTheme.moss)
                 HStack(alignment: .top, spacing: 10) {
-                    Text(mealEmoji(meal.title)).font(.system(size: 30))
+                    Text(MealEmoji.symbol(for: meal)).font(.system(size: 30))
                     Text(meal.title).font(.system(size: 29, weight: .bold)).tracking(-0.6)
                 }
                 if meal.analysisStatus == .pending {
                     JournalCard {
-                        Label("Calculating nutrition in the background", systemImage: "clock")
-                            .font(.subheadline.weight(.semibold)).foregroundStyle(JournalTheme.moss)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Label("Calculating nutrition in the background", systemImage: "clock")
+                                .font(.subheadline.weight(.semibold)).foregroundStyle(JournalTheme.moss)
+                            Text("Usually finished within a minute. If sources cannot be verified, you can retry from here.")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
                     }
                 } else if meal.analysisStatus == .failed {
                     JournalCard {
@@ -410,7 +414,13 @@ struct DayplateHistoryView: View {
                     HStack(alignment: .top) {
                         Text(selectedDate, format: .dateTime.month(.wide).year()).font(.system(size: 31, weight: .bold)).tracking(-0.6)
                         Spacer()
-                        Button { showsSearch = true } label: { Image(systemName: "magnifyingglass").frame(width: 42, height: 42).background(JournalTheme.card, in: Circle()).overlay(Circle().stroke(JournalTheme.moss.opacity(0.18))) }
+                        Button { showsSearch = true } label: {
+                            Label("Search", systemImage: "magnifyingglass")
+                                .font(.subheadline.weight(.semibold))
+                                .padding(.horizontal, 13).frame(height: 42)
+                                .background(JournalTheme.card, in: Capsule())
+                                .overlay(Capsule().stroke(JournalTheme.moss.opacity(0.18)))
+                        }
                             .buttonStyle(.plain).foregroundStyle(JournalTheme.moss).accessibilityLabel("Search meals")
                     }
                     HStack(spacing: 4) {
@@ -426,8 +436,15 @@ struct DayplateHistoryView: View {
                             }.buttonStyle(.plain).disabled(date > Date.now)
                         }
                     }
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 24).onEnded { value in
+                            if value.translation.width < -40 { shiftWeek(by: -1) }
+                            else if value.translation.width > 40 { shiftWeek(by: 1) }
+                        }
+                    )
                     DayplateHistoryDayCard(date: recentDays[0], meals: mealsFor(recentDays[0]), startsOpen: true)
-                    Text("EARLIER THIS WEEK").font(.caption.weight(.semibold)).tracking(1.4).foregroundStyle(JournalTheme.moss).padding(.top, 8)
+                    Text("PREVIOUS DAYS").font(.caption.weight(.semibold)).tracking(1.4).foregroundStyle(JournalTheme.moss).padding(.top, 8)
                     ForEach(recentDays.dropFirst(), id: \.self) { day in DayplateHistoryDayCard(date: day, meals: mealsFor(day)) }
                 }
                 .padding(.horizontal, 18).padding(.top, 18).padding(.bottom, 138)
@@ -437,6 +454,10 @@ struct DayplateHistoryView: View {
         }
     }
     private func mealsFor(_ date: Date) -> [MealLog] { meals.filter { calendar.isDate($0.timestamp, inSameDayAs: date) }.sorted { $0.timestamp < $1.timestamp } }
+    private func shiftWeek(by offset: Int) {
+        guard let candidate = calendar.date(byAdding: .day, value: offset * 7, to: selectedDate) else { return }
+        selectedDate = calendar.startOfDay(for: min(candidate, .now))
+    }
 }
 
 private struct DayplateHistoryDayCard: View {
@@ -467,8 +488,11 @@ private struct DayplateHistoryDayCard: View {
                 ForEach(meals) { meal in
                     NavigationLink { DayplateMealDetailView(meal: meal) } label: {
                         HStack(spacing: 10) {
-                            Text(meal.timestamp, format: .dateTime.hour().minute()).font(.caption2.weight(.semibold)).foregroundStyle(JournalTheme.ink.opacity(0.45)).frame(width: 58, alignment: .leading)
-                            Text(mealEmoji(meal.title)); Text(meal.title).font(.subheadline).lineLimit(1); Spacer(); Text("\(Int(meal.calories)) kcal").font(.caption.weight(.semibold)).foregroundStyle(JournalTheme.blue)
+                            Text(meal.timestamp, format: .dateTime.hour().minute())
+                                .font(.caption2.weight(.semibold)).foregroundStyle(JournalTheme.ink.opacity(0.45))
+                                .lineLimit(1).minimumScaleFactor(0.75).allowsTightening(true)
+                                .frame(width: 62, alignment: .leading)
+                            Text(MealEmoji.symbol(for: meal)); Text(meal.title).font(.subheadline).lineLimit(1); Spacer(); Text("\(Int(meal.calories)) kcal").font(.caption.weight(.semibold)).foregroundStyle(JournalTheme.blue)
                         }.foregroundStyle(JournalTheme.ink).padding(.horizontal, 14).padding(.vertical, 10).overlay(alignment: .top) { Divider().padding(.leading, 14) }
                     }.buttonStyle(.plain)
                 }
@@ -481,17 +505,67 @@ private struct DayplateHistorySearchView: View {
     @Environment(\.dismiss) private var dismiss
     let meals: [MealLog]
     @State private var query = ""
-    private var results: [MealLog] { query.isEmpty ? [] : meals.filter { $0.title.localizedCaseInsensitiveContains(query) || $0.descriptionText.localizedCaseInsensitiveContains(query) } }
+    @FocusState private var queryFocused: Bool
+    private var results: [MealLog] {
+        query.isEmpty ? [] : meals.filter { meal in
+            meal.title.localizedCaseInsensitiveContains(query)
+                || meal.descriptionText.localizedCaseInsensitiveContains(query)
+                || (meal.items ?? []).contains { $0.canonicalName.localizedCaseInsensitiveContains(query) }
+        }
+    }
+    private let suggestions = ["Bacon", "Breakfast", "Coffee", "Pop-Tarts", "Salmon", "Chicken"]
+    private var recentFoods: [String] {
+        var seen = Set<String>()
+        return meals.flatMap { ($0.items ?? []).map(\.canonicalName) }
+            .filter { seen.insert($0.lowercased()).inserted }
+            .prefix(6).map { $0 }
+    }
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    Text("Ask about your history").font(.title2.bold())
-                    TextField("When did I last eat salmon?", text: $query).padding(14).background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 16)).overlay(RoundedRectangle(cornerRadius: 16).stroke(JournalTheme.moss.opacity(0.2)))
+                VStack(alignment: .leading, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("Search your history").font(.title2.bold())
+                        Text("Find a food, meal title, or word from your original note.").font(.subheadline).foregroundStyle(.secondary)
+                    }
+                    TextField("Food, meal, or note", text: $query)
+                        .focused($queryFocused).submitLabel(.search)
+                        .padding(14).background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 16)).overlay(RoundedRectangle(cornerRadius: 16).stroke(JournalTheme.moss.opacity(0.2)))
+                    if query.isEmpty {
+                        searchSuggestions(title: "TRY A SEARCH", values: suggestions)
+                        if !recentFoods.isEmpty { searchSuggestions(title: "RECENT FOODS", values: recentFoods) }
+                        if !meals.isEmpty {
+                            Text("RECENT MEALS").font(.caption.bold()).tracking(1.2).foregroundStyle(JournalTheme.moss)
+                            ForEach(meals.prefix(4)) { meal in
+                                NavigationLink { DayplateMealDetailView(meal: meal) } label: { DayplateMealRow(meal: meal) }.buttonStyle(.plain)
+                            }
+                        }
+                    }
                     if !query.isEmpty { Text(results.isEmpty ? "No matching meals yet." : "Found \(results.count) matching \(results.count == 1 ? "meal" : "meals").").font(.subheadline).foregroundStyle(JournalTheme.ink.opacity(0.65)) }
-                    ForEach(results) { meal in DayplateMealRow(meal: meal) }
+                    ForEach(results) { meal in
+                        NavigationLink { DayplateMealDetailView(meal: meal) } label: { DayplateMealRow(meal: meal) }.buttonStyle(.plain)
+                    }
                 }.padding(18)
-            }.background(JournalTheme.paper).toolbar { ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } } }
+            }.background(JournalTheme.paper).toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
+                ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("Hide keyboard") { queryFocused = false } }
+            }
+        }
+    }
+
+    private func searchSuggestions(title: String, values: [String]) -> some View {
+        VStack(alignment: .leading, spacing: 9) {
+            Text(title).font(.caption.bold()).tracking(1.2).foregroundStyle(JournalTheme.moss)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 8)], alignment: .leading, spacing: 8) {
+                ForEach(values, id: \.self) { value in
+                    Button(value) { query = value; queryFocused = false }
+                        .font(.subheadline.weight(.semibold)).foregroundStyle(JournalTheme.moss)
+                        .padding(.horizontal, 12).frame(minHeight: 38)
+                        .frame(maxWidth: .infinity)
+                        .background(JournalTheme.card, in: Capsule())
+                        .overlay(Capsule().stroke(JournalTheme.moss.opacity(0.16)))
+                }
+            }
         }
     }
 }
@@ -585,7 +659,7 @@ struct DayplateInsightsView: View {
                         } else {
                             ForEach(topFoods, id: \.name) { food in
                                 HStack(spacing: 12) {
-                                    Text(mealEmoji(food.name)).frame(width: 28)
+                                    Text(MealEmoji.symbol(for: food.name)).frame(width: 28)
                                     Text(food.name).font(.subheadline.weight(.medium))
                                     Spacer()
                                     Text("\(food.count)×").font(.subheadline.weight(.semibold)).foregroundStyle(JournalTheme.ink.opacity(0.5))
@@ -659,15 +733,4 @@ private struct DayplateInsightMetric: View {
     let value: Double, color: Color
     init(_ label: String, _ value: Double, _ unit: String, _ color: Color) { self.label = label; self.value = value; self.unit = unit; self.color = color }
     var body: some View { VStack(alignment: .leading, spacing: 7) { HStack(spacing: 6) { RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 4, height: 16); Text(label).font(.subheadline.weight(.semibold)).foregroundStyle(JournalTheme.ink.opacity(0.60)) }; Text("\(Int(value.rounded())) \(unit)").font(.title2.bold()) }.frame(maxWidth: .infinity, alignment: .leading) }
-}
-
-private func mealEmoji(_ title: String) -> String {
-    let value = title.lowercased()
-    if value.contains("coffee") || value.contains("latte") { return "☕" }
-    if value.contains("salmon") || value.contains("noodle") || value.contains("miso") { return "🍜" }
-    if value.contains("salad") || value.contains("bowl") { return "🥗" }
-    if value.contains("sandwich") || value.contains("toast") { return "🥪" }
-    if value.contains("banana") || value.contains("fruit") { return "🍌" }
-    if value.contains("egg") { return "🍳" }
-    return "🍽️"
 }
