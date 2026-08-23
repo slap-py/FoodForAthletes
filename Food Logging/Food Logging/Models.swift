@@ -135,6 +135,10 @@ final class QueuedMeal {
     /// Added with the unified three-photo meal capture flow. Legacy paths above
     /// remain so already queued meals can still be processed.
     var photoPaths: [String] = []
+    var identifiedFoods: [String] = []
+    var clarificationAnswersData: Data?
+    var clarificationRound: Int = 0
+    var attemptCount: Int = 0
     var lastError: String?
 
     init(
@@ -143,7 +147,10 @@ final class QueuedMeal {
         descriptionText: String,
         mealPhotoPath: String? = nil,
         nutritionLabelPhotoPath: String? = nil,
-        photoPaths: [String] = []
+        photoPaths: [String] = [],
+        identifiedFoods: [String] = [],
+        clarificationAnswersData: Data? = nil,
+        clarificationRound: Int = 0
     ) {
         self.id = id
         self.capturedAt = capturedAt
@@ -151,6 +158,9 @@ final class QueuedMeal {
         self.mealPhotoPath = mealPhotoPath
         self.nutritionLabelPhotoPath = nutritionLabelPhotoPath
         self.photoPaths = photoPaths
+        self.identifiedFoods = identifiedFoods
+        self.clarificationAnswersData = clarificationAnswersData
+        self.clarificationRound = clarificationRound
     }
 }
 

@@ -37,6 +37,7 @@ struct MealCaptureView: View {
     @State private var clarificationQuestions: [MealClarification] = []
     @State private var clarificationIndex = 0
     @State private var clarificationAnswers: [String: String] = [:]
+    @State private var clarificationRound = 0
     @State private var isPreparingPreview = false
     @State private var showsCameraDenied = false
     @State private var audioRecorder: AVAudioRecorder?
@@ -793,6 +794,7 @@ struct MealCaptureView: View {
             clarificationAnswers = [:]
             clarificationQuestions = []
             clarificationIndex = 0
+            clarificationRound = 0
         }
         guard networkMonitor.isConnected else {
             queueCurrentMealForLater()
@@ -808,7 +810,8 @@ struct MealCaptureView: View {
                         photoData: photoData,
                         identifiedFoods: identifiedPhotoFoods,
                         allowsClarification: true,
-                        clarificationAnswers: clarificationAnswers
+                        clarificationAnswers: clarificationAnswers,
+                        clarificationRound: clarificationRound
                     )
                 )
                 guard !Task.isCancelled else { return }
@@ -843,6 +846,7 @@ struct MealCaptureView: View {
         if clarificationIndex + 1 < clarificationQuestions.count {
             clarificationIndex += 1
         } else {
+            clarificationRound += 1
             preparePreview(usingClarifications: true)
         }
     }
@@ -851,7 +855,10 @@ struct MealCaptureView: View {
         do {
             try offlineMealQueue.enqueue(
                 description: descriptionText,
-                photoData: photoData
+                photoData: photoData,
+                identifiedFoods: identifiedPhotoFoods,
+                clarificationAnswers: clarificationAnswers,
+                clarificationRound: clarificationRound
             )
             clearPhotos()
             showsOfflineQueuedConfirmation = true

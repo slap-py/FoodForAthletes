@@ -41,7 +41,14 @@ final class OfflineMealQueueStore: ObservableObject {
         }
     }
 
-    func enqueue(description: String, photoData: [Data], capturedAt: Date = .now) throws {
+    func enqueue(
+        description: String,
+        photoData: [Data],
+        identifiedFoods: [String] = [],
+        clarificationAnswers: [String: String] = [:],
+        clarificationRound: Int = 0,
+        capturedAt: Date = .now
+    ) throws {
         let id = UUID()
         var storedPaths: [String] = []
         do {
@@ -55,7 +62,10 @@ final class OfflineMealQueueStore: ObservableObject {
                 id: id,
                 capturedAt: capturedAt,
                 descriptionText: description,
-                photoPaths: photoPaths
+                photoPaths: photoPaths,
+                identifiedFoods: identifiedFoods,
+                clarificationAnswersData: try JSONEncoder().encode(clarificationAnswers),
+                clarificationRound: clarificationRound
             ))
             try context.save()
             reloadCount()
@@ -74,12 +84,16 @@ final class OfflineMealQueueStore: ObservableObject {
         guard let queuedMeals = try? context.fetch(descriptor) else { return }
 
         for queuedMeal in queuedMeals {
+            guard queuedMeal.attemptCount < 3 else { continue }
             do {
                 let draft = try await MealAnalysisService.shared.analyze(
                     MealAnalysisInput(
                         description: queuedMeal.descriptionText,
                         photoData: queuedMeal.allPhotoPaths.compactMap(OfflineMealPhotoStore.data),
-                        capturedAt: queuedMeal.capturedAt
+                        identifiedFoods: queuedMeal.identifiedFoods,
+                        capturedAt: queuedMeal.capturedAt,
+                        clarificationAnswers: queuedMeal.clarificationAnswers,
+                        clarificationRound: queuedMeal.clarificationRound
                     )
                 )
                 mealContext.insert(MealLog(draft: draft, descriptionText: queuedMeal.descriptionText, timestamp: queuedMeal.capturedAt))
@@ -88,6 +102,7 @@ final class OfflineMealQueueStore: ObservableObject {
                 context.delete(queuedMeal)
                 try context.save()
             } catch {
+                queuedMeal.attemptCount += 1
                 queuedMeal.lastError = error.localizedDescription
                 try? context.save()
             }
@@ -162,4 +177,8 @@ extension MealLog {
 
 private extension QueuedMeal {
     var allPhotoPaths: [String] { [mealPhotoPath, nutritionLabelPhotoPath].compactMap { $0 } + photoPaths }
+    var clarificationAnswers: [String: String] {
+        guard let clarificationAnswersData else { return [:] }
+        return (try? JSONDecoder().decode([String: String].self, from: clarificationAnswersData)) ?? [:]
+    }
 }

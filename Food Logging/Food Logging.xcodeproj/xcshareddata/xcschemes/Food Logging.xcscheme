@@ -21,20 +21,6 @@
                ReferencedContainer = "container:Food Logging.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "NO"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
-            buildForAnalyzing = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "88EBAC9B3032112D00FB5B08"
-               BuildableName = "Food LoggingTests.xctest"
-               BlueprintName = "Food LoggingTests"
-               ReferencedContainer = "container:Food Logging.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -44,14 +30,21 @@
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "YES">
+         <TestableReference skipped = "NO" parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "88EBAC9B3032112D00FB5B08"
                BuildableName = "Food LoggingTests.xctest"
                BlueprintName = "Food LoggingTests"
+               ReferencedContainer = "container:Food Logging.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference skipped = "NO" parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "88EBACA53032112D00FB5B08"
+               BuildableName = "Food LoggingUITests.xctest"
+               BlueprintName = "Food LoggingUITests"
                ReferencedContainer = "container:Food Logging.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -68,6 +61,15 @@
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES"
       queueDebuggingEnableBacktraceRecording = "Yes">
+      <BuildableProductRunnable runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "88EBAC893032112A00FB5B08"
+            BuildableName = "Dayplate.app"
+            BlueprintName = "Food Logging"
+            ReferencedContainer = "container:Food Logging.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -75,12 +77,18 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
+      <BuildableProductRunnable runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "88EBAC893032112A00FB5B08"
+            BuildableName = "Dayplate.app"
+            BlueprintName = "Food Logging"
+            ReferencedContainer = "container:Food Logging.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
    </ProfileAction>
-   <AnalyzeAction
-      buildConfiguration = "Debug">
+   <AnalyzeAction buildConfiguration = "Debug">
    </AnalyzeAction>
-   <ArchiveAction
-      buildConfiguration = "Release"
-      revealArchiveInOrganizer = "YES">
+   <ArchiveAction buildConfiguration = "Release" revealArchiveInOrganizer = "YES">
    </ArchiveAction>
 </Scheme>

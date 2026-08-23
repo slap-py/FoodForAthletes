@@ -81,7 +81,7 @@ struct DayplateService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(RemoteMealRequest(input: input))
-        let (data, response) = try await perform(request)
+        let (data, response) = try await perform(request, timeout: 300, retryTimeouts: false, maxAttempts: 1)
         try validate(response, data: data)
         if let clarification = try? JSONDecoder().decode(RemoteClarificationResponse.self, from: data),
            clarification.status == "needs_clarification", !clarification.questions.isEmpty {
@@ -99,14 +99,19 @@ struct DayplateService {
         }
     }
 
-    private func perform(_ originalRequest: URLRequest) async throws -> (Data, URLResponse) {
+    private func perform(
+        _ originalRequest: URLRequest,
+        timeout: TimeInterval = 60,
+        retryTimeouts: Bool = true,
+        maxAttempts: Int = 3
+    ) async throws -> (Data, URLResponse) {
         var lastError: Error?
-        for attempt in 0..<3 {
+        for attempt in 0..<maxAttempts {
             if attempt > 0 {
                 try? await Task.sleep(nanoseconds: attempt == 1 ? 300_000_000 : 900_000_000)
             }
             var request = originalRequest
-            request.timeoutInterval = 60
+            request.timeoutInterval = timeout
             do {
                 let result = try await URLSession.shared.data(for: request)
                 if let http = result.1 as? HTTPURLResponse,
@@ -117,8 +122,11 @@ struct DayplateService {
                 return result
             } catch {
                 lastError = error
-                guard let code = (error as? URLError)?.code,
-                      [.timedOut, .networkConnectionLost, .cannotConnectToHost, .dnsLookupFailed].contains(code) else {
+                guard let code = (error as? URLError)?.code else { throw error }
+                let retryable: [URLError.Code] = retryTimeouts
+                    ? [.timedOut, .networkConnectionLost, .cannotConnectToHost, .dnsLookupFailed]
+                    : [.networkConnectionLost, .cannotConnectToHost, .dnsLookupFailed]
+                guard retryable.contains(code) else {
                     throw error
                 }
             }
@@ -138,6 +146,7 @@ private struct RemoteMealRequest: Encodable {
     let timeZoneIdentifier: String
     let allowClarifications: Bool
     let clarificationAnswers: [String: String]
+    let clarificationRound: Int
 
     init(input: MealAnalysisInput) {
         description = input.description
@@ -147,6 +156,7 @@ private struct RemoteMealRequest: Encodable {
         timeZoneIdentifier = input.timeZoneIdentifier
         allowClarifications = input.allowsClarification
         clarificationAnswers = input.clarificationAnswers
+        clarificationRound = input.clarificationRound
     }
 }
 
@@ -176,6 +186,6 @@ private struct RemoteMealDraft: Decodable {
     let catalogVersion: String
 
     var mealDraft: MealDraft {
-        MealDraft(title: title, calories: calories, carbohydrates: carbohydrates, protein: protein, fat: fat, fiber: fiber, calcium: calcium, iron: iron, magnesium: magnesium, potassium: potassium, sodium: sodium, vitaminD: vitaminD, assumptions: assumptions, foods: foods.map { ($0.name, $0.portion) }, ingredientSources: Dictionary(uniqueKeysWithValues: foods.compactMap { food in food.sourceName.map { (food.name, $0) } }), analysisVersion: analysisVersion, catalogVersion: catalogVersion)
+        MealDraft(title: title, calories: calories, carbohydrates: carbohydrates, protein: protein, fat: fat, fiber: fiber, calcium: calcium, iron: iron, magnesium: magnesium, potassium: potassium, sodium: sodium, vitaminD: vitaminD, assumptions: assumptions, foods: foods.map { ($0.name, $0.portion) }, ingredientSources: Dictionary(foods.compactMap { food in food.sourceName.map { (food.name, $0) } }, uniquingKeysWith: { first, _ in first }), analysisVersion: analysisVersion, catalogVersion: catalogVersion)
     }
 }

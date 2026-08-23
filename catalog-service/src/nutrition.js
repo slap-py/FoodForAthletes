@@ -4,6 +4,7 @@ const USDA_API_URL = "https://api.nal.usda.gov/fdc/v1";
 const OPEN_FOOD_FACTS_URL = "https://world.openfoodfacts.org/cgi/search.pl";
 const ingredientCache = new Map();
 const INGREDIENT_CACHE_TTL_MS = 30 * 60 * 1000;
+const INGREDIENT_CACHE_MAX_ENTRIES = 256;
 
 export class NutritionSourceError extends Error {}
 
@@ -19,8 +20,13 @@ export async function sourceIngredient(ingredient, credentials, manufacturerLook
     ingredient.kind,
     normalize(ingredient.brand),
     normalize(ingredient.name),
-    Math.round(positiveNumber(ingredient.grams, 100))
+    Math.round(positiveNumber(ingredient.grams, 100)),
+    positiveNumber(ingredient.quantity, 0),
+    normalize(ingredient.quantityUnit),
+    ingredient.quantityWasExplicit === true,
+    ingredient.amountConfidence
   ]);
+  sweepCache(ingredientCache, INGREDIENT_CACHE_MAX_ENTRIES);
   const cached = ingredientCache.get(cacheKey);
   if (cached?.expiresAt > Date.now()) return cached.value;
 
@@ -51,7 +57,7 @@ async function sourceIngredientUncached(ingredient, credentials, manufacturerLoo
   ));
   if (isTrustworthyNutrition(usda, grams, failures)) return finalizeSourcedItem(usda, ingredient, grams);
 
-  const off = await trySource("Open Food Facts", failures, () => openFoodFactsIngredient(query, grams, request));
+  const off = await trySource("Open Food Facts", failures, () => openFoodFactsIngredient(query, grams, request, ingredient.kind === "branded"));
   if (isTrustworthyNutrition(off, grams, failures)) return finalizeSourcedItem(off, ingredient, grams);
 
   if (ingredient.kind === "branded") {
@@ -70,54 +76,33 @@ async function sourceIngredientUncached(ingredient, credentials, manufacturerLoo
 
 async function usdaIngredient(query, grams, apiKey, request, dataType) {
   if (!apiKey) throw new NutritionSourceError("USDA_FOODDATA_API_KEY is not configured.");
-  const foods = [];
-  let completedSearch = false;
-  let lastError;
-  for (const searchQuery of usdaSearchQueries(query)) {
-    const params = new URLSearchParams({ query: searchQuery, pageSize: "12", api_key: apiKey });
-    if (dataType) params.set("dataType", dataType);
-    try {
-      const search = await requestJSON(request, `${USDA_API_URL}/foods/search?${params}`, undefined, "USDA search failed.");
-      completedSearch = true;
-      foods.push(...asArray(search?.foods));
-      if (bestUsdaCandidates(foods, query, dataType)[0]?.score >= 0.9) break;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  if (!completedSearch) throw lastError ?? new NutritionSourceError("USDA search failed.");
+  const params = new URLSearchParams({ query: normalize(query), pageSize: "12", api_key: apiKey });
+  if (dataType) params.set("dataType", dataType);
+  const search = await requestJSON(request, `${USDA_API_URL}/foods/search?${params}`, undefined, "USDA search failed.");
+  const foods = asArray(search?.foods);
+  const candidate = bestUsdaCandidates(foods, query, dataType)[0]?.food;
+  if (!candidate?.fdcId) return null;
 
-  // USDA occasionally returns a search hit whose detail record is temporarily
-  // unavailable. Try the next deterministic candidate before abandoning USDA.
-  for (const { food: candidate } of bestUsdaCandidates(foods, query, dataType).slice(0, 3)) {
-    if (!candidate?.fdcId) continue;
-    try {
-      const food = await requestJSON(request, `${USDA_API_URL}/food/${candidate.fdcId}?api_key=${encodeURIComponent(apiKey)}`, undefined, "USDA food detail lookup failed.");
-      const perPortion = usdaNutrients(food, grams);
-      if (!perPortion || perPortion.calories <= 0) continue;
-      const candidateName = food.description ?? candidate.description ?? query;
-      return {
-        name: candidateName,
-        portion: portionLabel(grams, ingredientPortionHint(food)),
-        sourceName: dataType ? "USDA FoodData Central — Branded" : "USDA FoodData Central",
-        sourceID: String(candidate.fdcId),
-        identityMatch: productIdentityMatch(query, candidateName, foods.map(item => item?.description), [candidateName, food?.brandOwner, food?.brandName].filter(Boolean).join(" ")),
-        referenceServing: referenceServing(ingredientPortionHint(food), food?.servingSize, food?.servingSizeUnit),
-        nutrients: perPortion
-      };
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  if (lastError) throw lastError;
-  return null;
+  const food = await requestJSON(request, `${USDA_API_URL}/food/${candidate.fdcId}?api_key=${encodeURIComponent(apiKey)}`, undefined, "USDA food detail lookup failed.");
+  const perPortion = usdaNutrients(food, grams);
+  if (!perPortion) return null;
+  const candidateName = food.description ?? candidate.description ?? query;
+  return {
+    name: candidateName,
+    portion: portionLabel(grams, ingredientPortionHint(food)),
+    sourceName: dataType ? "USDA FoodData Central — Branded" : "USDA FoodData Central",
+    sourceID: String(candidate.fdcId),
+    identityMatch: productIdentityMatch(query, candidateName, foods.map(item => item?.description), [candidateName, food?.brandOwner, food?.brandName].filter(Boolean).join(" "), Boolean(dataType)),
+    referenceServing: referenceServing(ingredientPortionHint(food), servingSizeInGrams(food?.servingSize, food?.servingSizeUnit), "g"),
+    nutrients: perPortion
+  };
 }
 
 function usdaNutrients(food, grams) {
   const label = food?.labelNutrients;
-  const servingSize = positiveNumber(food?.servingSize, 0);
-  if (label && servingSize > 0) {
-    const scale = grams / servingSize;
+  const servingGrams = servingSizeInGrams(food?.servingSize, food?.servingSizeUnit);
+  if (label && servingGrams > 0) {
+    const scale = grams / servingGrams;
     const values = {
       calories: label.calories?.value,
       carbohydrates: label.carbohydrates?.value,
@@ -126,6 +111,7 @@ function usdaNutrients(food, grams) {
       fiber: label.fiber?.value,
       calcium: label.calcium?.value,
       iron: label.iron?.value,
+      magnesium: label.magnesium?.value,
       potassium: label.potassium?.value,
       sodium: label.sodium?.value,
       vitaminD: label.vitaminD?.value
@@ -149,42 +135,27 @@ function usdaNutrients(food, grams) {
   return hasCoreNutrients(nutrients) ? normalizeNutrients(nutrients, grams / 100) : null;
 }
 
-async function openFoodFactsIngredient(query, grams, request) {
-  const products = [];
-  let completedSearch = false;
-  for (const searchTerms of openFoodFactsSearchQueries(query)) {
-    const params = new URLSearchParams({
-      search_terms: searchTerms,
-      search_simple: "1",
-      action: "process",
-      json: "1",
-      page_size: "12",
-      fields: "code,product_name,brands,nutriments,serving_size,serving_quantity,serving_quantity_unit"
-    });
-    try {
-      const payload = await requestJSON(request, `${OPEN_FOOD_FACTS_URL}?${params}`, { headers: { "user-agent": "Dayplate/1.0 nutrition lookup" } }, "Open Food Facts search failed.");
-      completedSearch = true;
-      const batch = asArray(payload?.products);
-      products.push(...batch);
-      if (batch.some(item => {
-        const match = matchScores(query, [item?.product_name, item?.brands].filter(Boolean).join(" "));
-        return match.score >= 0.9 && match.literalScore >= 0.7;
-      })) break;
-    } catch {
-      // Continue through the bounded aliases before giving up on this source.
-    }
-  }
-  if (!completedSearch) throw new NutritionSourceError("Open Food Facts search failed.");
+async function openFoodFactsIngredient(query, grams, request, allowFuzzy) {
+  const params = new URLSearchParams({
+    search_terms: normalize(query),
+    search_simple: "1",
+    action: "process",
+    json: "1",
+    page_size: "12",
+    fields: "code,product_name,brands,nutriments,serving_size,serving_quantity,serving_quantity_unit"
+  });
+  const payload = await requestJSON(request, `${OPEN_FOOD_FACTS_URL}?${params}`, { headers: { "user-agent": "Dayplate/1.0 nutrition lookup" } }, "Open Food Facts search failed.");
+  const products = asArray(payload?.products);
   const uniqueProducts = [...new Map(products.map(item => [String(item?.code ?? `${item?.product_name}|${item?.brands}`), item])).values()];
   const ranked = uniqueProducts
     .filter(item => hasCoreNutrients(openFoodFactsNutrients(item?.nutriments)))
     .map(item => {
-      const match = matchScores(query, [item.product_name, item.brands].filter(Boolean).join(" "));
+      const match = matchScores(query, [item.product_name, item.brands].filter(Boolean).join(" "), allowFuzzy);
       return { item, ...match };
     })
     .sort((left, right) => right.score - left.score);
   const product = ranked[0];
-  if (!product || product.score < 0.7) return null;
+  if (!product || product.score < (allowFuzzy ? 0.7 : 0.9)) return null;
   const nutrients = openFoodFactsNutrients(product.item.nutriments);
   const productName = displayProductName(product.item.product_name ?? query);
   return {
@@ -192,7 +163,7 @@ async function openFoodFactsIngredient(query, grams, request) {
     portion: portionLabel(grams),
     sourceName: "Open Food Facts",
     sourceID: String(product.item.code ?? product.item.id ?? query),
-    identityMatch: productIdentityMatch(query, productName, ranked.map(candidate => candidate.item?.product_name), [productName, product.item.brands].filter(Boolean).join(" ")),
+    identityMatch: productIdentityMatch(query, productName, ranked.map(candidate => candidate.item?.product_name), [productName, product.item.brands].filter(Boolean).join(" "), allowFuzzy),
     referenceServing: referenceServing(product.item.serving_size, product.item.serving_quantity, product.item.serving_quantity_unit),
     nutrients: normalizeNutrients(nutrients, grams / 100)
   };
@@ -200,7 +171,7 @@ async function openFoodFactsIngredient(query, grams, request) {
 
 export function manufacturerNutrition(ingredient, result) {
   const reportedNutrients = result?.nutrients ?? result?.nutrientsPerServing;
-  if (result?.found === false || !reportedNutrients || positiveNumber(reportedNutrients.calories, 0) <= 0) return null;
+  if (result?.found === false || !hasCoreNutrients(reportedNutrients)) return null;
   const servingGrams = positiveNumber(result.servingGrams, 0);
   const grams = positiveNumber(ingredient.grams, servingGrams || 100);
   const nutritionBasis = result.nutritionBasis ?? "per_serving";
@@ -211,8 +182,8 @@ export function manufacturerNutrition(ingredient, result) {
     sourceName: result.sourceName || "AI-assisted nutrition research",
     sourceID: result.sourceURL || "ai-web-research",
     identityMatch: {
-      score: positiveNumber(result.matchConfidence, 1),
-      literalScore: positiveNumber(result.matchConfidence, 1),
+      score: nonnegativeNumber(result.matchConfidence, 1),
+      literalScore: nonnegativeNumber(result.matchConfidence, 1),
       needsConfirmation: Boolean(result.identityNeedsConfirmation),
       candidates: [result.name].filter(Boolean)
     },
@@ -314,11 +285,13 @@ function servingOption(id, quantity, unit, grams, suffix) {
 }
 
 function normalizeNutrients(values, scale) {
-  return Object.fromEntries(Object.keys(zeroNutrients()).map(key => [key, positiveNumber(values[key], 0) * scale]));
+  return Object.fromEntries(Object.keys(zeroNutrients()).map(key => [key, nonnegativeNumber(values[key], 0) * scale]));
 }
 function hasCoreNutrients(values) {
-  return ["calories", "carbohydrates", "protein", "fat"].every(key => values?.[key] != null && Number.isFinite(Number(values[key])))
-    && positiveNumber(values?.calories, 0) > 0;
+  return ["calories", "carbohydrates", "protein", "fat"].every(key => {
+    const value = Number(values?.[key]);
+    return values?.[key] != null && Number.isFinite(value) && value >= 0;
+  });
 }
 function openFoodFactsNutrients(values = {}) {
   return {
@@ -329,8 +302,12 @@ function openFoodFactsNutrients(values = {}) {
     fiber: values.fiber_100g,
     calcium: values.calcium_100g == null ? undefined : values.calcium_100g * 1000,
     iron: values.iron_100g == null ? undefined : values.iron_100g * 1000,
+    magnesium: values.magnesium_100g == null ? undefined : values.magnesium_100g * 1000,
     potassium: values.potassium_100g == null ? undefined : values.potassium_100g * 1000,
-    sodium: values.sodium_100g == null ? undefined : values.sodium_100g * 1000
+    sodium: values.sodium_100g == null ? undefined : values.sodium_100g * 1000,
+    vitaminD: (values["vitamin-d_100g"] ?? values.vitamin_d_100g) == null
+      ? undefined
+      : (values["vitamin-d_100g"] ?? values.vitamin_d_100g) * 1_000_000
   };
 }
 async function trySource(name, failures, lookup) {
@@ -345,18 +322,21 @@ async function trySource(name, failures, lookup) {
 }
 async function requestJSON(request, url, options, errorMessage) {
   let lastStatus;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    if (attempt > 0 && lastStatus) await delay(attempt === 1 ? 250 : 750);
+  const maximumAttempts = 2;
+  for (let attempt = 0; attempt < maximumAttempts; attempt += 1) {
+    if (attempt > 0 && lastStatus !== undefined) await delay(750);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8_000);
     try {
       const response = await request(url, { ...options, signal: controller.signal });
       if (response.ok) return await response.json();
-      lastStatus = Number(response.status) || null;
-      // Invalid credentials and malformed requests will not recover on retry.
-      if (lastStatus === 400 || lastStatus === 401 || lastStatus === 403) break;
-    } catch {
+      lastStatus = Number(response.status) || 0;
+      console.warn(`${errorMessage} HTTP ${lastStatus}; attempt ${attempt + 1}/${maximumAttempts}`);
+      // Retrying rate limits adds load. Let the next nutrition tier take over.
+      if (lastStatus === 400 || lastStatus === 401 || lastStatus === 403 || lastStatus === 429) break;
+    } catch (error) {
       lastStatus = 0;
+      console.warn(`${errorMessage} network error; attempt ${attempt + 1}/${maximumAttempts}`, error instanceof Error ? error.message : "unknown error");
     } finally {
       clearTimeout(timeout);
     }
@@ -372,11 +352,11 @@ function isTrustworthyNutrition(item, grams, failures) {
 }
 export function nutritionPlausibilityIssue(nutrients, grams) {
   const servingGrams = positiveNumber(grams, 0);
-  const calories = positiveNumber(nutrients?.calories, 0);
-  const carbohydrates = positiveNumber(nutrients?.carbohydrates, 0);
-  const protein = positiveNumber(nutrients?.protein, 0);
-  const fat = positiveNumber(nutrients?.fat, 0);
-  if (calories <= 0) return "calories are missing";
+  const calories = nonnegativeNumber(nutrients?.calories, NaN);
+  const carbohydrates = nonnegativeNumber(nutrients?.carbohydrates, NaN);
+  const protein = nonnegativeNumber(nutrients?.protein, NaN);
+  const fat = nonnegativeNumber(nutrients?.fat, NaN);
+  if (![calories, carbohydrates, protein, fat].every(Number.isFinite)) return "core nutrients are missing";
   if (servingGrams <= 0) return null;
 
   const macroMass = carbohydrates + protein + fat;
@@ -390,7 +370,8 @@ export function nutritionPlausibilityIssue(nutrients, grams) {
 }
 function add(a, b) { return Object.fromEntries(Object.keys(a).map(key => [key, a[key] + b[key]])); }
 function asArray(value) { return Array.isArray(value) ? value : value ? [value] : []; }
-function positiveNumber(value, fallback) { const parsed = Number(value); return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback; }
+function positiveNumber(value, fallback) { const parsed = Number(value); return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback; }
+function nonnegativeNumber(value, fallback) { const parsed = Number(value); return value != null && Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback; }
 function portionLabel(grams, hint) { return hint ? `${hint} (${Math.round(grams)} g)` : `${Math.round(grams)} g`; }
 function researchedPortionLabel(label, grams, servingGrams, nutritionBasis) {
   if (!label) return portionLabel(grams);
@@ -418,24 +399,28 @@ function finalizeSourcedItem(item, ingredient, grams) {
 function referenceServing(label, grams, gramUnit, explicitCount, explicitUnit) {
   const servingGrams = positiveNumber(grams, 0);
   const parsed = parseServingCount(label);
+  const countableExplicitUnit = countableServingUnit(explicitUnit);
+  const explicitUnitWasUncountable = String(explicitUnit ?? "").trim() && !countableExplicitUnit;
   if (!label && servingGrams <= 0 && !explicitCount) return null;
   return {
     label: label || (servingGrams > 0 ? `${Math.round(servingGrams)} ${gramUnit || "g"}` : "1 serving"),
     grams: servingGrams || null,
-    count: positiveNumber(explicitCount, 0) || parsed.count || null,
-    unit: explicitUnit || parsed.unit || null
+    count: explicitUnitWasUncountable ? parsed.count || null : positiveNumber(explicitCount, 0) || parsed.count || null,
+    unit: countableExplicitUnit || parsed.unit || null
   };
 }
 function parseServingCount(label) {
   const match = String(label ?? "").trim().match(/^(\d+(?:\.\d+)?)\s*(?:x\s*)?([^\d(]+)?/i);
   if (!match) return { count: null, unit: null };
-  const unit = String(match[2] ?? "").trim().replace(/\s+$/, "");
+  const rawUnit = String(match[2] ?? "").trim().replace(/\s+$/, "");
+  const unit = countableServingUnit(rawUnit);
+  if (rawUnit && !unit) return { count: null, unit: null };
   return { count: positiveNumber(match[1], 0) || null, unit: unit || null };
 }
-function productIdentityMatch(query, selectedName, alternativeNames, selectedSearchText = selectedName) {
-  const selected = matchScores(query, selectedSearchText);
+function productIdentityMatch(query, selectedName, alternativeNames, selectedSearchText = selectedName, allowFuzzy = false) {
+  const selected = matchScores(query, selectedSearchText, allowFuzzy);
   const candidates = dedupeIdentityNames(asArray(alternativeNames).map(displayProductName).filter(Boolean))
-    .map(name => ({ name, ...matchScores(query, name) }))
+    .map(name => ({ name, ...matchScores(query, name, allowFuzzy) }))
     .filter(candidate => candidate.score >= Math.max(0.65, selected.score - 0.15))
     .sort((left, right) => right.score - left.score)
     .slice(0, 3)
@@ -451,28 +436,32 @@ function productIdentityMatch(query, selectedName, alternativeNames, selectedSea
 function dedupeIdentityNames(names) {
   const unique = new Map();
   for (const name of names) {
-    const key = foodSearchTokens(name).filter(token => token !== "frosted").join(" ");
+    const key = foodSearchTokens(name).join(" ");
     if (!unique.has(key)) unique.set(key, name);
   }
   return [...unique.values()];
 }
-function matchScores(query, candidate) {
+function matchScores(query, candidate, allowFuzzy = false) {
   const literalQuery = new Set(foodSearchTokens(query));
   const literalCandidate = new Set(foodSearchTokens(candidate));
-  const semanticQuery = new Set([...literalQuery].map(semanticFoodToken));
-  const semanticCandidate = new Set([...literalCandidate].map(semanticFoodToken));
   const literalScore = tokenCoverage(literalQuery, literalCandidate);
-  let semanticScore = tokenCoverage(semanticQuery, semanticCandidate);
-  if (literalQuery.has("double") && literalQuery.has("chocolate") && literalCandidate.has("chocotastic")) semanticScore = 1;
-  return { score: Math.max(literalScore, semanticScore), literalScore };
+  const fuzzyScore = allowFuzzy ? fuzzyTokenCoverage(literalQuery, literalCandidate) : literalScore;
+  return { score: Math.max(literalScore, fuzzyScore), literalScore };
 }
 function tokenCoverage(queryTokens, candidateTokens) {
   if (!queryTokens.size) return 0;
   return [...queryTokens].filter(token => candidateTokens.has(token)).length / queryTokens.size;
 }
-function semanticFoodToken(token) {
-  if (/^choc(?:o|$)/.test(token)) return "chocolate";
-  return token;
+function fuzzyTokenCoverage(queryTokens, candidateTokens) {
+  if (!queryTokens.size) return 0;
+  return [...queryTokens].filter(queryToken => [...candidateTokens].some(candidateToken => {
+    if (queryToken === candidateToken) return true;
+    if (queryToken.length < 7 || candidateToken.length < 7) return false;
+    let commonPrefix = 0;
+    while (commonPrefix < Math.min(queryToken.length, candidateToken.length)
+      && queryToken[commonPrefix] === candidateToken[commonPrefix]) commonPrefix += 1;
+    return commonPrefix >= 4 && commonPrefix / Math.min(queryToken.length, candidateToken.length) >= 0.4;
+  })).length / queryTokens.size;
 }
 function displayProductName(value) {
   return String(value ?? "").replace(/\s+\d+\s*x\s*$/i, "").trim();
@@ -495,29 +484,6 @@ function normalize(value) {
 function foodSearchTokens(value) {
   return normalize(value).split(" ").filter(token => token.length > 1);
 }
-function openFoodFactsSearchQueries(query) {
-  const tokens = foodSearchTokens(query);
-  const variants = [tokens.join(" ")];
-  if (tokens.includes("double") && tokens.includes("chocolate")) {
-    variants.push(tokens.filter(token => token !== "double" && token !== "chocolate").concat("chocotastic").join(" "));
-  }
-  const relaxedTerms = new Set(["chocolate", "frosted", "flavor", "flavoured", "flavored"]);
-  if (tokens.includes("double") && tokens.includes("chocolate")) relaxedTerms.add("double");
-  const relaxed = tokens.filter(token => !relaxedTerms.has(token));
-  if (relaxed.length >= 2) variants.push(relaxed.join(" "));
-  return [...new Set(variants.filter(Boolean))].slice(0, 3);
-}
-
-function usdaSearchQueries(query) {
-  const tokens = foodSearchTokens(query);
-  const variants = [tokens.join(" ")];
-  const relaxedTerms = new Set(["frosted", "flavor", "flavoured", "flavored"]);
-  if (tokens.includes("double") && tokens.includes("chocolate")) relaxedTerms.add("double");
-  const relaxed = tokens.filter(token => !relaxedTerms.has(token));
-  if (relaxed.length >= 2) variants.push(relaxed.join(" "));
-  return [...new Set(variants.filter(Boolean))].slice(0, 2);
-}
-
 function bestUsdaCandidates(foods, query, dataType) {
   const permittedFoods = dataType
     ? foods.filter(food => String(food?.dataType ?? "").toLowerCase() === dataType.toLowerCase())
@@ -525,7 +491,7 @@ function bestUsdaCandidates(foods, query, dataType) {
   const ranked = (permittedFoods.length ? permittedFoods : foods)
     .map(food => {
       const candidateText = [food?.description, food?.brandOwner, food?.brandName].filter(Boolean).join(" ");
-      return { food, ...matchScores(query, candidateText) };
+      return { food, ...matchScores(query, candidateText, Boolean(dataType)) };
     })
     .sort((left, right) => right.score - left.score || right.literalScore - left.literalScore || Number(left.food?.fdcId ?? 0) - Number(right.food?.fdcId ?? 0));
 
@@ -536,3 +502,34 @@ function bestUsdaCandidates(foods, query, dataType) {
 }
 
 function delay(milliseconds) { return new Promise(resolve => setTimeout(resolve, milliseconds)); }
+
+function servingSizeInGrams(size, unit) {
+  const amount = positiveNumber(size, 0);
+  const normalizedUnit = normalize(unit);
+  if (!amount) return 0;
+  if (!normalizedUnit || ["g", "gram", "grams"].includes(normalizedUnit)) return amount;
+  if (["oz", "ounce", "ounces"].includes(normalizedUnit)) return amount * 28.3495;
+  if (["kg", "kilogram", "kilograms"].includes(normalizedUnit)) return amount * 1000;
+  if (["mg", "milligram", "milligrams"].includes(normalizedUnit)) return amount / 1000;
+  return 0;
+}
+
+function countableServingUnit(unit) {
+  const value = String(unit ?? "").trim();
+  if (!value) return null;
+  const normalizedUnit = normalize(value);
+  const uncountable = new Set([
+    "g", "gram", "grams", "mg", "milligram", "milligrams", "kg", "kilogram", "kilograms",
+    "ml", "milliliter", "milliliters", "millilitre", "millilitres", "l", "liter", "liters", "litre", "litres",
+    "oz", "ounce", "ounces", "fl oz", "fluid ounce", "fluid ounces", "cup", "cups", "tbsp", "tablespoon", "tablespoons", "tsp", "teaspoon", "teaspoons"
+  ]);
+  return uncountable.has(normalizedUnit) ? null : value;
+}
+
+function sweepCache(cache, maximumEntries) {
+  const now = Date.now();
+  for (const [key, entry] of cache) {
+    if (entry?.expiresAt <= now) cache.delete(key);
+  }
+  while (cache.size >= maximumEntries) cache.delete(cache.keys().next().value);
+}

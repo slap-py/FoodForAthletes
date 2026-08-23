@@ -127,11 +127,10 @@ test("a USDA outage falls through to Open Food Facts before AI research", async 
     }
   );
 
-  assert.equal(calls.length, 4);
+  assert.equal(calls.length, 3);
   assert.match(calls[0], /api\.nal\.usda\.gov/);
   assert.match(calls[1], /api\.nal\.usda\.gov/);
-  assert.match(calls[2], /api\.nal\.usda\.gov/);
-  assert.match(calls[3], /openfoodfacts\.org/);
+  assert.match(calls[2], /openfoodfacts\.org/);
   assert.equal(item.sourceName, "Open Food Facts");
   assert.equal(item.nutrients.calories, 200);
   assert.equal(item.nutrients.carbohydrates, 30);
@@ -168,12 +167,26 @@ test("generic foods also fall through USDA and Open Food Facts to AI research", 
   assert.equal(item.nutrients.calories, 60);
 });
 
-test("USDA tries another ranked record when the first detail record is unavailable", async () => {
+test("USDA bounds detail retries and falls through instead of amplifying candidate requests", async () => {
   const detailCalls = [];
   const item = await sourceIngredient(
     { name: "reliable test lentils", brand: null, kind: "generic", grams: 100 },
     { foodDataCentralKey: "key" },
-    async () => { throw new Error("USDA should recover before fallback"); },
+    async ingredient => manufacturerNutrition(ingredient, {
+      found: true,
+      name: "Reliable test lentils",
+      sourceURL: "https://example.test/lentils",
+      sourceName: "University food composition table",
+      matchConfidence: 1,
+      identityNeedsConfirmation: false,
+      servingLabel: "100 g",
+      servingGrams: 100,
+      servingCount: null,
+      servingUnit: null,
+      nutritionBasis: "per_100g",
+      nutrients: { calories: 116, carbohydrates: 20, protein: 9, fat: 0.4, fiber: 8, calcium: 19, iron: 3.3, magnesium: 36, potassium: 369, sodium: 2, vitaminD: 0 },
+      evidence: []
+    }),
     async url => {
       if (url.includes("foods/search")) return response({ foods: [
         { fdcId: 101, description: "Reliable test lentils" },
@@ -181,18 +194,13 @@ test("USDA tries another ranked record when the first detail record is unavailab
       ] });
       detailCalls.push(url);
       if (url.includes("/101?")) return { ok: false, status: 503 };
-      return response({ description: "Reliable test lentils cooked", foodNutrients: [
-        { nutrient: { name: "Energy" }, amount: 116 },
-        { nutrient: { name: "Carbohydrate, by difference" }, amount: 20 },
-        { nutrient: { name: "Protein" }, amount: 9 },
-        { nutrient: { name: "Total lipid (fat)" }, amount: 0.4 }
-      ] });
+      return response({ products: [] });
     }
   );
 
-  assert.equal(detailCalls.filter(url => url.includes("/101?")).length, 3);
-  assert.equal(detailCalls.filter(url => url.includes("/102?")).length, 1);
-  assert.equal(item.sourceID, "102");
+  assert.equal(detailCalls.filter(url => url.includes("/101?")).length, 2);
+  assert.equal(detailCalls.filter(url => url.includes("/102?")).length, 0);
+  assert.equal(item.sourceName, "University food composition table");
   assert.equal(item.nutrients.calories, 116);
 });
 
@@ -276,6 +284,37 @@ test("approximate chocolate product titles match Chocotastic and request identit
   assert.match(questions[0].prompt, /Chocotastic/);
 });
 
+test("approximate branded matching does not turn similar generic words into the same food", async () => {
+  const item = await sourceIngredient(
+    { name: "prefix safety test chicken", brand: null, kind: "generic", grams: 100 },
+    { foodDataCentralKey: "key" },
+    async ingredient => manufacturerNutrition(ingredient, {
+      found: true,
+      name: "Prefix safety test chicken",
+      sourceURL: "https://example.test/chicken",
+      sourceName: "University food composition table",
+      matchConfidence: 1,
+      identityNeedsConfirmation: false,
+      servingLabel: "100 g",
+      servingGrams: 100,
+      servingCount: null,
+      servingUnit: null,
+      nutritionBasis: "per_100g",
+      nutrients: { calories: 165, carbohydrates: 0, protein: 31, fat: 3.6, fiber: 0, calcium: 15, iron: 1, magnesium: 29, potassium: 256, sodium: 74, vitaminD: 0 },
+      evidence: []
+    }),
+    async url => url.includes("foods/search")
+      ? response({ foods: [] })
+      : response({ products: [{
+        product_name: "Prefix safety test chickpea", code: "not-chicken",
+        nutriments: { "energy-kcal_100g": 164, carbohydrates_100g: 27, proteins_100g: 9, fat_100g: 2.6 }
+      }] })
+  );
+
+  assert.equal(item.sourceName, "University food composition table");
+  assert.equal(item.name, "Prefix safety test chicken");
+});
+
 test("serving clarification is asked when interpreted per-item weight conflicts with the source", () => {
   const requested = { name: "Chocolate pastries", grams: 48, quantity: 2, quantityUnit: "pastry", quantityWasExplicit: true, amountConfidence: "high" };
   const sourced = {
@@ -289,6 +328,79 @@ test("serving clarification is asked when interpreted per-item weight conflicts 
   assert.equal(questions.length, 1);
   assert.match(questions[0].prompt, /How many pastries/);
   assert.deepEqual(questions[0].options.map(option => option.label), ["2 pastries (48 g)", "2 pastries (96 g)"]);
+});
+
+test("zero-calorie foods with complete core nutrients remain loggable", async () => {
+  const item = await sourceIngredient(
+    { name: "zero calorie test tea", brand: null, kind: "generic", grams: 240 },
+    { foodDataCentralKey: "key" },
+    async () => { throw new Error("USDA should satisfy the request"); },
+    async url => url.includes("foods/search")
+      ? response({ foods: [{ fdcId: 2001, description: "Zero calorie test tea" }] })
+      : response({ description: "Zero calorie test tea", foodNutrients: [
+        { nutrient: { name: "Energy" }, amount: 0 },
+        { nutrient: { name: "Carbohydrate, by difference" }, amount: 0 },
+        { nutrient: { name: "Protein" }, amount: 0 },
+        { nutrient: { name: "Total lipid (fat)" }, amount: 0 }
+      ] })
+  );
+
+  assert.equal(item.sourceName, "USDA FoodData Central");
+  assert.equal(item.nutrients.calories, 0);
+});
+
+test("null and zero gram estimates use the safe 100 g default", async () => {
+  const item = await sourceIngredient(
+    { name: "null grams test food", brand: null, kind: "generic", grams: null },
+    { foodDataCentralKey: "key" },
+    async () => null,
+    async url => url.includes("foods/search")
+      ? response({ foods: [{ fdcId: 2002, description: "Null grams test food" }] })
+      : response({ description: "Null grams test food", foodNutrients: [
+        { nutrient: { name: "Energy" }, amount: 100 },
+        { nutrient: { name: "Carbohydrate, by difference" }, amount: 10 },
+        { nutrient: { name: "Protein" }, amount: 5 },
+        { nutrient: { name: "Total lipid (fat)" }, amount: 4 }
+      ] })
+  );
+
+  assert.equal(item.portion, "100 g");
+  assert.equal(item.nutrients.calories, 100);
+});
+
+test("USDA label servings convert ounces to grams before scaling", async () => {
+  const item = await sourceIngredient(
+    { name: "ounce serving test snack", brand: "Example", kind: "branded", grams: 28.3495 },
+    { foodDataCentralKey: "key" },
+    async () => null,
+    async url => url.includes("foods/search")
+      ? response({ foods: [{ fdcId: 2003, description: "Ounce serving test snack", dataType: "Branded" }] })
+      : response({ description: "Ounce serving test snack", servingSize: 1, servingSizeUnit: "oz", labelNutrients: {
+        calories: { value: 120 }, carbohydrates: { value: 15 }, protein: { value: 2 }, fat: { value: 6 }
+      } })
+  );
+
+  assert.equal(item.nutrients.calories, 120);
+  assert.ok(Math.abs(item.referenceServing.grams - 28.3495) < 0.001);
+});
+
+test("mass serving labels do not become countable units and OFF micronutrients are retained", async () => {
+  const requested = { name: "mass label test cereal", brand: "Example", kind: "branded", grams: 30, quantity: 1, quantityUnit: null, quantityWasExplicit: false, amountConfidence: "low" };
+  const item = await sourceIngredient(
+    requested,
+    {},
+    async () => null,
+    async () => response({ products: [{
+      product_name: "Mass label test cereal", brands: "Example", code: "mass-label-test", serving_size: "30 g", serving_quantity: 30, serving_quantity_unit: "g",
+      nutriments: { "energy-kcal_100g": 400, carbohydrates_100g: 70, proteins_100g: 10, fat_100g: 8, magnesium_100g: 0.1, "vitamin-d_100g": 0.000005 }
+    }] })
+  );
+
+  assert.equal(item.referenceServing.count, null);
+  assert.equal(item.referenceServing.unit, null);
+  assert.equal(item.nutrients.magnesium, 30);
+  assert.equal(item.nutrients.vitaminD, 1.5);
+  assert.doesNotMatch(mealClarifications([requested], [item])[0].prompt, /\bgs\b/i);
 });
 
 function response(value) { return { ok: true, json: async () => value }; }

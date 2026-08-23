@@ -9,6 +9,7 @@ struct MealAnalysisInput {
     let timeZoneIdentifier: String
     let allowsClarification: Bool
     let clarificationAnswers: [String: String]
+    let clarificationRound: Int
 
     init(
         description: String,
@@ -17,7 +18,8 @@ struct MealAnalysisInput {
         capturedAt: Date = .now,
         timeZoneIdentifier: String = TimeZone.current.identifier,
         allowsClarification: Bool = false,
-        clarificationAnswers: [String: String] = [:]
+        clarificationAnswers: [String: String] = [:],
+        clarificationRound: Int = 0
     ) {
         self.description = description
         self.photoData = Array(photoData.prefix(3))
@@ -26,6 +28,7 @@ struct MealAnalysisInput {
         self.timeZoneIdentifier = timeZoneIdentifier
         self.allowsClarification = allowsClarification
         self.clarificationAnswers = clarificationAnswers
+        self.clarificationRound = min(2, max(0, clarificationRound))
     }
 }
 

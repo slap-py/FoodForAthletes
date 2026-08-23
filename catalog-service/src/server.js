@@ -5,6 +5,7 @@ import { namedMenuProducts, productIngredient } from "./menuProducts.js";
 const credentials = { foodDataCentralKey: process.env.USDA_FOODDATA_API_KEY, openAIKey: process.env.OPENAI_API_KEY };
 const mealAnalysisCache = new Map();
 const MEAL_ANALYSIS_CACHE_TTL_MS = 15 * 60 * 1000;
+const MEAL_ANALYSIS_CACHE_MAX_ENTRIES = 128;
 
 export const server = http.createServer(async (request, response) => {
   try {
@@ -35,8 +36,10 @@ async function cachedMealAnalysis(input) {
     description: normalizeForCache(input.description),
     identifiedFoods: asArray(input.identifiedFoods).map(normalizeForCache).filter(Boolean).sort(),
     allowClarifications: input.allowClarifications === true,
+    clarificationRound: clarificationRound(input),
     clarificationAnswers: sanitizeClarificationAnswers(input.clarificationAnswers)
   });
+  sweepCache(mealAnalysisCache, MEAL_ANALYSIS_CACHE_MAX_ENTRIES);
   const cached = mealAnalysisCache.get(key);
   if (cached?.expiresAt > Date.now()) return cached.value;
   const value = analyzeMeal(input);
@@ -73,9 +76,8 @@ async function analyzeMeal(input) {
   const mealIngredients = preserveNamedProducts(description, interpretation.ingredients);
   if (!mealIngredients.length) throw new ServiceError("no_recognized_food");
   const limitedMealIngredients = mealIngredients.slice(0, 12);
-  let ingredients = await Promise.all(limitedMealIngredients.map(ingredient => sourceIngredient(ingredient, credentials, manufacturerLookup)));
-  ingredients = await supplementServingEvidence(limitedMealIngredients, ingredients);
-  if (input.allowClarifications === true) {
+  let ingredients = await mapWithConcurrency(limitedMealIngredients, 3, ingredient => sourceIngredient(ingredient, credentials, manufacturerLookup));
+  if (input.allowClarifications === true && clarificationRound(input) < 2) {
     const questions = mealClarifications(limitedMealIngredients, ingredients, clarificationAnswers);
     if (questions.length) return { status: "needs_clarification", questions };
   }
@@ -83,7 +85,7 @@ async function analyzeMeal(input) {
   let verification = await verifyNutrition(interpretation.title, ingredients, nutrients);
   if (!verification.isPlausible) {
     const indexes = verificationIndexes(verification, ingredients.length);
-    const replacements = await Promise.all(indexes.map(async index => {
+    const replacements = await mapWithConcurrency(indexes, 2, async index => {
       try {
         return await manufacturerLookup(limitedMealIngredients[index], {
           priorResult: ingredients[index],
@@ -93,11 +95,11 @@ async function analyzeMeal(input) {
       } catch {
         return null;
       }
-    }));
+    });
     let replacementCount = 0;
     for (const [offset, index] of indexes.entries()) {
       const replacement = replacements[offset];
-      if (!replacement || nutritionPlausibilityIssue(replacement.nutrients, limitedMealIngredients[index].grams)) continue;
+      if (!replacement || nutritionPlausibilityIssue(replacement.nutrients, positiveNumber(limitedMealIngredients[index]?.grams, 100))) continue;
       ingredients[index] = replacement;
       replacementCount += 1;
     }
@@ -107,26 +109,7 @@ async function analyzeMeal(input) {
     }
   }
   if (!verification.isPlausible) throw new ServiceError(`nutrition_verification_failed: ${verification.reason}`);
-  return { status: "complete", title: interpretation.title, ...nutrients, assumptions: interpretation.assumptions, foods: ingredients.map(item => ({ name: item.name, portion: item.portion, sourceName: item.sourceName, sourceID: item.sourceID })), analysisVersion: "meal-level-sourced-v4", catalogVersion: "USDA FoodData Central; fuzzy Open Food Facts matching; AI identity and serving corroboration; deterministic unit checks; GPT sanity check and repair" };
-}
-
-async function supplementServingEvidence(requestedIngredients, sourcedIngredients) {
-  return Promise.all(sourcedIngredients.map(async (item, index) => {
-    const requested = requestedIngredients[index];
-    if (requested?.kind !== "branded" || requested.quantityWasExplicit !== true || item.sourceName !== "Open Food Facts") return item;
-    try {
-      const verified = await manufacturerLookup(requested, { priorResult: item, verifyServingOnly: true, requireCorroboration: true });
-      if (!verified?.referenceServing?.grams) return item;
-      return {
-        ...item,
-        referenceServing: verified.referenceServing,
-        servingVerifiedBy: { sourceName: verified.sourceName, sourceID: verified.sourceID },
-        corroboratedBy: [...asArray(item.corroboratedBy), { sourceName: verified.sourceName, sourceURL: verified.sourceID }]
-      };
-    } catch {
-      return item;
-    }
-  }));
+  return { status: "complete", title: interpretation.title, ...nutrients, assumptions: interpretation.assumptions, foods: ingredients.map(item => ({ name: item.name, portion: item.portion, sourceName: item.sourceName, sourceID: item.sourceID })), analysisVersion: "meal-level-sourced-v5", catalogVersion: "bounded USDA FoodData Central; Open Food Facts; AI web research; deterministic serving-unit checks; targeted GPT sanity check and repair" };
 }
 
 async function verifyNutrition(title, ingredients, nutrients, priorIssue = null) {
@@ -182,15 +165,21 @@ async function transcribe(input) {
 }
 
 async function structuredResponse({ model, reasoning, content, instructions, tools, name, schema }) {
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST", headers: { Authorization: `Bearer ${credentials.openAIKey}`, "content-type": "application/json" },
-    body: JSON.stringify({ model, reasoning: { effort: reasoning }, store: false, instructions, tools, input: [{ role: "user", content }], text: { format: { type: "json_schema", name, strict: true, schema } } })
-  });
-  const payload = await response.json();
-  if (!response.ok) throw new ServiceError(payload?.error?.message ?? "openai_analysis_failed");
-  const output = payload.output_text ?? payload.output?.flatMap(item => item.content ?? []).find(item => item.type === "output_text")?.text;
-  if (!output) throw new ServiceError("openai_analysis_failed");
-  return JSON.parse(output);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90_000);
+  try {
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST", headers: { Authorization: `Bearer ${credentials.openAIKey}`, "content-type": "application/json" }, signal: controller.signal,
+      body: JSON.stringify({ model, reasoning: { effort: reasoning }, store: false, instructions, tools, input: [{ role: "user", content }], text: { format: { type: "json_schema", name, strict: true, schema } } })
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new ServiceError(payload?.error?.message ?? "openai_analysis_failed");
+    const output = payload.output_text ?? payload.output?.flatMap(item => item.content ?? []).find(item => item.type === "output_text")?.text;
+    if (!output) throw new ServiceError("openai_analysis_failed");
+    return JSON.parse(output);
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function addImage(content, base64, label, detail) {
@@ -233,7 +222,7 @@ const ingredientSchema = {
   properties: {
     title: { type: "string" },
     assumptions: { type: "string" },
-    ingredients: { type: "array", items: { type: "object", additionalProperties: false, properties: { name: { type: "string" }, brand: { type: ["string", "null"] }, kind: { type: "string", enum: ["generic", "branded"] }, grams: { type: "number" }, quantity: { type: "number" }, quantityUnit: { type: ["string", "null"] }, quantityWasExplicit: { type: "boolean" }, amountConfidence: { type: "string", enum: ["high", "medium", "low"] } }, required: ["name", "brand", "kind", "grams", "quantity", "quantityUnit", "quantityWasExplicit", "amountConfidence"] } }
+    ingredients: { type: "array", items: { type: "object", additionalProperties: false, properties: { name: { type: "string" }, brand: { type: ["string", "null"] }, kind: { type: "string", enum: ["generic", "branded"] }, grams: { type: "number", exclusiveMinimum: 0 }, quantity: { type: "number", minimum: 0 }, quantityUnit: { type: ["string", "null"] }, quantityWasExplicit: { type: "boolean" }, amountConfidence: { type: "string", enum: ["high", "medium", "low"] } }, required: ["name", "brand", "kind", "grams", "quantity", "quantityUnit", "quantityWasExplicit", "amountConfidence"] } }
   },
   required: ["title", "assumptions", "ingredients"]
 };
@@ -244,15 +233,15 @@ const nutrientProperties = Object.fromEntries(["calories", "carbohydrates", "pro
 const manufacturerSchema = { type: "object", additionalProperties: false, properties: { found: { type: "boolean" }, name: { type: "string" }, sourceURL: { type: "string" }, sourceName: { type: "string" }, matchConfidence: { type: "number" }, identityNeedsConfirmation: { type: "boolean" }, servingLabel: { type: "string" }, servingGrams: { type: ["number", "null"] }, servingCount: { type: ["number", "null"] }, servingUnit: { type: ["string", "null"] }, nutritionBasis: { type: "string", enum: ["per_serving", "per_100g"] }, nutrients: { type: "object", additionalProperties: false, properties: nutrientProperties, required: Object.keys(nutrientProperties) }, evidence: { type: "array", items: { type: "object", additionalProperties: false, properties: { sourceName: { type: "string" }, sourceURL: { type: "string" } }, required: ["sourceName", "sourceURL"] } } }, required: ["found", "name", "sourceURL", "sourceName", "matchConfidence", "identityNeedsConfirmation", "servingLabel", "servingGrams", "servingCount", "servingUnit", "nutritionBasis", "nutrients", "evidence"] };
 
 function verificationIndexes(verification, ingredientCount) {
-  const valid = [...new Set(asArray(verification.ingredientIndexesToRecheck)
+  return [...new Set(asArray(verification.ingredientIndexesToRecheck)
     .map(Number)
-    .filter(index => Number.isInteger(index) && index >= 0 && index < ingredientCount))];
-  return valid.length ? valid : Array.from({ length: ingredientCount }, (_, index) => index);
+    .filter(index => Number.isInteger(index) && index >= 0 && index < ingredientCount))]
+    .slice(0, 2);
 }
 
 function sanitizeClarificationAnswers(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-  return Object.fromEntries(Object.entries(value).slice(0, 2).map(([key, answer]) => [String(key).slice(0, 80), String(answer).slice(0, 300)]));
+  return Object.fromEntries(Object.entries(value).slice(0, 4).map(([key, answer]) => [String(key).slice(0, 80), String(answer).slice(0, 300)]));
 }
 
 function requestBody(request) {
@@ -271,5 +260,25 @@ function requestBody(request) {
 
 function json(response, status, value) { response.writeHead(status); response.end(JSON.stringify(value)); }
 function asArray(value) { return Array.isArray(value) ? value : value ? [value] : []; }
+function positiveNumber(value, fallback) { const parsed = Number(value); return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback; }
+function clarificationRound(input) { return Math.min(2, Math.max(0, Math.floor(Number(input?.clarificationRound) || 0))); }
+async function mapWithConcurrency(items, limit, operation) {
+  const results = new Array(items.length);
+  let nextIndex = 0;
+  async function worker() {
+    while (nextIndex < items.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await operation(items[index], index);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+function sweepCache(cache, maximumEntries) {
+  const now = Date.now();
+  for (const [key, entry] of cache) if (entry?.expiresAt <= now) cache.delete(key);
+  while (cache.size >= maximumEntries) cache.delete(cache.keys().next().value);
+}
 function requireOpenAI() { if (!credentials.openAIKey) throw new ServiceError("service_not_configured"); }
 class ServiceError extends Error { constructor(code) { super(code); this.code = code; } }
