@@ -12,7 +12,7 @@ enum DayplateServiceError: LocalizedError {
         case .invalidResponse:
             return "The Dayplate service returned an unreadable response. Please try again."
         case .server("route_not_found"):
-            return "Voice transcription is not available on the Dayplate service yet. Update the service deployment, then try again."
+            return "This app is connected to an older Dayplate service. Deploy the current catalog service, then try again."
         case .server("service_not_configured"):
             return "Voice transcription is not configured on the Dayplate service yet."
         case .server(let message):
@@ -34,7 +34,7 @@ struct DayplateService {
         guard let baseURL else { throw DayplateServiceError.notConfigured }
         var components = URLComponents(url: baseURL.appending(path: "/v1/foods/search"), resolvingAgainstBaseURL: false)!
         components.queryItems = [URLQueryItem(name: "q", value: query)]
-        let (data, response) = try await URLSession.shared.data(from: components.url!)
+        let (data, response) = try await perform(URLRequest(url: components.url!))
         try validate(response, data: data)
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
@@ -48,22 +48,47 @@ struct DayplateService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(TranscriptionRequest(audioBase64: audioData.base64EncodedString(), mimeType: mimeType))
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await perform(request)
         try validate(response, data: data)
         guard let result = try? JSONDecoder().decode(TranscriptionResponse.self, from: data) else { throw DayplateServiceError.invalidResponse }
         return result.text
     }
 
+    func detectFoods(photoData: Data) async throws -> [String] {
+        guard let baseURL else { throw DayplateServiceError.notConfigured }
+        var request = URLRequest(url: baseURL.appending(path: "/v1/photo-foods"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(PhotoFoodsRequest(photoBase64: photoData.base64EncodedString()))
+        let (data, response) = try await perform(request)
+        try validate(response, data: data)
+        guard let result = try? JSONDecoder().decode(PhotoFoodsResponse.self, from: data) else {
+            throw DayplateServiceError.invalidResponse
+        }
+        return result.foods
+    }
+
     func analyze(_ input: MealAnalysisInput) async throws -> MealDraft {
+        switch try await analyzeOutcome(input) {
+        case .draft(let draft): return draft
+        case .needsClarification: throw MealAnalysisError.clarificationRequired
+        }
+    }
+
+    func analyzeOutcome(_ input: MealAnalysisInput) async throws -> MealAnalysisOutcome {
         guard let baseURL else { throw DayplateServiceError.notConfigured }
         var request = URLRequest(url: baseURL.appending(path: "/v1/meal-analysis"))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(RemoteMealRequest(input: input))
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await perform(request)
         try validate(response, data: data)
+        if let clarification = try? JSONDecoder().decode(RemoteClarificationResponse.self, from: data),
+           clarification.status == "needs_clarification", !clarification.questions.isEmpty {
+            return .needsClarification(clarification.questions)
+        }
         guard let result = try? JSONDecoder().decode(RemoteMealDraft.self, from: data) else { throw DayplateServiceError.invalidResponse }
-        return result.mealDraft
+        return .draft(result.mealDraft)
     }
 
     private func validate(_ response: URLResponse, data: Data) throws {
@@ -73,6 +98,33 @@ struct DayplateService {
             throw DayplateServiceError.server(message)
         }
     }
+
+    private func perform(_ originalRequest: URLRequest) async throws -> (Data, URLResponse) {
+        var lastError: Error?
+        for attempt in 0..<3 {
+            if attempt > 0 {
+                try? await Task.sleep(nanoseconds: attempt == 1 ? 300_000_000 : 900_000_000)
+            }
+            var request = originalRequest
+            request.timeoutInterval = 60
+            do {
+                let result = try await URLSession.shared.data(for: request)
+                if let http = result.1 as? HTTPURLResponse,
+                   http.statusCode == 429 || (500..<600).contains(http.statusCode) {
+                    lastError = DayplateServiceError.server("The Dayplate service is temporarily unavailable.")
+                    continue
+                }
+                return result
+            } catch {
+                lastError = error
+                guard let code = (error as? URLError)?.code,
+                      [.timedOut, .networkConnectionLost, .cannotConnectToHost, .dnsLookupFailed].contains(code) else {
+                    throw error
+                }
+            }
+        }
+        throw lastError ?? DayplateServiceError.invalidResponse
+    }
 }
 
 private struct FoodSearchResponse: Decodable { let foods: [CatalogFood] }
@@ -81,19 +133,28 @@ private struct ServiceError: Decodable { let error: String }
 private struct RemoteMealRequest: Encodable {
     let description: String
     let photosBase64: [String]
+    let identifiedFoods: [String]
     let capturedAt: String
     let timeZoneIdentifier: String
+    let allowClarifications: Bool
+    let clarificationAnswers: [String: String]
 
     init(input: MealAnalysisInput) {
         description = input.description
         photosBase64 = input.photoData.map { $0.base64EncodedString() }
+        identifiedFoods = input.identifiedFoods
         capturedAt = ISO8601DateFormatter().string(from: input.capturedAt)
         timeZoneIdentifier = input.timeZoneIdentifier
+        allowClarifications = input.allowsClarification
+        clarificationAnswers = input.clarificationAnswers
     }
 }
 
 private struct TranscriptionRequest: Encodable { let audioBase64: String; let mimeType: String }
 private struct TranscriptionResponse: Decodable { let text: String }
+private struct PhotoFoodsRequest: Encodable { let photoBase64: String }
+private struct PhotoFoodsResponse: Decodable { let foods: [String] }
+private struct RemoteClarificationResponse: Decodable { let status: String; let questions: [MealClarification] }
 
 private struct RemoteMealDraft: Decodable {
     struct Food: Decodable { let name: String; let portion: String; let sourceName: String? }

@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct TodayView: View {
+    @Environment(\.locale) private var locale
     @EnvironmentObject private var healthStore: HealthKitStore
     @Query(sort: \MealLog.timestamp) private var allMeals: [MealLog]
     @Query(sort: \WaterLog.timestamp) private var allWater: [WaterLog]
@@ -271,7 +272,7 @@ struct MealRhythmView: View {
                                 .frame(width: 13, height: 13)
                                 .overlay(Circle().stroke(JournalTheme.card, lineWidth: 3))
                                 .offset(x: markerPosition(for: meal.timestamp, width: proxy.size.width) - 6)
-                                .accessibilityLabel("Meal at \(meal.timestamp.formatted(date: .omitted, time: .shortened))")
+                                .accessibilityLabel("Meal at \(meal.timestamp.formatted(.dateTime.hour().minute().locale(locale)))")
                         }
                         ForEach(water) { waterLog in
                             Image(systemName: "drop.fill")
@@ -280,7 +281,7 @@ struct MealRhythmView: View {
                                 .frame(width: 14, height: 14)
                                 .background(JournalTheme.card, in: Circle())
                                 .offset(x: markerPosition(for: waterLog.timestamp, width: proxy.size.width) - 7)
-                                .accessibilityLabel("Water at \(waterLog.timestamp.formatted(date: .omitted, time: .shortened))")
+                                .accessibilityLabel("Water at \(waterLog.timestamp.formatted(.dateTime.hour().minute().locale(locale)))")
                         }
                         ForEach(workouts) { workout in
                             Image(systemName: "figure.run")
@@ -289,7 +290,7 @@ struct MealRhythmView: View {
                                 .frame(width: 16, height: 16)
                                 .background(JournalTheme.card, in: Circle())
                                 .offset(x: markerPosition(for: workout.startDate, width: proxy.size.width) - 8)
-                                .accessibilityLabel("\(workout.activityName) at \(workout.startDate.formatted(date: .omitted, time: .shortened))")
+                                .accessibilityLabel("\(workout.activityName) at \(workout.startDate.formatted(.dateTime.hour().minute().locale(locale)))")
                         }
                     }
                 }
@@ -325,6 +326,7 @@ struct MealRhythmView: View {
 }
 
 struct WaterJournalCard: View {
+    @Environment(\.locale) private var locale
     let water: WaterLog
     let unitSystem: String
     var onEdit: (() -> Void)?
@@ -374,7 +376,7 @@ struct WaterJournalCard: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Water, \(WaterDisplay.amount(water.milliliters, unitSystem: unitSystem)), at \(water.timestamp.formatted(date: .omitted, time: .shortened))")
+        .accessibilityLabel("Water, \(WaterDisplay.amount(water.milliliters, unitSystem: unitSystem)), at \(water.timestamp.formatted(.dateTime.hour().minute().locale(locale)))")
     }
 }
 

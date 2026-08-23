@@ -3,6 +3,7 @@ import SwiftData
 
 struct HistoryView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.locale) private var locale
     @Query(sort: \MealLog.timestamp, order: .reverse) private var meals: [MealLog]
     @Query(sort: \WaterLog.timestamp, order: .reverse) private var water: [WaterLog]
     @State private var mode = 0
@@ -16,7 +17,11 @@ struct HistoryView: View {
     @AppStorage("unitSystem") private var unitSystem = "us"
     let onLogMeal: (Date) -> Void
 
-    private let calendar = Calendar.autoupdatingCurrent
+    private var calendar: Calendar {
+        var value = Calendar.autoupdatingCurrent
+        value.locale = locale
+        return value
+    }
 
     init(selectedDate: Binding<Date>, onLogMeal: @escaping (Date) -> Void) {
         _selectedDate = selectedDate
@@ -296,7 +301,7 @@ struct HistoryView: View {
         let minutes = firsts.map { Calendar.current.component(.hour, from: $0) * 60 + Calendar.current.component(.minute, from: $0) }
         let average = minutes.reduce(0, +) / minutes.count
         var components = DateComponents(); components.hour = average / 60; components.minute = average % 60
-        return Calendar.current.date(from: components)?.formatted(date: .omitted, time: .shortened) ?? "—"
+        return Calendar.current.date(from: components)?.formatted(.dateTime.hour().minute().locale(locale)) ?? "—"
     }
 
     private var averageSpacing: String {
@@ -402,6 +407,7 @@ private struct WeekdayHeader: View {
 }
 
 private struct MonthCalendarGrid: View {
+    @Environment(\.locale) private var locale
     let month: Date
     let selectedDate: Date
     let summaries: [Date: HistoryDaySummary]
@@ -448,7 +454,7 @@ private struct MonthCalendarGrid: View {
     }
 
     private func accessibilityLabel(for summary: HistoryDaySummary) -> String {
-        var label = summary.date.formatted(.dateTime.weekday(.wide).month(.wide).day())
+        var label = summary.date.formatted(.dateTime.weekday(.wide).month(.wide).day().locale(locale))
         if summary.hasMeals {
             label += ", \(summary.mealCount) meal\(summary.mealCount == 1 ? "" : "s"), \(Int(summary.calories.rounded())) calories, \(Int(summary.carbohydrates.rounded())) grams carbs, \(Int(summary.protein.rounded())) grams protein"
         } else if summary.hasEntries {
@@ -461,6 +467,7 @@ private struct MonthCalendarGrid: View {
 }
 
 private struct HistoryDayNutritionCard: View {
+    @Environment(\.locale) private var locale
     let summary: HistoryDaySummary
     let unitSystem: String
 
@@ -495,7 +502,7 @@ private struct HistoryDayNutritionCard: View {
         HStack(spacing: 5) {
             Text("\(summary.mealCount) meal\(summary.mealCount == 1 ? "" : "s")")
             if let firstMeal = summary.firstMeal {
-                Text("· First at \(firstMeal.formatted(date: .omitted, time: .shortened))")
+                Text("· First at \(firstMeal.formatted(.dateTime.hour().minute().locale(locale)))")
             }
             if summary.waterMilliliters > 0 {
                 Text("· \(WaterDisplay.total(summary.waterMilliliters, unitSystem: unitSystem)) water")

@@ -6,6 +6,7 @@ import SwiftData
 // while reading the real SwiftData journal.
 
 struct DayplateTodayView: View {
+    @Environment(\.locale) private var locale
     @Query(sort: \MealLog.timestamp) private var allMeals: [MealLog]
     @Query(sort: \WaterLog.timestamp) private var allWater: [WaterLog]
     @AppStorage("unitSystem") private var unitSystem = "us"
@@ -137,7 +138,7 @@ struct DayplateTodayView: View {
             VStack(spacing: 9) {
                 ForEach(entries) { entry in
                     HStack(alignment: .top, spacing: 10) {
-                        Text(entry.timestamp.formatted(.dateTime.hour().minute()))
+                        Text(entry.timestamp.formatted(.dateTime.hour().minute().locale(locale)))
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(JournalTheme.ink.opacity(0.45))
                             .frame(width: 48, alignment: .trailing)
@@ -429,6 +430,7 @@ private struct DayplateHistorySearchView: View {
 }
 
 struct DayplateInsightsView: View {
+    @Environment(\.locale) private var locale
     @Query(sort: \MealLog.timestamp) private var meals: [MealLog]
     @AppStorage("insightsWindow") private var insightsWindow = "rolling"
     @State private var selectedBar: Int?
@@ -532,12 +534,12 @@ struct DayplateInsightsView: View {
     private var maxCalories: Double { dailyMeals.map { $0.reduce(0) { $0 + $1.calories } }.max() ?? 1 }
     private func average(_ keyPath: KeyPath<MealLog, Double>) -> Double { guard !logged.isEmpty else { return 0 }; return logged.map { $0.reduce(0) { $0 + $1[keyPath: keyPath] } }.reduce(0, +) / Double(logged.count) }
     private var windowLabel: String {
-        insightsWindow == "week" ? "This week · Mon – Sun" : "Rolling 7 day period · \(days.first?.formatted(.dateTime.month(.abbreviated).day()) ?? "") – \(days.last?.formatted(.dateTime.day()) ?? "")"
+        insightsWindow == "week" ? "This week · Mon – Sun" : "Rolling 7 day period · \(days.first?.formatted(.dateTime.month(.abbreviated).day().locale(locale)) ?? "") – \(days.last?.formatted(.dateTime.day().locale(locale)) ?? "")"
     }
     private var barCallout: String {
         guard let selectedBar else { return "Tap a bar for that day's total" }
         let dayMeals = dailyMeals[selectedBar]
-        let label = days[selectedBar].formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
+        let label = days[selectedBar].formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day().locale(locale))
         return dayMeals.isEmpty ? "\(label) · nothing logged yet" : "\(label) · \(Int(dayMeals.reduce(0) { $0 + $1.calories })) kcal"
     }
     private var topFoods: [(name: String, count: Int)] {

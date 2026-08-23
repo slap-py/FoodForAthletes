@@ -3,24 +3,41 @@ import SwiftData
 import PhotosUI
 import AVFoundation
 import UIKit
+import Combine
 
 struct MealCaptureView: View {
-    enum Step { case capture, review }
+    enum Step { case capture, camera, clarify, review }
+    enum PhotoSource { case camera, library }
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.locale) private var locale
     @EnvironmentObject private var offlineMealQueue: OfflineMealQueueStore
     @EnvironmentObject private var networkMonitor: NetworkMonitor
     @Query(sort: \MealLog.timestamp, order: .reverse) private var previousMeals: [MealLog]
     @State private var step: Step = .capture
     @State private var descriptionText = ""
-    @State private var selectedPhotos: [PhotosPickerItem] = []
+    @State private var selectedLibraryPhoto: PhotosPickerItem?
     @State private var photoData: [Data] = []
     @State private var photos: [UIImage] = []
-    @State private var cameraPhoto: UIImage?
+    @StateObject private var camera = DayplateCameraController()
+    @State private var cameraPhotoData: Data?
+    @State private var cameraPhotoAddedToMeal = false
+    @State private var identifiedPhotoFoods: [String] = []
+    @State private var identifiedFoodsBeforeCameraPhoto: [String]?
+    @State private var cameraFoods: [String] = []
+    @State private var isDetectingCameraFoods = false
+    @State private var cameraDetectionRequestID = UUID()
+    @State private var cameraDetectionError: String?
+    @State private var isAddingCameraFood = false
+    @State private var newCameraFood = ""
+    @State private var photoSource: PhotoSource = .camera
+    @State private var isLoadingLibraryPhoto = false
     @State private var draft: MealDraft?
+    @State private var clarificationQuestions: [MealClarification] = []
+    @State private var clarificationIndex = 0
+    @State private var clarificationAnswers: [String: String] = [:]
     @State private var isPreparingPreview = false
-    @State private var showsCamera = false
     @State private var showsCameraDenied = false
     @State private var audioRecorder: AVAudioRecorder?
     @State private var isRecording = false
@@ -54,6 +71,8 @@ struct MealCaptureView: View {
             Group {
                 switch step {
                 case .capture: captureStep
+                case .camera: cameraStep
+                case .clarify: clarificationStep
                 case .review: reviewStep
                 }
             }
@@ -66,18 +85,12 @@ struct MealCaptureView: View {
                 }
             }
         }
-        .fullScreenCover(isPresented: $showsCamera) {
-            CameraPicker(image: $cameraPhoto)
-                .ignoresSafeArea()
+        .onReceive(camera.$capturedImage.compactMap { $0 }) { image in
+            handleCapturedPhoto(image)
         }
-        .onChange(of: cameraPhoto) { _, image in
-            guard let image, photos.count < 3 else { return }
-            photos.append(image)
-            if let data = image.analysisJPEGData() { photoData.append(data) }
-            cameraPhoto = nil
-        }
-        .onChange(of: selectedPhotos) { _, items in
-            loadPhotos(items)
+        .onChange(of: selectedLibraryPhoto) { _, item in
+            guard let item else { return }
+            reviewLibraryPhoto(item)
         }
         .alert("Camera access is off", isPresented: $showsCameraDenied) {
             Button("Open Settings") { openSystemSettings() }
@@ -109,7 +122,7 @@ struct MealCaptureView: View {
                     .padding(.top, -10)
 
                 if !Calendar.current.isDateInToday(loggingDate) {
-                    Label("Logging for \(loggingDate.formatted(.dateTime.weekday(.wide).month(.wide).day()))", systemImage: "calendar")
+                    Label("Logging for \(loggingDate.formatted(.dateTime.weekday(.wide).month(.wide).day().locale(locale)))", systemImage: "calendar")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(JournalTheme.moss)
                         .padding(12)
@@ -154,7 +167,7 @@ struct MealCaptureView: View {
                     .font(.caption)
                     .foregroundStyle(JournalTheme.ink.opacity(0.58))
 
-                Button(action: preparePreview) {
+                Button { preparePreview() } label: {
                     HStack {
                         if isPreparingPreview { ProgressView().tint(.white) }
                     Text(isPreparingPreview ? "Reviewing meal…" : "Analyze meal")
@@ -174,6 +187,218 @@ struct MealCaptureView: View {
         .scrollDismissesKeyboard(.interactively)
     }
 
+    private var cameraStep: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Button("‹ Back") { leaveCamera() }
+                    .font(.body)
+                    .foregroundStyle(JournalTheme.moss)
+
+                Text(photoSource == .library ? "Review a photo" : "Take a photo")
+                    .font(.system(size: 31, weight: .bold))
+                    .tracking(-0.6)
+                    .foregroundStyle(JournalTheme.ink)
+
+                Text("The meal itself, the packaging, or a nutrition label — any of the three works.")
+                    .font(.body)
+                    .foregroundStyle(JournalTheme.ink.opacity(0.58))
+                    .padding(.top, -10)
+
+                cameraViewfinder
+
+                if cameraPhotoData == nil {
+                    if isLoadingLibraryPhoto {
+                        HStack(spacing: 10) {
+                            ProgressView().tint(JournalTheme.moss)
+                            Text("Preparing photo…")
+                        }
+                        .foregroundStyle(JournalTheme.ink.opacity(0.58))
+                        .frame(maxWidth: .infinity, minHeight: 78)
+                    } else {
+                        HStack(spacing: 34) {
+                            PhotosPicker(selection: $selectedLibraryPhoto, matching: .images) {
+                                VStack(spacing: 7) {
+                                    Image(systemName: "photo.on.rectangle")
+                                        .font(.title3)
+                                        .frame(width: 52, height: 52)
+                                        .background(JournalTheme.card, in: Circle())
+                                    Text("Photos").font(.caption.weight(.semibold))
+                                }
+                                .foregroundStyle(JournalTheme.moss)
+                            }
+
+                            Button {
+                                photoSource = .camera
+                                camera.capture()
+                            } label: {
+                                ZStack {
+                                    Circle().stroke(JournalTheme.moss.opacity(0.22), lineWidth: 5)
+                                    Circle().fill(JournalTheme.moss).padding(7)
+                                }
+                                .frame(width: 78, height: 78)
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(!camera.isReady)
+                            .accessibilityLabel("Take photo")
+
+                            Color.clear.frame(width: 52, height: 52)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+
+                    Text("Photos are used for this estimate only.")
+                        .font(.subheadline)
+                        .foregroundStyle(JournalTheme.ink.opacity(0.48))
+                        .frame(maxWidth: .infinity)
+                } else {
+                    cameraFindings
+                }
+            }
+            .padding(18)
+            .padding(.bottom, 28)
+        }
+        .scrollIndicators(.hidden)
+        .onAppear {
+            if photoSource == .camera && cameraPhotoData == nil && !isLoadingLibraryPhoto { camera.start() }
+        }
+        .onDisappear { camera.stop() }
+    }
+
+    private var cameraViewfinder: some View {
+        ZStack {
+            if let image = camera.capturedImage {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                DayplateCameraPreview(session: camera.session)
+            }
+
+            RoundedRectangle(cornerRadius: 19, style: .continuous)
+                .stroke(JournalTheme.card.opacity(0.65), lineWidth: 2)
+                .padding(16)
+
+            if (!camera.isReady || isLoadingLibraryPhoto) && camera.capturedImage == nil {
+                ProgressView()
+                    .tint(.white)
+                    .padding(16)
+                    .background(.black.opacity(0.28), in: Circle())
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 280)
+        .background(JournalTheme.mint)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(JournalTheme.moss.opacity(0.18), lineWidth: 1)
+        }
+        .clipped()
+    }
+
+    private var cameraFindings: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("I found:")
+                    .font(.title3.bold())
+                    .foregroundStyle(JournalTheme.ink)
+                Spacer()
+                if photoSource == .library {
+                    PhotosPicker(selection: $selectedLibraryPhoto, matching: .images) {
+                        Text("Choose another")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(JournalTheme.moss)
+                    }
+                } else {
+                    Button("Retake") { retakePhoto() }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(JournalTheme.moss)
+                }
+            }
+
+            if isDetectingCameraFoods {
+                HStack(spacing: 11) {
+                    ProgressView().tint(JournalTheme.moss)
+                    Text("Looking for foods…")
+                        .foregroundStyle(JournalTheme.ink.opacity(0.58))
+                }
+                .frame(maxWidth: .infinity, minHeight: 74)
+                .background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
+            } else {
+                ForEach(Array(cameraFoods.enumerated()), id: \.offset) { index, food in
+                    HStack(spacing: 12) {
+                        Text(food)
+                            .font(.body)
+                            .foregroundStyle(JournalTheme.ink)
+                        Spacer()
+                        Button { cameraFoods.remove(at: index) } label: {
+                            Image(systemName: "xmark")
+                                .font(.subheadline)
+                                .foregroundStyle(JournalTheme.clay)
+                                .frame(width: 34, height: 34)
+                                .background(JournalTheme.clay.opacity(0.11), in: Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Remove \(food)")
+                    }
+                    .padding(.horizontal, 14)
+                    .frame(minHeight: 62)
+                    .background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 17, style: .continuous)
+                            .stroke(JournalTheme.moss.opacity(0.10), lineWidth: 1)
+                    }
+                }
+
+                if let cameraDetectionError {
+                    Text(cameraDetectionError)
+                        .font(.caption)
+                        .foregroundStyle(JournalTheme.clay)
+                }
+
+                if isAddingCameraFood {
+                    HStack {
+                        TextField("Food name", text: $newCameraFood)
+                            .textInputAutocapitalization(.sentences)
+                            .submitLabel(.done)
+                            .onSubmit(addCameraFood)
+                        Button("Add", action: addCameraFood)
+                            .fontWeight(.semibold)
+                            .disabled(newCameraFood.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                    .padding(.horizontal, 14)
+                    .frame(minHeight: 58)
+                    .background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
+                } else {
+                    Button { isAddingCameraFood = true } label: {
+                        Label("Add a food", systemImage: "plus")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(JournalTheme.moss)
+                            .frame(maxWidth: .infinity, minHeight: 58)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 17, style: .continuous)
+                                    .stroke(JournalTheme.moss.opacity(0.38), style: StrokeStyle(lineWidth: 1, dash: [5]))
+                            }
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Button(action: continueFromCamera) {
+                    HStack(spacing: 9) {
+                        if isPreparingPreview { ProgressView().tint(.white) }
+                        Text(isPreparingPreview ? "Reviewing meal…" : "Continue")
+                    }
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, minHeight: 56)
+                    .background(JournalTheme.moss, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .disabled(isPreparingPreview)
+            }
+        }
+    }
+
     private var usualRow: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("RECENTS")
@@ -185,7 +410,7 @@ struct MealCaptureView: View {
                             Text(mealEmojiForCapture(meal.title)).font(.title3)
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(meal.title).font(.subheadline.bold()).lineLimit(1)
-                                Text("\(Int(meal.calories)) kcal · \(meal.timestamp.formatted(.relative(presentation: .named)))")
+                                Text("\(Int(meal.calories)) kcal · \(meal.timestamp.formatted(.relative(presentation: .named).locale(locale)))")
                                     .font(.caption).foregroundStyle(JournalTheme.ink.opacity(0.55)).lineLimit(1)
                             }
                             Spacer()
@@ -263,6 +488,82 @@ struct MealCaptureView: View {
         }
     }
 
+    private var clarificationStep: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Button("‹ Back") {
+                    step = .capture
+                    descriptionFocused = true
+                }
+                .font(.body)
+                .foregroundStyle(JournalTheme.moss)
+
+                Text("One quick check")
+                    .font(.system(size: 31, weight: .bold))
+                    .tracking(-0.6)
+                    .foregroundStyle(JournalTheme.ink)
+
+                if clarificationQuestions.indices.contains(clarificationIndex) {
+                    let question = clarificationQuestions[clarificationIndex]
+                    Text("Question \(clarificationIndex + 1) of \(clarificationQuestions.count)")
+                        .font(.caption.bold())
+                        .tracking(1.2)
+                        .foregroundStyle(JournalTheme.moss)
+
+                    JournalCard {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text(question.prompt)
+                                .font(.title3.bold())
+                                .foregroundStyle(JournalTheme.ink)
+                            Text(question.detail)
+                                .font(.subheadline)
+                                .foregroundStyle(JournalTheme.ink.opacity(0.62))
+                        }
+                    }
+
+                    VStack(spacing: 10) {
+                        ForEach(question.options) { option in
+                            Button {
+                                answerClarification(question, with: option)
+                            } label: {
+                                HStack {
+                                    Text(option.label)
+                                        .multilineTextAlignment(.leading)
+                                    Spacer()
+                                    Image(systemName: option.action == "edit" ? "pencil" : "chevron.right")
+                                }
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(option.action == "edit" ? JournalTheme.ink.opacity(0.68) : JournalTheme.moss)
+                                .padding(.horizontal, 16)
+                                .frame(maxWidth: .infinity, minHeight: 58, alignment: .leading)
+                                .background(JournalTheme.card, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 17, style: .continuous)
+                                        .stroke(JournalTheme.moss.opacity(0.14), lineWidth: 1)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(isPreparingPreview)
+                        }
+                    }
+
+                    if isPreparingPreview {
+                        HStack(spacing: 10) {
+                            ProgressView().tint(JournalTheme.moss)
+                            Text("Checking sources again…")
+                        }
+                        .font(.subheadline)
+                        .foregroundStyle(JournalTheme.ink.opacity(0.58))
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+            }
+            .padding(18)
+            .padding(.bottom, 28)
+        }
+        .scrollIndicators(.hidden)
+    }
+
     private func reviewNutrient(_ label: String, _ value: Double, _ color: Color, unit: String = "g") -> some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 5) {
@@ -297,7 +598,7 @@ struct MealCaptureView: View {
                 }
             }
             if photos.count < 3 {
-                PhotosPicker(selection: $selectedPhotos, maxSelectionCount: max(1, 3 - photos.count), matching: .images) {
+                PhotosPicker(selection: $selectedLibraryPhoto, matching: .images) {
                     Label("Choose from Photos", systemImage: "photo.on.rectangle")
                         .font(.subheadline.weight(.semibold)).foregroundStyle(JournalTheme.moss)
                         .frame(maxWidth: .infinity).frame(height: 48)
@@ -324,15 +625,116 @@ struct MealCaptureView: View {
         }
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
-            showsCamera = true
+            step = .camera
         case .notDetermined:
             Task {
                 let allowed = await AVCaptureDevice.requestAccess(for: .video)
-                if allowed { showsCamera = true } else { showsCameraDenied = true }
+                if allowed { step = .camera } else { showsCameraDenied = true }
             }
         default:
             showsCameraDenied = true
         }
+    }
+
+    private func handleCapturedPhoto(_ image: UIImage) {
+        guard cameraPhotoData == nil, let data = image.analysisJPEGData() else { return }
+        camera.stop()
+        cameraPhotoData = data
+        isDetectingCameraFoods = true
+        cameraDetectionError = nil
+        cameraFoods = []
+        let requestID = UUID()
+        cameraDetectionRequestID = requestID
+        Task {
+            do {
+                let foods = try await DayplateService.shared.detectFoods(photoData: data)
+                guard cameraDetectionRequestID == requestID else { return }
+                cameraFoods = foods
+                if cameraFoods.isEmpty {
+                    cameraDetectionError = "I couldn’t identify a food in the quick review. You can still continue—the full meal analysis will inspect the photo again."
+                }
+            } catch {
+                guard cameraDetectionRequestID == requestID else { return }
+                cameraDetectionError = "Quick photo recognition wasn’t available. You can still continue—the full meal analysis will inspect the photo again."
+            }
+            guard cameraDetectionRequestID == requestID else { return }
+            isDetectingCameraFoods = false
+        }
+    }
+
+    private func reviewLibraryPhoto(_ item: PhotosPickerItem) {
+        resetCurrentPhoto(startCamera: false)
+        photoSource = .library
+        isLoadingLibraryPhoto = true
+        step = .camera
+        camera.stop()
+        Task {
+            defer {
+                isLoadingLibraryPhoto = false
+                selectedLibraryPhoto = nil
+            }
+            guard let data = try? await item.loadTransferable(type: Data.self),
+                  let image = UIImage(data: data) else {
+                analysisError = "That photo couldn’t be opened. Please choose another one."
+                return
+            }
+            camera.review(image)
+        }
+    }
+
+    private func addCameraFood() {
+        let food = newCameraFood.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !food.isEmpty else { return }
+        cameraFoods.append(food)
+        newCameraFood = ""
+        isAddingCameraFood = false
+    }
+
+    private func continueFromCamera() {
+        guard let data = cameraPhotoData, let image = camera.capturedImage else { return }
+        if !cameraPhotoAddedToMeal, photos.count < 3 {
+            identifiedFoodsBeforeCameraPhoto = identifiedPhotoFoods
+            photos.append(image)
+            photoData.append(data)
+            for food in cameraFoods where !identifiedPhotoFoods.contains(where: { $0.localizedCaseInsensitiveCompare(food) == .orderedSame }) {
+                identifiedPhotoFoods.append(food)
+            }
+            cameraPhotoAddedToMeal = true
+        }
+        preparePreview()
+    }
+
+    private func retakePhoto() {
+        photoSource = .camera
+        resetCurrentPhoto(startCamera: true)
+    }
+
+    private func resetCurrentPhoto(startCamera: Bool) {
+        if cameraPhotoAddedToMeal {
+            if let data = cameraPhotoData, photoData.last == data, !photos.isEmpty {
+                photoData.removeLast()
+                photos.removeLast()
+            }
+            if let identifiedFoodsBeforeCameraPhoto { identifiedPhotoFoods = identifiedFoodsBeforeCameraPhoto }
+        }
+        cameraPhotoData = nil
+        cameraPhotoAddedToMeal = false
+        identifiedFoodsBeforeCameraPhoto = nil
+        cameraFoods = []
+        cameraDetectionError = nil
+        isDetectingCameraFoods = false
+        cameraDetectionRequestID = UUID()
+        isAddingCameraFood = false
+        newCameraFood = ""
+        camera.resetPhoto()
+        if startCamera { camera.start() }
+    }
+
+    private func leaveCamera() {
+        resetCurrentPhoto(startCamera: false)
+        photoSource = .camera
+        camera.stop()
+        step = .capture
     }
 
     private func toggleRecording() {
@@ -384,9 +786,14 @@ struct MealCaptureView: View {
         }
     }
 
-    private func preparePreview() {
+    private func preparePreview(usingClarifications: Bool = false) {
         guard canAnalyze else { return }
         descriptionFocused = false
+        if !usingClarifications {
+            clarificationAnswers = [:]
+            clarificationQuestions = []
+            clarificationIndex = 0
+        }
         guard networkMonitor.isConnected else {
             queueCurrentMealForLater()
             return
@@ -395,15 +802,27 @@ struct MealCaptureView: View {
         Task {
             defer { isPreparingPreview = false }
             do {
-                let result = try await MealAnalysisService.shared.analyze(
+                let result = try await MealAnalysisService.shared.analyzeOutcome(
                     MealAnalysisInput(
                         description: descriptionText,
-                        photoData: photoData
+                        photoData: photoData,
+                        identifiedFoods: identifiedPhotoFoods,
+                        allowsClarification: true,
+                        clarificationAnswers: clarificationAnswers
                     )
                 )
                 guard !Task.isCancelled else { return }
-                draft = result
-                step = .review
+                switch result {
+                case .draft(let completedDraft):
+                    draft = completedDraft
+                    clarificationQuestions = []
+                    clarificationIndex = 0
+                    step = .review
+                case .needsClarification(let questions):
+                    clarificationQuestions = Array(questions.prefix(2))
+                    clarificationIndex = 0
+                    step = .clarify
+                }
             } catch {
                 if shouldQueue(error) {
                     queueCurrentMealForLater()
@@ -411,6 +830,20 @@ struct MealCaptureView: View {
                     analysisError = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
                 }
             }
+        }
+    }
+
+    private func answerClarification(_ question: MealClarification, with option: MealClarification.Option) {
+        if option.action == "edit" {
+            step = .capture
+            descriptionFocused = true
+            return
+        }
+        clarificationAnswers[question.id] = option.value
+        if clarificationIndex + 1 < clarificationQuestions.count {
+            clarificationIndex += 1
+        } else {
+            preparePreview(usingClarifications: true)
         }
     }
 
@@ -501,31 +934,18 @@ struct MealCaptureView: View {
         dismiss()
     }
 
-    private func loadPhotos(_ items: [PhotosPickerItem]) {
-        guard !items.isEmpty else { return }
-        Task {
-            var loaded: [(UIImage, Data)] = []
-            for item in items.prefix(max(0, 3 - photos.count)) {
-                guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data), let compressed = image.analysisJPEGData() else { continue }
-                loaded.append((image, compressed))
-            }
-            photos.append(contentsOf: loaded.map(\.0))
-            photoData.append(contentsOf: loaded.map(\.1))
-            selectedPhotos = []
-        }
-    }
-
     private func clearPhoto(at index: Int) {
         guard photos.indices.contains(index), photoData.indices.contains(index) else { return }
         photos.remove(at: index)
         photoData.remove(at: index)
-        selectedPhotos = []
+        selectedLibraryPhoto = nil
     }
 
     private func clearPhotos() {
-        selectedPhotos = []
+        selectedLibraryPhoto = nil
         photos = []
         photoData = []
+        identifiedPhotoFoods = []
     }
 
     private func openSystemSettings() {
@@ -534,35 +954,100 @@ struct MealCaptureView: View {
     }
 }
 
-private struct CameraPicker: UIViewControllerRepresentable {
-    @Environment(\.dismiss) private var dismiss
-    @Binding var image: UIImage?
+private final class DayplateCameraController: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
+    let session = AVCaptureSession()
+    @Published private(set) var isReady = false
+    @Published private(set) var capturedImage: UIImage?
 
-    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+    private let photoOutput = AVCapturePhotoOutput()
+    private let sessionQueue = DispatchQueue(label: "com.dayplate.camera-session", qos: .userInitiated)
+    private var isConfigured = false
 
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.cameraCaptureMode = .photo
-        picker.delegate = context.coordinator
-        return picker
-    }
-
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-
-    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        var parent: CameraPicker
-        init(parent: CameraPicker) { self.parent = parent }
-
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-            parent.image = info[.originalImage] as? UIImage
-            parent.dismiss()
-        }
-
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            parent.dismiss()
+    func start() {
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            do {
+                if !self.isConfigured { try self.configure() }
+                if !self.session.isRunning { self.session.startRunning() }
+                DispatchQueue.main.async { self.isReady = true }
+            } catch {
+                DispatchQueue.main.async { self.isReady = false }
+            }
         }
     }
+
+    func stop() {
+        sessionQueue.async { [weak self] in
+            guard let self, self.session.isRunning else { return }
+            self.session.stopRunning()
+            DispatchQueue.main.async { self.isReady = false }
+        }
+    }
+
+    func capture() {
+        guard isReady else { return }
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            let settings = AVCapturePhotoSettings()
+            settings.flashMode = .auto
+            self.photoOutput.capturePhoto(with: settings, delegate: self)
+        }
+    }
+
+    func resetPhoto() {
+        capturedImage = nil
+    }
+
+    func review(_ image: UIImage) {
+        isReady = false
+        capturedImage = image
+    }
+
+    private func configure() throws {
+        session.beginConfiguration()
+        defer { session.commitConfiguration() }
+        session.sessionPreset = .photo
+
+        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+            throw NSError(domain: "DayplateCamera", code: 1)
+        }
+        let input = try AVCaptureDeviceInput(device: device)
+        guard session.canAddInput(input), session.canAddOutput(photoOutput) else {
+            throw NSError(domain: "DayplateCamera", code: 2)
+        }
+        session.addInput(input)
+        session.addOutput(photoOutput)
+        photoOutput.maxPhotoQualityPrioritization = .quality
+        isConfigured = true
+    }
+
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
+        guard error == nil, let data = photo.fileDataRepresentation(), let image = UIImage(data: data) else { return }
+        DispatchQueue.main.async {
+            self.capturedImage = image
+            self.isReady = false
+        }
+    }
+}
+
+private struct DayplateCameraPreview: UIViewRepresentable {
+    let session: AVCaptureSession
+
+    func makeUIView(context: Context) -> CameraPreviewUIView {
+        let view = CameraPreviewUIView()
+        view.previewLayer.session = session
+        view.previewLayer.videoGravity = .resizeAspectFill
+        return view
+    }
+
+    func updateUIView(_ uiView: CameraPreviewUIView, context: Context) {
+        uiView.previewLayer.session = session
+    }
+}
+
+private final class CameraPreviewUIView: UIView {
+    override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
+    var previewLayer: AVCaptureVideoPreviewLayer { layer as! AVCaptureVideoPreviewLayer }
 }
 
 private extension UIImage {

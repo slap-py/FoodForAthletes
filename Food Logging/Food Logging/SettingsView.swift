@@ -231,7 +231,7 @@ struct SettingsView: View {
                     )
                     privacyRow(
                         title: "Ingredient sources",
-                        message: "Meal nutrition is sourced per ingredient from USDA FoodData Central, Open Food Facts when needed for branded products, and a manufacturer-site fallback. Saved portions and sources remain attached to the meal for traceability.",
+                        message: "Meal nutrition is sourced per food from USDA FoodData Central, then Open Food Facts, then AI-assisted web research when needed. Sources can be corroborated, and saved portions and primary sources remain attached to the meal for traceability.",
                         icon: "magnifyingglass"
                     )
                 }
@@ -251,9 +251,9 @@ struct SettingsView: View {
                     Text("A fast, ingredient-level estimate with source checks before you save.")
                         .font(.body)
                         .foregroundStyle(JournalTheme.ink.opacity(0.72))
-                    howItWorksRow(number: "1", title: "Understand your meal", message: "Text, up to three photos, and an optional voice note identify meal-level foods such as chicken breast, bun, or sauce.")
-                    howItWorksRow(number: "2", title: "Find nutrition", message: "Generic foods use USDA FoodData Central. Branded foods check USDA’s branded database, then Open Food Facts, then an official manufacturer page if needed.")
-                    howItWorksRow(number: "3", title: "Check the result", message: "A separate AI sanity check looks for implausible amounts or unit mistakes before the review is shown.")
+                    howItWorksRow(number: "1", title: "Understand your meal", message: "Text, up to three photos, and an optional voice note identify meal-level foods—even when a product or flavor name is approximate.")
+                    howItWorksRow(number: "2", title: "Find nutrition", message: "Every food checks USDA first, then Open Food Facts, then AI-assisted web research. Failed or unit-mismatched results automatically move to the next source.")
+                    howItWorksRow(number: "3", title: "Check the result", message: "Serving labels are checked separately from the amount eaten. If identity or portion remains ambiguous, Dayplate asks up to two quick questions before showing the review.")
                     howItWorksRow(number: "4", title: "You stay in control", message: "Review each food and portion before saving. Photos and recordings are used only to make that estimate; your saved meal keeps the resulting nutrition and source details.")
                 }
                 .padding(22)

@@ -4,6 +4,7 @@ import SwiftData
 struct LogFoodView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.locale) private var locale
     @Query(sort: \MealLog.timestamp, order: .reverse) private var meals: [MealLog]
     @State private var showsMealCapture = false
 
@@ -38,7 +39,7 @@ struct LogFoodView: View {
                                     HStack {
                                         VStack(alignment: .leading, spacing: 3) {
                                             Text(meal.title).font(.headline).foregroundStyle(JournalTheme.ink)
-                                            Text("\(Int(meal.calories)) kcal · \(meal.timestamp.formatted(date: .abbreviated, time: .shortened))")
+                                            Text("\(Int(meal.calories)) kcal · \(meal.timestamp.formatted(.dateTime.year().month().day().hour().minute().locale(locale)))")
                                                 .font(.caption).foregroundStyle(.secondary)
                                         }
                                         Spacer()
