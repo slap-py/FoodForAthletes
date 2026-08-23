@@ -16,6 +16,8 @@ The service is configured for Workers. There is no build command: it is plain Ja
 
 For local Workers secrets, create a non-committed `.dev.vars` file with `USDA_FOODDATA_API_KEY` and `OPENAI_API_KEY`. In Cloudflare, add those two values as Worker Secrets—not plaintext Variables—before deploying. The four optional `OPENAI_*_MODEL` overrides shown in `.env.example` are ordinary configuration variables and can be omitted to use the checked-in defaults. The checked-in Worker name is `foodforathletes`, matching the workers.dev URL configured in the iOS app.
 
+Meal analysis uses `OPENAI_MODEL` for text-only logs and `OPENAI_VISION_MODEL` (falling back to `OPENAI_PHOTO_MODEL`) whenever a meal includes one or more photos. Set the latter to a model that supports `input_image`; this split prevents a text-only model configuration from causing photo-only meals to fail as a service outage.
+
 Ingestion groups deterministic exact keys first. `duplicateCandidates` creates only plausible later-stage candidates. An agent may return the documented structured merge/keep decision, but `applyAgentDecision` accepts an automatic merge only at high confidence when normalized identity, serving weight, and key nutrients agree. Conflicts remain separate for review, while all original records and import timestamps remain in `sourceRecords` for auditability.
 
 ## Curating exact branded menu products

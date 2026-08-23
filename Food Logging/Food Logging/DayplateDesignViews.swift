@@ -257,11 +257,13 @@ private struct DayplateMealRow: View {
 }
 
 struct DayplateMealDetailView: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var offlineMealQueue: OfflineMealQueueStore
     @EnvironmentObject private var networkMonitor: NetworkMonitor
     let meal: MealLog
     @State private var showsReestimate = false
+    @State private var showsDeleteConfirmation = false
     @AppStorage("unitSystem") private var unitSystem = "us"
     var body: some View {
         ScrollView {
@@ -292,6 +294,8 @@ struct DayplateMealDetailView: View {
                                 Task { await offlineMealQueue.processPending(into: modelContext, networkAvailable: networkMonitor.isConnected) }
                             }
                             .buttonStyle(.bordered)
+                            Button("Delete meal", role: .destructive) { showsDeleteConfirmation = true }
+                                .buttonStyle(.bordered)
                         }
                     }
                 } else {
@@ -366,6 +370,15 @@ struct DayplateMealDetailView: View {
         }
         .background(JournalTheme.paper).navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showsReestimate) { MealReestimateView(meal: meal) }
+        .confirmationDialog("Delete this failed meal?", isPresented: $showsDeleteConfirmation, titleVisibility: .visible) {
+            Button("Delete meal", role: .destructive) {
+                offlineMealQueue.delete(meal: meal, in: modelContext)
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The queued photos and this failed meal will be permanently removed.")
+        }
     }
 
     private func answer(_ question: MealClarification, with option: MealClarification.Option) {

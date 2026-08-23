@@ -70,7 +70,9 @@ struct DayplateService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(RemoteMealRequest(input: input))
-        let (data, response) = try await perform(request, timeout: 75, retryTimeouts: false, maxAttempts: 1)
+        // Analysis is idempotent. Give a transient gateway or provider failure
+        // one bounded retry before the durable on-device queue takes over.
+        let (data, response) = try await perform(request, timeout: 110, retryTimeouts: true, maxAttempts: 2)
         try validate(response, data: data)
         guard let result = try? JSONDecoder().decode(RemoteMealDraft.self, from: data) else { throw DayplateServiceError.invalidResponse }
         return result.mealDraft
@@ -101,7 +103,10 @@ struct DayplateService {
                 let result = try await URLSession.shared.data(for: request)
                 if let http = result.1 as? HTTPURLResponse,
                    http.statusCode == 429 || (500..<600).contains(http.statusCode) {
-                    lastError = DayplateServiceError.server("The Dayplate service is temporarily unavailable.")
+                    lastError = DayplateServiceError.server(
+                        (try? JSONDecoder().decode(ServiceError.self, from: result.0).error)
+                            ?? "The Dayplate service is temporarily unavailable."
+                    )
                     continue
                 }
                 return result

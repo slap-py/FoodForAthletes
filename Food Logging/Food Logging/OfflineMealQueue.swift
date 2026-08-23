@@ -112,7 +112,7 @@ final class OfflineMealQueueStore: ObservableObject {
                 finish(queuedMeal, with: draft, in: mealContext)
             } catch {
                 let message = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
-                queuedMeal.attemptCount = shouldRetryInBackground(error) ? queuedMeal.attemptCount + 1 : 3
+                queuedMeal.attemptCount = shouldRetryInBackground(error) || shouldRetryServiceRequest(error) ? queuedMeal.attemptCount + 1 : 3
                 queuedMeal.lastError = message
                 try? context.save()
                 if queuedMeal.attemptCount >= 3,
@@ -191,6 +191,24 @@ final class OfflineMealQueueStore: ObservableObject {
         reloadCount()
     }
 
+    /// Removes both the visible failed placeholder and its protected queued
+    /// photos. Queue and meal data live in separate stores, so this cleanup is
+    /// intentionally centralized rather than relying on the meal relationship.
+    func delete(meal: MealLog, in mealContext: ModelContext) {
+        let id = meal.id
+        let descriptor = FetchDescriptor<QueuedMeal>(predicate: #Predicate { $0.targetMealID == id })
+        if let queuedMeals = try? context.fetch(descriptor) {
+            for queuedMeal in queuedMeals {
+                queuedMeal.allPhotoPaths.forEach(OfflineMealPhotoStore.remove)
+                context.delete(queuedMeal)
+            }
+            try? context.save()
+        }
+        mealContext.delete(meal)
+        try? mealContext.save()
+        reloadCount()
+    }
+
     private func reloadCount() {
         pendingCount = (try? context.fetchCount(FetchDescriptor<QueuedMeal>())) ?? 0
     }
@@ -233,6 +251,14 @@ final class OfflineMealQueueStore: ObservableObject {
             .cannotFindHost,
             .dnsLookupFailed
         ].contains(code)
+    }
+
+    private func shouldRetryServiceRequest(_ error: Error) -> Bool {
+        guard let serviceError = error as? DayplateServiceError,
+              case let .server(message) = serviceError else { return false }
+        return message == "analysis_timed_out"
+            || message == "service_unavailable"
+            || message.localizedCaseInsensitiveContains("temporarily unavailable")
     }
 }
 

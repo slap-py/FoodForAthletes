@@ -6,6 +6,11 @@ const credentials = { foodDataCentralKey: process.env.USDA_FOODDATA_API_KEY, ope
 const mealAnalysisCache = new Map();
 const MEAL_ANALYSIS_CACHE_TTL_MS = 15 * 60 * 1000;
 const MEAL_ANALYSIS_CACHE_MAX_ENTRIES = 128;
+// The general analysis model is text-first.  A request containing input_image
+// must use the separate vision-capable model; otherwise an upstream model
+// validation error is surfaced to iOS as a generic 5xx outage.
+const defaultMealModel = process.env.OPENAI_MODEL ?? "gpt-5.6-terra";
+const defaultVisionModel = process.env.OPENAI_VISION_MODEL ?? process.env.OPENAI_PHOTO_MODEL ?? "gpt-5.4-mini";
 
 export const server = http.createServer(async (request, response) => {
   try {
@@ -69,7 +74,7 @@ async function analyzeMeal(input) {
   for (const [index, photo] of asArray(input.photosBase64).slice(0, 3).entries()) addImage(content, photo, `PHOTO ${index + 1} — determine whether this is food, packaging, or a nutrition label, then use it accordingly.`, "high");
 
   const interpretation = await structuredResponse({
-    model: process.env.OPENAI_MODEL ?? "gpt-5.6-terra", reasoning: "low", content,
+    model: modelForMealAnalysis(input), reasoning: "low", content,
     timeoutMs: 30_000,
     instructions: "Identify only foods at the level the person ordered or ate. Foods identified during photo review are explicit user-visible hints: use them together with the photos and description, correct them only when the image clearly contradicts them, and do not discard them silently. Treat consumer descriptions as approximate: resolve ordinary synonyms, abbreviated flavor names, and remembered marketing names to a searchable product name, but do not silently choose between materially different products. Apply any user clarification answers as authoritative. A named branded restaurant/menu product or packaged product MUST be exactly one branded ingredient and must never be split into recipe components. grams MUST be the total estimated weight actually consumed, not the weight of one unit: multiply an explicit count by the per-item weight (for example, two 48 g pastries means grams=96). quantity is the number of discrete units eaten; use 1 when not applicable or unknown. quantityUnit is a singular food unit such as pastry, bar, slice, or sandwich, or null when not applicable. quantityWasExplicit is true only when the user supplied the count. amountConfidence is low when the amount or per-unit weight is materially uncertain. Keep the ingredient name as the searchable product or food name without putting the count into it. Only split an unbranded homemade/composed meal into familiar top-level components. Infer brands only when visible, explicitly named, or unambiguous from a protected trademark such as Pop-Tarts. Return no duplicate, speculative, or unrelated ingredients.",
     name: "meal_ingredients", schema: ingredientSchema
@@ -142,7 +147,7 @@ async function detectFoods(input) {
   const photo = String(input.photoBase64 ?? "");
   if (!photo) throw new ServiceError("invalid_photo");
   const result = await structuredResponse({
-    model: process.env.OPENAI_PHOTO_MODEL ?? "gpt-5.4-mini",
+    model: defaultVisionModel,
     reasoning: "low",
     timeoutMs: 30_000,
     content: [
@@ -295,6 +300,8 @@ function requestBody(request) {
 
 function json(response, status, value) { response.writeHead(status); response.end(JSON.stringify(value)); }
 function asArray(value) { return Array.isArray(value) ? value : value ? [value] : []; }
+function hasPhotos(input) { return asArray(input?.photosBase64).some(Boolean); }
+export function modelForMealAnalysis(input) { return hasPhotos(input) ? defaultVisionModel : defaultMealModel; }
 function positiveNumber(value, fallback) { const parsed = Number(value); return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback; }
 function clarificationRound(input) { return Math.min(2, Math.max(0, Math.floor(Number(input?.clarificationRound) || 0))); }
 async function mapWithConcurrency(items, limit, operation) {
