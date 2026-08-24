@@ -29,9 +29,11 @@ struct MealCaptureView: View {
     @State private var isDetectingCameraFoods = false
     @State private var cameraDetectionRequestID = UUID()
     @State private var cameraDetectionError: String?
+    @State private var cameraFoundNutritionLabel = false
     @State private var isAddingCameraFood = false
     @State private var newCameraFood = ""
     @State private var photoSource: PhotoSource = .camera
+    @State private var focusIndicator: CGPoint?
     @State private var isLoadingLibraryPhoto = false
     @State private var isPreparingPreview = false
     @State private var showsCameraDenied = false
@@ -244,8 +246,9 @@ struct MealCaptureView: View {
                         .frame(maxWidth: .infinity)
                     }
 
-                    Text("Photos are used for this estimate only.")
+                    Text(photoSource == .camera ? "Tap the preview to focus. Photos are used for this estimate only." : "Photos are used for this estimate only.")
                         .font(.subheadline)
+                        .multilineTextAlignment(.center)
                         .foregroundStyle(JournalTheme.ink.opacity(0.48))
                         .frame(maxWidth: .infinity)
                 } else {
@@ -269,12 +272,30 @@ struct MealCaptureView: View {
                     .resizable()
                     .scaledToFill()
             } else {
-                DayplateCameraPreview(session: camera.session)
+                DayplateCameraPreview(session: camera.session) { devicePoint, viewPoint in
+                    camera.focus(at: devicePoint)
+                    focusIndicator = viewPoint
+                    Task {
+                        try? await Task.sleep(for: .seconds(0.9))
+                        if focusIndicator == viewPoint { focusIndicator = nil }
+                    }
+                }
+                .overlay(alignment: .topLeading) {
+                    if let focusIndicator {
+                        Circle()
+                            .stroke(.white, lineWidth: 1.5)
+                            .frame(width: 62, height: 62)
+                            .position(focusIndicator)
+                            .allowsHitTesting(false)
+                            .transition(.opacity)
+                    }
+                }
             }
 
             RoundedRectangle(cornerRadius: 19, style: .continuous)
                 .stroke(JournalTheme.card.opacity(0.65), lineWidth: 2)
                 .padding(16)
+                .allowsHitTesting(false)
 
             if (!camera.isReady || isLoadingLibraryPhoto) && camera.capturedImage == nil {
                 ProgressView()
@@ -296,11 +317,11 @@ struct MealCaptureView: View {
 
     private var cameraFindings: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("I found:")
+            HStack(alignment: .firstTextBaseline) {
+                Text(cameraFoundNutritionLabel ? "I recognized a nutrition label" : "I found:")
                     .font(.title3.bold())
                     .foregroundStyle(JournalTheme.ink)
-                Spacer()
+                Spacer(minLength: 8)
                 if photoSource == .library {
                     PhotosPicker(selection: $selectedLibraryPhoto, matching: .images) {
                         Text("Choose another")
@@ -312,6 +333,12 @@ struct MealCaptureView: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(JournalTheme.moss)
                 }
+            }
+
+            if cameraFoundNutritionLabel && !isDetectingCameraFoods {
+                Text("The panel's own numbers will be used for this food.")
+                    .font(.subheadline)
+                    .foregroundStyle(JournalTheme.ink.opacity(0.58))
             }
 
             if isDetectingCameraFoods {
@@ -479,15 +506,17 @@ struct MealCaptureView: View {
         cameraPhotoData = data
         isDetectingCameraFoods = true
         cameraDetectionError = nil
+        cameraFoundNutritionLabel = false
         cameraFoods = []
         let requestID = UUID()
         cameraDetectionRequestID = requestID
         Task {
             do {
-                let foods = try await DayplateService.shared.detectFoods(photoData: data)
+                let review = try await DayplateService.shared.detectFoods(photoData: data)
                 guard cameraDetectionRequestID == requestID else { return }
-                cameraFoods = foods
-                if cameraFoods.isEmpty {
+                cameraFoods = review.foods
+                cameraFoundNutritionLabel = review.isNutritionLabel
+                if cameraFoods.isEmpty && !cameraFoundNutritionLabel {
                     cameraDetectionError = "I couldn’t identify a food in the quick review. You can still continue—the full meal analysis will inspect the photo again."
                 }
             } catch {
@@ -527,17 +556,20 @@ struct MealCaptureView: View {
         isAddingCameraFood = false
     }
 
-    private func continueFromCamera() {
-        guard let data = cameraPhotoData, let image = camera.capturedImage else { return }
-        if !cameraPhotoAddedToMeal, photos.count < 3 {
-            identifiedFoodsBeforeCameraPhoto = identifiedPhotoFoods
-            photos.append(image)
-            photoData.append(data)
-            for food in cameraFoods where !identifiedPhotoFoods.contains(where: { $0.localizedCaseInsensitiveCompare(food) == .orderedSame }) {
-                identifiedPhotoFoods.append(food)
-            }
-            cameraPhotoAddedToMeal = true
+    private func attachCurrentPhoto() {
+        guard !cameraPhotoAddedToMeal, photos.count < 3,
+              let data = cameraPhotoData, let image = camera.capturedImage else { return }
+        identifiedFoodsBeforeCameraPhoto = identifiedPhotoFoods
+        photos.append(image)
+        photoData.append(data)
+        for food in cameraFoods where !identifiedPhotoFoods.contains(where: { $0.localizedCaseInsensitiveCompare(food) == .orderedSame }) {
+            identifiedPhotoFoods.append(food)
         }
+        cameraPhotoAddedToMeal = true
+    }
+
+    private func continueFromCamera() {
+        attachCurrentPhoto()
         savePendingMeal()
     }
 
@@ -546,6 +578,25 @@ struct MealCaptureView: View {
         resetCurrentPhoto(startCamera: true)
     }
 
+    /// Clears the camera step's scratch state. A photo already attached to the
+    /// meal is left alone.
+    private func clearCameraStepState() {
+        cameraPhotoData = nil
+        cameraPhotoAddedToMeal = false
+        identifiedFoodsBeforeCameraPhoto = nil
+        cameraFoods = []
+        cameraDetectionError = nil
+        cameraFoundNutritionLabel = false
+        isDetectingCameraFoods = false
+        cameraDetectionRequestID = UUID()
+        isAddingCameraFood = false
+        newCameraFood = ""
+        focusIndicator = nil
+        camera.resetPhoto()
+    }
+
+    /// Discards the photo under review, including from the meal if it had
+    /// already been attached.
     private func resetCurrentPhoto(startCamera: Bool) {
         if cameraPhotoAddedToMeal {
             if let data = cameraPhotoData, photoData.last == data, !photos.isEmpty {
@@ -554,21 +605,15 @@ struct MealCaptureView: View {
             }
             if let identifiedFoodsBeforeCameraPhoto { identifiedPhotoFoods = identifiedFoodsBeforeCameraPhoto }
         }
-        cameraPhotoData = nil
-        cameraPhotoAddedToMeal = false
-        identifiedFoodsBeforeCameraPhoto = nil
-        cameraFoods = []
-        cameraDetectionError = nil
-        isDetectingCameraFoods = false
-        cameraDetectionRequestID = UUID()
-        isAddingCameraFood = false
-        newCameraFood = ""
-        camera.resetPhoto()
+        clearCameraStepState()
         if startCamera { camera.start() }
     }
 
+    /// Going back keeps the photo attached so it shows up under Photos and the
+    /// user can add a written note to it.
     private func leaveCamera() {
-        resetCurrentPhoto(startCamera: false)
+        attachCurrentPhoto()
+        clearCameraStepState()
         photoSource = .camera
         camera.stop()
         step = .capture
@@ -729,6 +774,7 @@ private final class DayplateCameraController: NSObject, ObservableObject, AVCapt
     private let photoOutput = AVCapturePhotoOutput()
     private let sessionQueue = DispatchQueue(label: "com.dayplate.camera-session", qos: .userInitiated)
     private var isConfigured = false
+    private var captureDevice: AVCaptureDevice?
 
     func start() {
         sessionQueue.async { [weak self] in
@@ -748,6 +794,22 @@ private final class DayplateCameraController: NSObject, ObservableObject, AVCapt
             guard let self, self.session.isRunning else { return }
             self.session.stopRunning()
             DispatchQueue.main.async { self.isReady = false }
+        }
+    }
+
+    func focus(at devicePoint: CGPoint) {
+        sessionQueue.async { [weak self] in
+            guard let self, let device = self.captureDevice else { return }
+            try? device.lockForConfiguration()
+            if device.isFocusPointOfInterestSupported, device.isFocusModeSupported(.autoFocus) {
+                device.focusPointOfInterest = devicePoint
+                device.focusMode = .autoFocus
+            }
+            if device.isExposurePointOfInterestSupported, device.isExposureModeSupported(.continuousAutoExposure) {
+                device.exposurePointOfInterest = devicePoint
+                device.exposureMode = .continuousAutoExposure
+            }
+            device.unlockForConfiguration()
         }
     }
 
@@ -785,6 +847,7 @@ private final class DayplateCameraController: NSObject, ObservableObject, AVCapt
         session.addInput(input)
         session.addOutput(photoOutput)
         photoOutput.maxPhotoQualityPrioritization = .quality
+        captureDevice = device
         isConfigured = true
     }
 
@@ -799,25 +862,43 @@ private final class DayplateCameraController: NSObject, ObservableObject, AVCapt
 
 private struct DayplateCameraPreview: UIViewRepresentable {
     let session: AVCaptureSession
+    /// Reports the tapped spot both as a normalized capture-device point, for
+    /// focus, and in view coordinates, for the on-screen indicator.
+    let onTapToFocus: (CGPoint, CGPoint) -> Void
 
     func makeUIView(context: Context) -> CameraPreviewUIView {
         let view = CameraPreviewUIView()
         view.previewLayer.session = session
         view.previewLayer.videoGravity = .resizeAspectFill
+        view.onTapToFocus = onTapToFocus
         return view
     }
 
     func updateUIView(_ uiView: CameraPreviewUIView, context: Context) {
         uiView.previewLayer.session = session
+        uiView.onTapToFocus = onTapToFocus
     }
 }
 
 private final class CameraPreviewUIView: UIView {
     override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
     var previewLayer: AVCaptureVideoPreviewLayer { layer as! AVCaptureVideoPreviewLayer }
+    var onTapToFocus: ((CGPoint, CGPoint) -> Void)?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap)))
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
+
+    @objc private func handleTap(_ recognizer: UITapGestureRecognizer) {
+        let point = recognizer.location(in: self)
+        onTapToFocus?(previewLayer.captureDevicePointConverted(fromLayerPoint: point), point)
+    }
 }
 
-private extension UIImage {
+extension UIImage {
     /// Keeps three temporary AI photos within the service request budget.
     func analysisJPEGData(maximumDimension: CGFloat = 1_280) -> Data? {
         let largestDimension = max(size.width, size.height)

@@ -250,6 +250,32 @@ function corroborateKnownProduct(item, product, grams, failures) {
   };
 }
 
+/**
+ * A photographed nutrition panel is the product's own label for the exact food
+ * the user ate, so it outranks every database lookup. Returns null when the
+ * interpretation step did not read a usable panel for this ingredient.
+ */
+export function labelNutritionSource(ingredient) {
+  const label = ingredient?.labelNutrition;
+  if (!label || !hasCoreNutrients(label)) return null;
+  const servings = positiveNumber(label.servingsConsumed, 1);
+  const servingGrams = positiveNumber(label.servingGrams, 0);
+  const grams = servingGrams > 0 ? servingGrams * servings : positiveNumber(ingredient.grams, 0);
+  const servingLabel = String(label.servingLabel ?? "").trim();
+  return {
+    name: ingredient.name,
+    portion: servingLabel
+      ? (Math.abs(servings - 1) < 0.05 ? servingLabel : `${formatQuantity(servings)} × ${servingLabel}`)
+      : portionLabel(grams),
+    sourceName: "Nutrition label photo",
+    sourceTier: "label",
+    sourceID: "nutrition-label-photo",
+    identityMatch: { score: 1, literalScore: 1, needsConfirmation: false, candidates: [ingredient.name] },
+    referenceServing: referenceServing(servingLabel, servingGrams),
+    nutrients: normalizeNutrients(label, servings)
+  };
+}
+
 export function totals(ingredients) { return ingredients.reduce((sum, item) => add(sum, item.nutrients), zeroNutrients()); }
 export function zeroNutrients() { return { calories: 0, carbohydrates: 0, protein: 0, fat: 0, fiber: 0, calcium: 0, iron: 0, magnesium: 0, potassium: 0, sodium: 0, vitaminD: 0 }; }
 
@@ -515,11 +541,19 @@ function displayProductName(value) {
   return String(value ?? "").replace(/\s+\d+\s*x\s*$/i, "").trim();
 }
 function formatQuantity(value) { return Number.isInteger(value) ? String(value) : String(Math.round(value * 100) / 100); }
-function singularUnit(unit) { return String(unit).replace(/ies$/i, "y").replace(/s$/i, ""); }
+function singularUnit(unit) {
+  const value = String(unit ?? "").trim();
+  if (/ies$/i.test(value)) return `${value.slice(0, -3)}y`;
+  if (/(ches|shes|sses|xes|zes)$/i.test(value)) return value.slice(0, -2);
+  if (/s$/i.test(value) && !/ss$/i.test(value)) return value.slice(0, -1);
+  return value;
+}
 function pluralizedUnit(unit, quantity) {
-  if (Math.abs(quantity - 1) < 0.001) return singularUnit(unit);
   const singular = singularUnit(unit);
-  return /y$/i.test(singular) ? `${singular.slice(0, -1)}ies` : `${singular}s`;
+  if (Math.abs(quantity - 1) < 0.001) return singular;
+  // "sandwich" takes -es, and only a consonant before -y becomes -ies.
+  if (/[^aeiou]y$/i.test(singular)) return `${singular.slice(0, -1)}ies`;
+  return /(s|x|z|ch|sh)$/i.test(singular) ? `${singular}es` : `${singular}s`;
 }
 function ingredientPortionHint(food) { return food?.householdServingFullText || null; }
 function normalize(value) {

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { manufacturerNutrition, mealClarifications, nutritionPlausibilityIssue, sourceIngredient } from "../src/nutrition.js";
+import { labelNutritionSource, manufacturerNutrition, mealClarifications, nutritionPlausibilityIssue, sourceIngredient } from "../src/nutrition.js";
 import { namedMenuProducts, productIngredient } from "../src/menuProducts.js";
 
 test("generic ingredients search the full USDA corpus and scale detail nutrients", async () => {
@@ -62,6 +62,46 @@ test("a confirmed product title outranks a same-scoring sibling of a different s
 
   assert.equal(item.name, "Test Wafer 2 Ounce Peanut Snack Each");
   assert.equal(item.nutrients.calories, 210);
+});
+
+test("a photographed nutrition panel is used instead of a database lookup", () => {
+  const item = labelNutritionSource({
+    name: "Salmon avocado roll",
+    grams: 200,
+    labelNutrition: {
+      servingLabel: "1 tray (170 g)",
+      servingGrams: 170,
+      servingsConsumed: 1,
+      calories: 320,
+      carbohydrates: 48,
+      protein: 12,
+      fat: 8,
+      fiber: 3,
+      calcium: null, iron: null, magnesium: null, potassium: null, sodium: 590, vitaminD: null
+    }
+  });
+
+  assert.equal(item.sourceTier, "label");
+  assert.equal(item.sourceName, "Nutrition label photo");
+  assert.equal(item.portion, "1 tray (170 g)");
+  assert.equal(item.nutrients.calories, 320);
+  assert.equal(item.nutrients.sodium, 590);
+  assert.equal(item.identityMatch.needsConfirmation, false);
+  assert.equal(labelNutritionSource({ name: "Plain rice", grams: 100 }), null);
+});
+
+test("serving units pluralize with English spelling rules", async () => {
+  const request = async url => url.includes("foods/search")
+    ? response({ foods: [{ fdcId: 9, dataType: "Branded", description: "Test Deli Sandwich" }] })
+    : response({ description: "Test Deli Sandwich", servingSize: 100, labelNutrients: { calories: { value: 250 }, carbohydrates: { value: 30 }, protein: { value: 12 }, fat: { value: 9 } } });
+  const item = await sourceIngredient(
+    { name: "Test Deli Sandwich", brand: null, kind: "branded", grams: 200, quantity: 2, quantityUnit: "sandwich", quantityWasExplicit: true, amountConfidence: "high" },
+    { foodDataCentralKey: "key" },
+    async () => { throw new Error("manufacturer fallback should not run"); },
+    request
+  );
+
+  assert.equal(item.portion, "2 sandwiches (200 g)");
 });
 
 test("manufacturer serving facts keep an exact menu product whole", () => {

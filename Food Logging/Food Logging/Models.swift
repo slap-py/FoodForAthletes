@@ -166,6 +166,7 @@ final class MealItem {
 }
 
 enum NutritionSourceTier: String, Codable {
+    case label
     case usda
     case openFoodFacts = "open_food_facts"
     case brand
@@ -173,6 +174,7 @@ enum NutritionSourceTier: String, Codable {
 
     var shortLabel: String {
         switch self {
+        case .label: "Nutrition label photo"
         case .usda: "USDA"
         case .openFoodFacts: "Open Food Facts"
         case .brand: "Brand source"

@@ -29,6 +29,20 @@ enum DayplateServiceError: LocalizedError {
     }
 }
 
+struct PhotoReview: Decodable {
+    let foods: [String]
+    /// Older services do not report this; treat a missing flag as "not a label".
+    let isNutritionLabel: Bool
+
+    private enum CodingKeys: String, CodingKey { case foods, isNutritionLabel }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        foods = try container.decodeIfPresent([String].self, forKey: .foods) ?? []
+        isNutritionLabel = try container.decodeIfPresent(Bool.self, forKey: .isNutritionLabel) ?? false
+    }
+}
+
 struct DayplateService {
     static let shared = DayplateService()
 
@@ -50,7 +64,7 @@ struct DayplateService {
         return result.text
     }
 
-    func detectFoods(photoData: Data) async throws -> [String] {
+    func detectFoods(photoData: Data) async throws -> PhotoReview {
         guard let baseURL else { throw DayplateServiceError.notConfigured }
         var request = URLRequest(url: baseURL.appending(path: "/v1/photo-foods"))
         request.httpMethod = "POST"
@@ -58,10 +72,10 @@ struct DayplateService {
         request.httpBody = try JSONEncoder().encode(PhotoFoodsRequest(photoBase64: photoData.base64EncodedString()))
         let (data, response) = try await perform(request)
         try validate(response, data: data)
-        guard let result = try? JSONDecoder().decode(PhotoFoodsResponse.self, from: data) else {
+        guard let result = try? JSONDecoder().decode(PhotoReview.self, from: data) else {
             throw DayplateServiceError.invalidResponse
         }
-        return result.foods
+        return result
     }
 
     func analyze(_ input: MealAnalysisInput) async throws -> MealDraft {
@@ -152,7 +166,6 @@ private struct RemoteMealRequest: Encodable {
 private struct TranscriptionRequest: Encodable { let audioBase64: String; let mimeType: String }
 private struct TranscriptionResponse: Decodable { let text: String }
 private struct PhotoFoodsRequest: Encodable { let photoBase64: String }
-private struct PhotoFoodsResponse: Decodable { let foods: [String] }
 private struct RemoteMealDraft: Decodable {
     struct Food: Decodable {
         let name: String
