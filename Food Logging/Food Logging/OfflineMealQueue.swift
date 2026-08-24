@@ -308,7 +308,7 @@ extension MealLog {
             vitaminD: draft.vitaminD,
             assumptions: draft.assumptions,
             clarificationSuggestionsData: try? JSONEncoder().encode(draft.clarifications),
-            items: draft.foods.map { MealItem(canonicalName: $0.name, portion: $0.portion, sourceName: $0.sourceName, sourceTier: $0.sourceTier) }
+            items: draft.foods.map(MealItem.init(food:))
         )
     }
 
@@ -332,10 +332,25 @@ extension MealLog {
         analysisError = nil
         clarificationSuggestions = draft.clarifications
         items = draft.foods.map {
-            let item = MealItem(canonicalName: $0.name, portion: $0.portion, sourceName: $0.sourceName, sourceTier: $0.sourceTier)
+            let item = MealItem(food: $0)
             item.meal = self
             return item
         }
+    }
+}
+
+extension MealItem {
+    convenience init(food: MealDraftFood) {
+        self.init(
+            canonicalName: food.name,
+            portion: food.portion,
+            sourceName: food.sourceName,
+            sourceTier: food.sourceTier,
+            calories: food.calories,
+            carbohydrates: food.carbohydrates,
+            protein: food.protein,
+            fat: food.fat
+        )
     }
 }
 

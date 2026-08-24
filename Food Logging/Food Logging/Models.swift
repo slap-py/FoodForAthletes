@@ -119,6 +119,12 @@ final class MealItem {
     var brandName: String?
     var sourceName: String?
     var sourceTierRaw: String?
+    /// Per-food nutrition, added in Dayplate 1.4. Optional so meals logged before
+    /// the service reported it keep showing no breakdown rather than a false zero.
+    var calories: Double?
+    var carbohydrates: Double?
+    var protein: Double?
+    var fat: Double?
     var meal: MealLog?
 
     init(
@@ -129,7 +135,11 @@ final class MealItem {
         sourceRecordIDs: [String] = [],
         brandName: String? = nil,
         sourceName: String? = nil,
-        sourceTier: NutritionSourceTier? = nil
+        sourceTier: NutritionSourceTier? = nil,
+        calories: Double? = nil,
+        carbohydrates: Double? = nil,
+        protein: Double? = nil,
+        fat: Double? = nil
     ) {
         self.canonicalName = canonicalName
         self.portion = portion
@@ -139,7 +149,14 @@ final class MealItem {
         self.brandName = brandName
         self.sourceName = sourceName
         self.sourceTierRaw = sourceTier?.rawValue
+        self.calories = calories
+        self.carbohydrates = carbohydrates
+        self.protein = protein
+        self.fat = fat
     }
+
+    /// True only when the service reported a complete per-food breakdown.
+    var hasNutrition: Bool { calories != nil && carbohydrates != nil && protein != nil && fat != nil }
 
 
     var sourceTier: NutritionSourceTier? {
@@ -235,6 +252,11 @@ struct MealDraftFood: Equatable, Codable {
     var portion: String
     var sourceName: String?
     var sourceTier: NutritionSourceTier?
+    /// Optional so drafts cached by earlier versions still decode.
+    var calories: Double?
+    var carbohydrates: Double?
+    var protein: Double?
+    var fat: Double?
 }
 
 struct MealDraft: Equatable, Codable {

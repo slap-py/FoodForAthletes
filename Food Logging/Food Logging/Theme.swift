@@ -6,14 +6,16 @@ enum JournalTheme {
         Color(uiColor: UIColor { traits in traits.userInterfaceStyle == .dark ? dark : light })
     }
 
-    // Shared cream-and-green palette, with deliberately matched dark surfaces.
-    static let paper = adaptive(UIColor(red: 0.965, green: 0.945, blue: 0.89, alpha: 1), UIColor(red: 0.055, green: 0.075, blue: 0.06, alpha: 1))
-    static let card = adaptive(UIColor(red: 1.0, green: 0.99, blue: 0.96, alpha: 1), UIColor(red: 0.105, green: 0.135, blue: 0.11, alpha: 1))
-    static let ink = adaptive(UIColor(red: 0.10, green: 0.18, blue: 0.12, alpha: 1), UIColor(red: 0.91, green: 0.95, blue: 0.88, alpha: 1))
-    static let forest = adaptive(UIColor(red: 0.10, green: 0.31, blue: 0.18, alpha: 1), UIColor(red: 0.55, green: 0.75, blue: 0.55, alpha: 1))
-    static let moss = adaptive(UIColor(red: 0.18, green: 0.35, blue: 0.23, alpha: 1), UIColor(red: 0.50, green: 0.71, blue: 0.49, alpha: 1))
-    static let sage = adaptive(UIColor(red: 0.62, green: 0.72, blue: 0.54, alpha: 1), UIColor(red: 0.31, green: 0.43, blue: 0.31, alpha: 1))
-    static let mint = adaptive(UIColor(red: 0.87, green: 0.92, blue: 0.84, alpha: 1), UIColor(red: 0.16, green: 0.23, blue: 0.17, alpha: 1))
+    // Shared cream-and-green palette. The dark surfaces are near-neutral warm
+    // charcoals that keep only a trace of the green hue, and the dark accents are
+    // desaturated toward olive so the theme reads calm rather than phosphor-green.
+    static let paper = adaptive(UIColor(red: 0.965, green: 0.945, blue: 0.89, alpha: 1), UIColor(red: 0.068, green: 0.075, blue: 0.067, alpha: 1))
+    static let card = adaptive(UIColor(red: 1.0, green: 0.99, blue: 0.96, alpha: 1), UIColor(red: 0.113, green: 0.122, blue: 0.111, alpha: 1))
+    static let ink = adaptive(UIColor(red: 0.10, green: 0.18, blue: 0.12, alpha: 1), UIColor(red: 0.918, green: 0.922, blue: 0.902, alpha: 1))
+    static let forest = adaptive(UIColor(red: 0.10, green: 0.31, blue: 0.18, alpha: 1), UIColor(red: 0.62, green: 0.70, blue: 0.60, alpha: 1))
+    static let moss = adaptive(UIColor(red: 0.18, green: 0.35, blue: 0.23, alpha: 1), UIColor(red: 0.57, green: 0.65, blue: 0.55, alpha: 1))
+    static let sage = adaptive(UIColor(red: 0.62, green: 0.72, blue: 0.54, alpha: 1), UIColor(red: 0.40, green: 0.44, blue: 0.37, alpha: 1))
+    static let mint = adaptive(UIColor(red: 0.87, green: 0.92, blue: 0.84, alpha: 1), UIColor(red: 0.175, green: 0.190, blue: 0.170, alpha: 1))
     static let oat = Color(red: 0.84, green: 0.73, blue: 0.51)
     static let clay = Color(red: 0.69, green: 0.43, blue: 0.30)
     static let blue = Color(red: 0.35, green: 0.56, blue: 0.61)

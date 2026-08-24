@@ -99,9 +99,9 @@ enum DataExportService {
         let waterURL = root.appendingPathComponent("water.csv")
         try write(waterCSV(export.water), to: waterURL)
         var urls = [jsonURL, mealsURL, itemsURL, waterURL]
-        if !profilePhotoPath.isEmpty, FileManager.default.fileExists(atPath: profilePhotoPath) {
+        if let sourceURL = ProfilePhotoStore.url(for: profilePhotoPath), FileManager.default.fileExists(atPath: sourceURL.path) {
             let photoURL = root.appendingPathComponent("profile-photo.jpg")
-            try FileManager.default.copyItem(at: URL(fileURLWithPath: profilePhotoPath), to: photoURL)
+            try FileManager.default.copyItem(at: sourceURL, to: photoURL)
             urls.append(photoURL)
         }
         return urls

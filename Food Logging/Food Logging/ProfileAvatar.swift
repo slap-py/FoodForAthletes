@@ -37,26 +37,37 @@ struct ProfileAvatar: View {
     }
 }
 
+/// Only the file name is stored. The app container path changes between installs
+/// and OS upgrades, so an absolute path saved earlier stops resolving and the
+/// photo silently disappears while the rest of the profile survives.
 enum ProfilePhotoStore {
-    static func image(at path: String) -> UIImage? {
-        guard !path.isEmpty else { return nil }
-        return UIImage(contentsOfFile: path)
+    static func url(for reference: String) -> URL? {
+        guard !reference.isEmpty else { return nil }
+        // Absolute paths written by earlier versions still resolve when the
+        // container happens to be unchanged.
+        guard !reference.hasPrefix("/") else { return URL(fileURLWithPath: reference) }
+        return try? profileDirectory().appendingPathComponent(reference)
     }
 
-    static func save(_ image: UIImage, replacing oldPath: String) throws -> String {
+    static func image(at reference: String) -> UIImage? {
+        guard let url = url(for: reference) else { return nil }
+        return UIImage(contentsOfFile: url.path)
+    }
+
+    static func save(_ image: UIImage, replacing oldReference: String) throws -> String {
         guard let data = image.jpegData(compressionQuality: 0.86) else {
             throw CocoaError(.fileWriteUnknown)
         }
         let directory = try profileDirectory()
-        let url = directory.appendingPathComponent("profile-\(UUID().uuidString).jpg")
-        try data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
-        remove(oldPath)
-        return url.path
+        let name = "profile-\(UUID().uuidString).jpg"
+        try data.write(to: directory.appendingPathComponent(name), options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        remove(oldReference)
+        return name
     }
 
-    static func remove(_ path: String) {
-        guard !path.isEmpty else { return }
-        try? FileManager.default.removeItem(atPath: path)
+    static func remove(_ reference: String) {
+        guard let url = url(for: reference) else { return }
+        try? FileManager.default.removeItem(at: url)
     }
 
     private static func profileDirectory() throws -> URL {

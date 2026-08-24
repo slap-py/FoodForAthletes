@@ -408,7 +408,7 @@ struct MealCaptureView: View {
                             Text(MealEmoji.symbol(for: meal)).font(.title3)
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(meal.title).font(.subheadline.bold()).lineLimit(1)
-                                Text("\(Int(meal.calories)) kcal · \(meal.timestamp.formatted(.relative(presentation: .named).locale(locale)))")
+                                Text("\(Int(meal.calories.rounded())) kcal · \(meal.timestamp.formatted(.relative(presentation: .named).locale(locale)))")
                                     .font(.caption).foregroundStyle(JournalTheme.ink.opacity(0.55)).lineLimit(1)
                             }
                             Spacer()
@@ -673,7 +673,7 @@ struct MealCaptureView: View {
     }
 
     private func repeatMeal(_ source: MealLog) {
-        let items = (source.items ?? []).map { MealItem(canonicalName: $0.canonicalName, portion: $0.portion, quantity: $0.quantity, catalogFoodID: $0.catalogFoodID, sourceRecordIDs: $0.sourceRecordIDs, brandName: $0.brandName, sourceName: $0.sourceName, sourceTier: $0.sourceTier) }
+        let items = (source.items ?? []).map { MealItem(canonicalName: $0.canonicalName, portion: $0.portion, quantity: $0.quantity, catalogFoodID: $0.catalogFoodID, sourceRecordIDs: $0.sourceRecordIDs, brandName: $0.brandName, sourceName: $0.sourceName, sourceTier: $0.sourceTier, calories: $0.calories, carbohydrates: $0.carbohydrates, protein: $0.protein, fat: $0.fat) }
         let meal = MealLog(
             timestamp: loggingDate,
             title: source.title,

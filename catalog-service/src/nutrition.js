@@ -10,10 +10,11 @@ export class NutritionSourceError extends Error {}
 
 /**
  * Resolves a meal-level food, never recipe subcomponents. Branded restaurant
- * and packaged menu items are kept intact as one product. Every food follows
- * the same lookup hierarchy: USDA, Open Food Facts, then AI-assisted web
- * research. A checked-in exact manufacturer record can satisfy the final tier
- * without another web request.
+ * and packaged menu items are kept intact as one product. Every food starts at
+ * USDA; a branded food USDA does not carry then tries Open Food Facts, and
+ * anything still unresolved falls through to AI-assisted web research. A
+ * checked-in exact manufacturer record can satisfy the final tier without
+ * another web request.
  */
 export async function sourceIngredient(ingredient, credentials, manufacturerLookup, request = fetch) {
   const cacheKey = JSON.stringify([
@@ -61,7 +62,13 @@ async function sourceIngredientUncached(ingredient, credentials, manufacturerLoo
     if (corroborated) return finalizeSourcedItem(corroborated, ingredient, grams);
   }
 
-  const off = await trySource("Open Food Facts", failures, () => openFoodFactsIngredient(query, grams, request, ingredient.kind === "branded"));
+  // Open Food Facts indexes packaged retail products. Searching it for a generic
+  // food returns a plausible-looking but unrelated packaged item — a boxed "mini
+  // beef tacos" panel for three street tacos — so generic foods skip it and go
+  // straight to web research.
+  const off = ingredient.kind === "branded"
+    ? await trySource("Open Food Facts", failures, () => openFoodFactsIngredient(query, grams, request, true))
+    : null;
   if (isTrustworthyNutrition(off, grams, failures)) {
     const corroborated = corroborateKnownProduct(off, curated, grams, failures);
     if (corroborated) return finalizeSourcedItem(corroborated, ingredient, grams);
@@ -158,9 +165,9 @@ async function openFoodFactsIngredient(query, grams, request, allowFuzzy) {
     .filter(item => hasCoreNutrients(openFoodFactsNutrients(item?.nutriments)))
     .map(item => {
       const match = matchScores(query, [item.product_name, item.brands].filter(Boolean).join(" "), allowFuzzy);
-      return { item, ...match };
+      return { item, ...match, exact: isExactTitle(query, item.product_name) };
     })
-    .sort((left, right) => right.score - left.score);
+    .sort((left, right) => Number(right.exact) - Number(left.exact) || right.score - left.score);
   const product = ranked[0];
   if (!product || product.score < (allowFuzzy ? 0.7 : 0.9)) return null;
   const nutrients = openFoodFactsNutrients(product.item.nutriments);
@@ -475,6 +482,13 @@ function dedupeIdentityNames(names) {
   }
   return [...unique.values()];
 }
+// Token scoring drops one-character tokens, so "2 Ounce" and "2.6 Ounce" of the
+// same product tie and the winner is arbitrary. A title the query reproduces
+// exactly — which is what a user-confirmed identity produces — wins outright.
+function isExactTitle(query, candidate) {
+  const normalizedQuery = normalize(query);
+  return Boolean(normalizedQuery) && normalize(displayProductName(candidate)) === normalizedQuery;
+}
 function matchScores(query, candidate, allowFuzzy = false) {
   const literalQuery = new Set(foodSearchTokens(query));
   const literalCandidate = new Set(foodSearchTokens(candidate));
@@ -525,9 +539,9 @@ function bestUsdaCandidates(foods, query, dataType) {
   const ranked = (permittedFoods.length ? permittedFoods : foods)
     .map(food => {
       const candidateText = [food?.description, food?.brandOwner, food?.brandName].filter(Boolean).join(" ");
-      return { food, ...matchScores(query, candidateText, Boolean(dataType)) };
+      return { food, ...matchScores(query, candidateText, Boolean(dataType)), exact: isExactTitle(query, food?.description) };
     })
-    .sort((left, right) => right.score - left.score || right.literalScore - left.literalScore || Number(left.food?.fdcId ?? 0) - Number(right.food?.fdcId ?? 0));
+    .sort((left, right) => Number(right.exact) - Number(left.exact) || right.score - left.score || right.literalScore - left.literalScore || Number(left.food?.fdcId ?? 0) - Number(right.food?.fdcId ?? 0));
 
   // A loose branded match can have an unrelated nutrient panel. Let the
   // official-product fallback handle it instead of returning a plausible but

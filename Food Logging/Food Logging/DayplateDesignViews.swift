@@ -137,7 +137,8 @@ struct DayplateTodayView: View {
                         Text(entry.timestamp.formatted(.dateTime.hour().minute().locale(locale)))
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(JournalTheme.ink.opacity(0.45))
-                            .frame(width: 48, alignment: .trailing)
+                            .lineLimit(1).minimumScaleFactor(0.75).allowsTightening(true)
+                            .frame(width: 56, alignment: .trailing)
                             .padding(.top, 14)
                         Circle().fill(entry.isWater ? JournalTheme.blue : JournalTheme.moss)
                             .frame(width: 9, height: 9).padding(.top, 17)
@@ -162,7 +163,7 @@ struct DayplateTodayView: View {
             }
             .overlay(alignment: .leading) {
                 Rectangle().fill(JournalTheme.moss.opacity(0.22)).frame(width: 1.5)
-                    .padding(.leading, 62).padding(.vertical, 20).allowsHitTesting(false)
+                    .padding(.leading, 70).padding(.vertical, 20).allowsHitTesting(false)
             }
         }
     }
@@ -237,13 +238,13 @@ private struct DayplateMealRow: View {
                         .font(.caption2.weight(.semibold)).foregroundStyle(JournalTheme.clay)
                 } else {
                     HStack(spacing: 6) {
-                        Text("\(Int(meal.calories)) kcal").foregroundStyle(JournalTheme.blue)
+                        Text("\(Int(meal.calories.rounded())) kcal").foregroundStyle(JournalTheme.blue)
                         Text("·")
-                        Text("\(Int(meal.protein))p").foregroundStyle(JournalTheme.clay)
+                        Text("\(Int(meal.protein.rounded()))p").foregroundStyle(JournalTheme.clay)
                         Text("·")
-                        Text("\(Int(meal.carbohydrates))c").foregroundStyle(Color(red: 0.69, green: 0.54, blue: 0.24))
+                        Text("\(Int(meal.carbohydrates.rounded()))c").foregroundStyle(Color(red: 0.69, green: 0.54, blue: 0.24))
                         Text("·")
-                        Text("\(Int(meal.fat))f").foregroundStyle(Color(red: 0.43, green: 0.55, blue: 0.35))
+                        Text("\(Int(meal.fat.rounded()))f").foregroundStyle(Color(red: 0.43, green: 0.55, blue: 0.35))
                     }.font(.caption2.bold()).lineLimit(1)
                 }
             }
@@ -268,7 +269,7 @@ struct DayplateMealDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text(meal.timestamp, format: .dateTime.weekday(.short).month(.abbreviated).day().hour().minute())
+                Text(meal.timestamp, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day().hour().minute())
                     .font(.caption.weight(.semibold)).tracking(1.4).foregroundStyle(JournalTheme.moss)
                 HStack(alignment: .top, spacing: 10) {
                     Text(MealEmoji.symbol(for: meal)).font(.system(size: 30))
@@ -301,11 +302,11 @@ struct DayplateMealDetailView: View {
                 } else {
                     JournalCard {
                         VStack(alignment: .leading, spacing: 18) {
-                            DayplateDetailMetric(label: "Calories", value: "\(Int(meal.calories)) kcal", color: JournalTheme.blue, large: true)
+                            DayplateDetailMetric(label: "Calories", value: "\(Int(meal.calories.rounded())) kcal", color: JournalTheme.blue, large: true)
                             HStack {
-                                DayplateDetailMetric(label: "Protein", value: "\(Int(meal.protein)) g", color: JournalTheme.clay)
-                                DayplateDetailMetric(label: "Carbs", value: "\(Int(meal.carbohydrates)) g", color: JournalTheme.oat)
-                                DayplateDetailMetric(label: "Fat", value: "\(Int(meal.fat)) g", color: JournalTheme.sage)
+                                DayplateDetailMetric(label: "Protein", value: "\(Int(meal.protein.rounded())) g", color: JournalTheme.clay)
+                                DayplateDetailMetric(label: "Carbs", value: "\(Int(meal.carbohydrates.rounded())) g", color: JournalTheme.oat)
+                                DayplateDetailMetric(label: "Fat", value: "\(Int(meal.fat.rounded())) g", color: JournalTheme.sage)
                             }
                         }
                     }
@@ -335,16 +336,25 @@ struct DayplateMealDetailView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Foods & portions").font(.headline)
                             ForEach(meal.items ?? []) { item in
-                                VStack(alignment: .leading, spacing: 3) {
-                                    HStack(alignment: .firstTextBaseline) {
-                                        Text(item.canonicalName)
-                                        Spacer()
-                                        Text(PortionDisplay.text(item.portion, unitSystem: unitSystem)).foregroundStyle(.secondary)
-                                    }.font(.subheadline)
-                                    if let tier = item.sourceTier {
-                                        Text(tier.shortLabel).font(.caption2).foregroundStyle(JournalTheme.ink.opacity(0.42))
+                                NavigationLink { DayplateMealItemDetailView(item: item) } label: {
+                                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                        VStack(alignment: .leading, spacing: 3) {
+                                            HStack(alignment: .firstTextBaseline) {
+                                                Text(item.canonicalName)
+                                                Spacer()
+                                                Text(PortionDisplay.text(item.portion, unitSystem: unitSystem)).foregroundStyle(.secondary)
+                                            }.font(.subheadline)
+                                            if let tier = item.sourceTier {
+                                                Text(tier.shortLabel).font(.caption2).foregroundStyle(JournalTheme.ink.opacity(0.42))
+                                            }
+                                        }
+                                        Image(systemName: "chevron.right")
+                                            .font(.caption2.bold()).foregroundStyle(JournalTheme.ink.opacity(0.32))
                                     }
+                                    .contentShape(Rectangle())
                                 }
+                                .buttonStyle(.plain)
+                                .foregroundStyle(JournalTheme.ink)
                                 Divider().opacity(0.5)
                             }
                         }
@@ -364,20 +374,27 @@ struct DayplateMealDetailView: View {
                     .font(.body.weight(.semibold)).foregroundStyle(JournalTheme.moss)
                     .frame(maxWidth: .infinity).frame(height: 50)
                     .overlay(Capsule().stroke(JournalTheme.moss.opacity(0.30)))
+                    Button("Delete meal", role: .destructive) { showsDeleteConfirmation = true }
+                    .font(.body.weight(.semibold)).foregroundStyle(JournalTheme.clay)
+                    .frame(maxWidth: .infinity).frame(height: 50)
+                    .overlay(Capsule().stroke(JournalTheme.clay.opacity(0.45)))
                 }
             }
-            .padding(18).padding(.bottom, 40)
+            .padding(18).padding(.bottom, 56)
         }
+        // The floating log button is hidden on this screen, so the page only has
+        // to clear the tab bar itself.
+        .preference(key: HidesQuickActionsKey.self, value: true)
         .background(JournalTheme.paper).navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showsReestimate) { MealReestimateView(meal: meal) }
-        .confirmationDialog("Delete this failed meal?", isPresented: $showsDeleteConfirmation, titleVisibility: .visible) {
+        .confirmationDialog("Delete this meal?", isPresented: $showsDeleteConfirmation, titleVisibility: .visible) {
             Button("Delete meal", role: .destructive) {
                 offlineMealQueue.delete(meal: meal, in: modelContext)
                 dismiss()
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("The queued photos and this failed meal will be permanently removed.")
+            Text("This meal and any queued photos will be permanently removed. This cannot be undone.")
         }
     }
 
@@ -390,6 +407,50 @@ struct DayplateMealDetailView: View {
             meal.analysisError = error.localizedDescription
             try? modelContext.save()
         }
+    }
+}
+
+struct DayplateMealItemDetailView: View {
+    let item: MealItem
+    @AppStorage("unitSystem") private var unitSystem = "us"
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(PortionDisplay.text(item.portion, unitSystem: unitSystem).uppercased())
+                    .font(.caption.weight(.semibold)).tracking(1.4).foregroundStyle(JournalTheme.moss)
+                Text(item.canonicalName).font(.system(size: 25, weight: .bold)).tracking(-0.4)
+                if item.hasNutrition {
+                    JournalCard {
+                        VStack(alignment: .leading, spacing: 18) {
+                            DayplateDetailMetric(label: "Calories", value: "\(Int((item.calories ?? 0).rounded())) kcal", color: JournalTheme.blue, large: true)
+                            HStack {
+                                DayplateDetailMetric(label: "Protein", value: "\(Int((item.protein ?? 0).rounded())) g", color: JournalTheme.clay)
+                                DayplateDetailMetric(label: "Carbs", value: "\(Int((item.carbohydrates ?? 0).rounded())) g", color: JournalTheme.oat)
+                                DayplateDetailMetric(label: "Fat", value: "\(Int((item.fat ?? 0).rounded())) g", color: JournalTheme.sage)
+                            }
+                        }
+                    }
+                } else {
+                    JournalCard {
+                        Text("This food was logged before Dayplate saved a per-food breakdown. Re-estimate the meal to fill it in.")
+                            .font(.subheadline).foregroundStyle(JournalTheme.ink.opacity(0.62))
+                    }
+                }
+                JournalCard {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("SOURCE").font(.caption.bold()).tracking(1.2).foregroundStyle(JournalTheme.moss)
+                        Text(item.sourceName ?? "Not recorded").font(.subheadline)
+                        if let tier = item.sourceTier {
+                            Text(tier.shortLabel).font(.caption).foregroundStyle(JournalTheme.ink.opacity(0.5))
+                        }
+                    }
+                }
+            }
+            .padding(18).padding(.bottom, 56)
+        }
+        .preference(key: HidesQuickActionsKey.self, value: true)
+        .background(JournalTheme.paper).navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -485,11 +546,11 @@ private struct DayplateHistoryDayCard: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(date, format: .dateTime.weekday(.wide).month(.abbreviated).day()).font(.subheadline.weight(.semibold))
                         HStack(spacing: 7) {
-                            Text("\(Int(calories)) kcal").foregroundStyle(JournalTheme.blue)
+                            Text("\(Int(calories.rounded())) kcal").foregroundStyle(JournalTheme.blue)
                             Text("·")
-                            Text("\(Int(meals.reduce(0) { $0 + $1.protein })) g protein").foregroundStyle(JournalTheme.clay)
+                            Text("\(Int(meals.reduce(0) { $0 + $1.protein }.rounded())) g protein").foregroundStyle(JournalTheme.clay)
                             Text("·")
-                            Text("\(Int(meals.reduce(0) { $0 + $1.carbohydrates })) g carbs").foregroundStyle(Color(red: 0.69, green: 0.54, blue: 0.24))
+                            Text("\(Int(meals.reduce(0) { $0 + $1.carbohydrates }.rounded())) g carbs").foregroundStyle(Color(red: 0.69, green: 0.54, blue: 0.24))
                         }.font(.caption.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.75)
                     }
                     Spacer()
@@ -505,7 +566,7 @@ private struct DayplateHistoryDayCard: View {
                                 .font(.caption2.weight(.semibold)).foregroundStyle(JournalTheme.ink.opacity(0.45))
                                 .lineLimit(1).minimumScaleFactor(0.75).allowsTightening(true)
                                 .frame(width: 62, alignment: .leading)
-                            Text(MealEmoji.symbol(for: meal)); Text(meal.title).font(.subheadline).lineLimit(1); Spacer(); Text("\(Int(meal.calories)) kcal").font(.caption.weight(.semibold)).foregroundStyle(JournalTheme.blue)
+                            Text(MealEmoji.symbol(for: meal)); Text(meal.title).font(.subheadline).lineLimit(1); Spacer(); Text("\(Int(meal.calories.rounded())) kcal").font(.caption.weight(.semibold)).foregroundStyle(JournalTheme.blue)
                         }.foregroundStyle(JournalTheme.ink).padding(.horizontal, 14).padding(.vertical, 10).overlay(alignment: .top) { Divider().padding(.leading, 14) }
                     }.buttonStyle(.plain)
                 }
@@ -694,7 +755,7 @@ struct DayplateInsightsView: View {
         guard let selectedBar else { return "Tap a bar for that day's total" }
         let dayMeals = dailyMeals[selectedBar]
         let label = days[selectedBar].formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day().locale(locale))
-        return dayMeals.isEmpty ? "\(label) · nothing logged yet" : "\(label) · \(Int(dayMeals.reduce(0) { $0 + $1.calories })) kcal"
+        return dayMeals.isEmpty ? "\(label) · nothing logged yet" : "\(label) · \(Int(dayMeals.reduce(0) { $0 + $1.calories }.rounded())) kcal"
     }
     private var topFoods: [(name: String, count: Int)] {
         var counts: [String: Int] = [:]
@@ -728,14 +789,16 @@ private struct DayplateMacroTableRow: View {
         HStack(spacing: 0) {
             Text(label).font(.caption.bold()).foregroundStyle(color).frame(width: 22, alignment: .leading)
             ForEach(values.indices, id: \.self) { index in
-                VStack(spacing: 2) {
+                HStack(spacing: 1.5) {
                     Text(values[index] == 0 ? "—" : "\(Int(values[index].rounded()))")
                         .font(.caption2.weight(.semibold)).foregroundStyle(values[index] == 0 ? JournalTheme.ink.opacity(0.25) : color)
                     if index > 0, values[index] > 0, values[index - 1] > 0, abs(values[index] - values[index - 1]) >= 0.5 {
                         Image(systemName: values[index] > values[index - 1] ? "arrow.up" : "arrow.down")
                             .font(.system(size: 7, weight: .bold)).foregroundStyle(values[index] > values[index - 1] ? JournalTheme.moss : JournalTheme.clay)
                     }
-                }.frame(maxWidth: .infinity).padding(.vertical, 5)
+                }
+                .lineLimit(1).minimumScaleFactor(0.6).allowsTightening(true)
+                .frame(maxWidth: .infinity).padding(.vertical, 5)
             }
         }.overlay(alignment: .top) { Divider().opacity(0.45) }
     }

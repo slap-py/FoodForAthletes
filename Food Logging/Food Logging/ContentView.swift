@@ -5,6 +5,13 @@ enum AppTab: Hashable {
     case today, history, insights, you
 }
 
+/// Pushed detail screens set this so the floating log/water buttons stop
+/// covering their content.
+struct HidesQuickActionsKey: PreferenceKey {
+    static let defaultValue = false
+    static func reduce(value: inout Bool, nextValue: () -> Bool) { value = value || nextValue() }
+}
+
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var offlineMealQueue: OfflineMealQueueStore
@@ -14,6 +21,7 @@ struct ContentView: View {
     @State private var showsLogFood = false
     @State private var historySelectedDate = Calendar.current.startOfDay(for: .now)
     @State private var loggingDate = Date.now
+    @State private var hidesQuickActions = false
     @AppStorage("appearance") private var appearance = "system"
     @AppStorage("appLanguage") private var appLanguage = "system"
     @AppStorage("unitSystem") private var unitSystem = "us"
@@ -35,6 +43,7 @@ struct ContentView: View {
     var body: some View {
         currentTabContent
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onPreferenceChange(HidesQuickActionsKey.self) { hidesQuickActions = $0 }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             bottomBar
         }
@@ -87,6 +96,7 @@ struct ContentView: View {
     private var bottomBar: some View {
         BottomBar(
             selection: $selectedTab,
+            showsQuickActions: !hidesQuickActions,
             onLogMeal: { openMealCapture(for: selectedTab == .history ? historySelectedDate : .now) },
             onAddWater: selectedTab == .today && waterLoggingEnabled ? { addQuickWater() } : nil,
             quickWaterLabel: WaterDisplay.amount(defaultWaterML, unitSystem: unitSystem)
@@ -121,6 +131,7 @@ struct ContentView: View {
 
 private struct BottomBar: View {
     @Binding var selection: AppTab
+    let showsQuickActions: Bool
     let onLogMeal: () -> Void
     let onAddWater: (() -> Void)?
     let quickWaterLabel: String
@@ -139,37 +150,39 @@ private struct BottomBar: View {
             .background(JournalTheme.paper)
             .overlay(alignment: .top) { Divider().opacity(0.35) }
 
-            HStack(spacing: 12) {
-                if let onAddWater {
-                    Button(action: onAddWater) {
-                        HStack(spacing: 7) {
-                            Image(systemName: "drop.fill")
-                            Text("+ \(quickWaterLabel)")
-                        }
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(JournalTheme.blue)
-                        .frame(height: 52)
-                        .padding(.horizontal, 17)
-                        .background(JournalTheme.blue.opacity(0.13), in: Capsule())
-                    }
-                    .accessibilityLabel("Add \(quickWaterLabel) of water")
-                }
-
-                Button(action: onLogMeal) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "plus")
-                            .font(.headline.bold())
-                        Text("Log meal")
+            if showsQuickActions {
+                HStack(spacing: 12) {
+                    if let onAddWater {
+                        Button(action: onAddWater) {
+                            HStack(spacing: 7) {
+                                Image(systemName: "drop.fill")
+                                Text("+ \(quickWaterLabel)")
+                            }
                             .font(.subheadline.weight(.bold))
+                            .foregroundStyle(JournalTheme.blue)
+                            .frame(height: 52)
+                            .padding(.horizontal, 17)
+                            .background(JournalTheme.blue.opacity(0.13), in: Capsule())
+                        }
+                        .accessibilityLabel("Add \(quickWaterLabel) of water")
                     }
-                    .foregroundStyle(.white)
-                    .frame(width: 136, height: 52)
-                    .background(JournalTheme.moss, in: Capsule())
-                    .shadow(color: JournalTheme.ink.opacity(0.2), radius: 10, y: 4)
+
+                    Button(action: onLogMeal) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "plus")
+                                .font(.headline.bold())
+                            Text("Log meal")
+                                .font(.subheadline.weight(.bold))
+                        }
+                        .foregroundStyle(.white)
+                        .frame(width: 136, height: 52)
+                        .background(JournalTheme.moss, in: Capsule())
+                        .shadow(color: JournalTheme.ink.opacity(0.2), radius: 10, y: 4)
+                    }
+                    .accessibilityHint("Describe, speak, or photograph a meal, or repeat a meal")
                 }
-                .accessibilityHint("Describe, speak, or photograph a meal, or repeat a meal")
+                .offset(y: -60)
             }
-            .offset(y: -60)
         }
     }
 

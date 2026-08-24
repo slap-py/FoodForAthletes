@@ -40,6 +40,30 @@ test("branded ingredients try USDA Branded before other sources", async () => {
     assert.equal(item.nutrients.fiber, 3);
 });
 
+test("a confirmed product title outranks a same-scoring sibling of a different size", async () => {
+  // Size tokens are dropped by token scoring, so both records score identically.
+  // The record whose title the query reproduces exactly has to win.
+  const request = async url => {
+    if (url.includes("foods/search")) {
+      return response({ foods: [
+        { fdcId: 1, dataType: "Branded", description: "Test Wafer 2.6 Ounce Peanut Snack Each" },
+        { fdcId: 2, dataType: "Branded", description: "Test Wafer 2 Ounce Peanut Snack Each" }
+      ] });
+    }
+    assert.match(url, /food\/2\?/, "the confirmed 2 ounce record must be the one fetched");
+    return response({ description: "Test Wafer 2 Ounce Peanut Snack Each", servingSize: 57, labelNutrients: { calories: { value: 210 }, carbohydrates: { value: 25 }, protein: { value: 7 }, fat: { value: 9 } } });
+  };
+  const item = await sourceIngredient(
+    { name: "Test Wafer 2 Ounce Peanut Snack Each", brand: null, kind: "branded", grams: 57 },
+    { foodDataCentralKey: "key" },
+    async () => { throw new Error("manufacturer fallback should not run"); },
+    request
+  );
+
+  assert.equal(item.name, "Test Wafer 2 Ounce Peanut Snack Each");
+  assert.equal(item.nutrients.calories, 210);
+});
+
 test("manufacturer serving facts keep an exact menu product whole", () => {
   const product = manufacturerNutrition(
     { name: "Double-Smoked Bacon, Cheddar & Egg Sandwich", brand: "Starbucks", kind: "branded", grams: 180 },
@@ -192,7 +216,7 @@ test("a USDA outage falls through to Open Food Facts before AI research", async 
   assert.equal(item.nutrients.carbohydrates, 30);
 });
 
-test("generic foods also fall through USDA and Open Food Facts to AI research", async () => {
+test("generic foods skip the branded-only Open Food Facts tier and fall from USDA to AI research", async () => {
   const calls = [];
   let researched = false;
   const item = await sourceIngredient(
@@ -218,7 +242,8 @@ test("generic foods also fall through USDA and Open Food Facts to AI research", 
   );
 
   assert.equal(researched, true);
-  assert.equal(calls.length, 2);
+  assert.equal(calls.length, 1);
+  assert.ok(calls[0].includes("foods/search"));
   assert.equal(item.sourceName, "University food composition table");
   assert.equal(item.nutrients.calories, 60);
 });

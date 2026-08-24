@@ -76,10 +76,13 @@ async function analyzeMeal(input) {
   const interpretation = await structuredResponse({
     model: modelForMealAnalysis(input), reasoning: "low", content,
     timeoutMs: 30_000,
-    instructions: "Identify only foods at the level the person ordered or ate. Foods identified during photo review are explicit user-visible hints: use them together with the photos and description, correct them only when the image clearly contradicts them, and do not discard them silently. Treat consumer descriptions as approximate: resolve ordinary synonyms, abbreviated flavor names, and remembered marketing names to a searchable product name, but do not silently choose between materially different products. Apply any user clarification answers as authoritative. A named branded restaurant/menu product or packaged product MUST be exactly one branded ingredient and must never be split into recipe components. grams MUST be the total estimated weight actually consumed, not the weight of one unit: multiply an explicit count by the per-item weight (for example, two 48 g pastries means grams=96). quantity is the number of discrete units eaten; use 1 when not applicable or unknown. quantityUnit is a singular food unit such as pastry, bar, slice, or sandwich, or null when not applicable. quantityWasExplicit is true only when the user supplied the count. amountConfidence is low when the amount or per-unit weight is materially uncertain. Keep the ingredient name as the searchable product or food name without putting the count into it. Only split an unbranded homemade/composed meal into familiar top-level components. Infer brands only when visible, explicitly named, or unambiguous from a protected trademark such as Pop-Tarts. Return no duplicate, speculative, or unrelated ingredients.",
+    instructions: "Identify only foods at the level the person ordered or ate. Foods identified during photo review are explicit user-visible hints: use them together with the photos and description, correct them only when the image clearly contradicts them, and do not discard them silently. Treat consumer descriptions as approximate: resolve ordinary synonyms, abbreviated flavor names, and remembered marketing names to a searchable product name, but do not silently choose between materially different products. Apply any user clarification answers as authoritative and re-derive the whole estimate from them: when an answer names a product, copy that product name verbatim into the ingredient name including any size, weight, or flavor qualifier, and recompute grams from the product the user chose rather than from the earlier guess. A named branded restaurant/menu product or packaged product MUST be exactly one branded ingredient and must never be split into recipe components. grams MUST be the total estimated weight actually consumed, not the weight of one unit: multiply an explicit count by the per-item weight (for example, two 48 g pastries means grams=96). quantity is the number of discrete units eaten; use 1 when not applicable or unknown. quantityUnit is a singular food unit such as pastry, bar, slice, or sandwich, or null when not applicable. quantityWasExplicit is true only when the user supplied the count. amountConfidence is low when the amount or per-unit weight is materially uncertain. Keep the ingredient name as the searchable product or food name without putting the count into it. Only split an unbranded homemade/composed meal into familiar top-level components. When such a component is itself an assembly of distinct foods rather than a single food with a reliable composition record — a street taco, a burrito, a sandwich made to order, a salad — split it into the ingredients it is built from (for example three carne asada street tacos become corn tortillas, grilled beef, onion, and cilantro with per-ingredient grams). A packaged or restaurant-menu product with a real nutrition panel is never split this way. Infer brands only when visible, explicitly named, or unambiguous from a protected trademark such as Pop-Tarts. Return no duplicate, speculative, or unrelated ingredients.",
     name: "meal_ingredients", schema: ingredientSchema
   });
-  const mealIngredients = preserveNamedProducts(description, interpretation.ingredients);
+  const mealIngredients = applyConfirmedIdentities(
+    preserveNamedProducts(description, interpretation.ingredients),
+    clarificationAnswers
+  );
   if (!mealIngredients.length) throw new ServiceError("no_recognized_food");
   const limitedMealIngredients = mealIngredients.slice(0, 12);
   let ingredients = await mapWithConcurrency(limitedMealIngredients, 3, ingredient => sourceIngredient(ingredient, credentials, manufacturerLookup));
@@ -124,7 +127,12 @@ async function analyzeMeal(input) {
       portion: item.portion,
       sourceName: item.sourceName,
       sourceID: item.sourceID,
-      sourceTier: item.sourceTier
+      sourceTier: item.sourceTier,
+      // Per-food macros so the app can show where a meal's total came from.
+      calories: item.nutrients?.calories ?? null,
+      carbohydrates: item.nutrients?.carbohydrates ?? null,
+      protein: item.nutrients?.protein ?? null,
+      fat: item.nutrients?.fat ?? null
     })),
     clarifications,
     analysisVersion: "meal-level-sourced-v6",
@@ -211,6 +219,31 @@ async function structuredResponse({ model, reasoning, content, instructions, too
 function addImage(content, base64, label, detail) {
   if (typeof base64 !== "string" || !base64) return;
   content.push({ type: "input_text", text: label }, { type: "input_image", image_url: `data:image/jpeg;base64,${base64}`, detail });
+}
+
+// A confirmed identity is the user's own answer, so it replaces whatever product
+// name the interpretation model paraphrased. The nutrition search keys off the
+// name, and a paraphrase loses the size or flavor qualifier that distinguishes
+// two real products (a 2 oz sandwich from a 2.6 oz one).
+function applyConfirmedIdentities(ingredients, answers) {
+  const confirmed = Object.entries(answers ?? {})
+    .filter(([key]) => key.endsWith("_identity"))
+    .map(([, value]) => String(value).replace(/^The intended product is\s*/i, "").replace(/\.\s*$/, "").trim())
+    .filter(Boolean);
+  if (!confirmed.length) return ingredients;
+
+  return ingredients.map(ingredient => {
+    const current = [ingredient.brand, ingredient.name].filter(Boolean).join(" ");
+    const match = confirmed.find(name => sharesMostWords(current, name));
+    return match ? { ...ingredient, name: match, brand: null } : ingredient;
+  });
+}
+
+function sharesMostWords(value, other) {
+  const valueWords = words(value);
+  const otherWords = words(other);
+  if (!valueWords.size || !otherWords.size) return false;
+  return [...valueWords].filter(word => otherWords.has(word)).length / valueWords.size >= 0.5;
 }
 
 function preserveNamedProducts(description, candidates) {

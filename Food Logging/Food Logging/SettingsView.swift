@@ -334,7 +334,7 @@ struct SettingsView: View {
                     )
                     privacyRow(
                         title: "Ingredient sources",
-                        message: "Meal nutrition is sourced per food from USDA FoodData Central, then Open Food Facts, then AI-assisted web research when needed. Sources can be corroborated, and saved portions and primary sources remain attached to the meal for traceability.",
+                        message: "Meal nutrition is sourced per food from USDA FoodData Central first. Branded products USDA does not carry fall back to Open Food Facts, and anything still unresolved goes to AI-assisted web research. Sources can be corroborated, and saved portions and primary sources remain attached to the meal for traceability.",
                         icon: "magnifyingglass"
                     )
                 }
@@ -355,7 +355,7 @@ struct SettingsView: View {
                         .font(.body)
                         .foregroundStyle(JournalTheme.ink.opacity(0.72))
                     howItWorksRow(number: "1", title: "Understand your meal", message: "Text, up to three photos, and an optional voice note identify meal-level foods—even when a product or flavor name is approximate.")
-                    howItWorksRow(number: "2", title: "Find nutrition", message: "Every food checks USDA first, then Open Food Facts, then AI-assisted web research. Failed or unit-mismatched results automatically move to the next source.")
+                    howItWorksRow(number: "2", title: "Find nutrition", message: "Every food checks USDA first. Branded products USDA does not carry then check Open Food Facts, and anything still unresolved goes to AI-assisted web research. Failed or unit-mismatched results automatically move to the next source.")
                     howItWorksRow(number: "3", title: "Finish in the background", message: "The meal appears immediately while nutrition is resolved. Exact text-only results can be reused from the private on-device cache when you are offline.")
                     howItWorksRow(number: "4", title: "You stay in control", message: "If identity or portion remains ambiguous, the saved meal can show a quiet optional correction. Photos and recordings are used only to make the estimate; the saved result keeps nutrition and source details.")
                 }
@@ -386,9 +386,12 @@ struct SettingsView: View {
 
     private func privacyRow(title: String, message: String, icon: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label(title, systemImage: icon)
-                .font(.title3.bold())
-                .foregroundStyle(JournalTheme.ink)
+            Label {
+                Text(title).foregroundStyle(JournalTheme.ink)
+            } icon: {
+                Image(systemName: icon).foregroundStyle(JournalTheme.moss)
+            }
+            .font(.title3.bold())
             Text(message)
                 .font(.body)
                 .foregroundStyle(JournalTheme.ink.opacity(0.72))

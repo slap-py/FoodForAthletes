@@ -159,6 +159,10 @@ private struct RemoteMealDraft: Decodable {
         let portion: String
         let sourceName: String?
         let sourceTier: NutritionSourceTier?
+        let calories: Double?
+        let carbohydrates: Double?
+        let protein: Double?
+        let fat: Double?
     }
     let title: String
     let calories: Double
@@ -193,7 +197,18 @@ private struct RemoteMealDraft: Decodable {
             sodium: sodium,
             vitaminD: vitaminD,
             assumptions: assumptions,
-            foods: foods.map { MealDraftFood(name: $0.name, portion: $0.portion, sourceName: $0.sourceName, sourceTier: $0.sourceTier) },
+            foods: foods.map {
+                MealDraftFood(
+                    name: $0.name,
+                    portion: $0.portion,
+                    sourceName: $0.sourceName,
+                    sourceTier: $0.sourceTier,
+                    calories: $0.calories,
+                    carbohydrates: $0.carbohydrates,
+                    protein: $0.protein,
+                    fat: $0.fat
+                )
+            },
             clarifications: clarifications ?? [],
             analysisVersion: analysisVersion,
             catalogVersion: catalogVersion
