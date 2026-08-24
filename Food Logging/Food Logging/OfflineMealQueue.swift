@@ -160,21 +160,61 @@ final class OfflineMealQueueStore: ObservableObject {
         for meal: MealLog,
         in mealContext: ModelContext
     ) throws {
+        try requeue(
+            meal: meal,
+            description: meal.descriptionText,
+            photoData: [],
+            clarificationAnswers: [questionID: option.value],
+            clarificationRound: 1,
+            in: mealContext
+        )
+    }
+
+    /// Re-runs analysis for an already saved meal. The meal stays visible and
+    /// flips back to pending while the queue works, so editing never blocks the
+    /// user on a spinner.
+    func reestimate(
+        meal: MealLog,
+        description: String,
+        photoData: [Data],
+        timestamp: Date,
+        in mealContext: ModelContext
+    ) throws {
+        meal.timestamp = timestamp
+        meal.descriptionText = description
+        try requeue(
+            meal: meal,
+            description: description,
+            photoData: photoData,
+            clarificationAnswers: [:],
+            clarificationRound: 0,
+            in: mealContext
+        )
+    }
+
+    private func requeue(
+        meal: MealLog,
+        description: String,
+        photoData: [Data],
+        clarificationAnswers: [String: String],
+        clarificationRound: Int,
+        in mealContext: ModelContext
+    ) throws {
         let id = meal.id
-        let existingDescriptor = FetchDescriptor<QueuedMeal>(predicate: #Predicate { $0.targetMealID == id })
-        if let existing = try context.fetch(existingDescriptor).first {
+        let descriptor = FetchDescriptor<QueuedMeal>(predicate: #Predicate { $0.targetMealID == id })
+        for existing in (try? context.fetch(descriptor)) ?? [] {
+            existing.allPhotoPaths.forEach(OfflineMealPhotoStore.remove)
             context.delete(existing)
         }
-        let answers = [questionID: option.value]
         meal.analysisStatus = .pending
         meal.analysisError = nil
         meal.clarificationSuggestions = []
         try mealContext.save()
         try enqueue(
-            description: meal.descriptionText,
-            photoData: [],
-            clarificationAnswers: answers,
-            clarificationRound: 1,
+            description: description,
+            photoData: photoData,
+            clarificationAnswers: clarificationAnswers,
+            clarificationRound: clarificationRound,
             capturedAt: meal.timestamp,
             targetMealID: meal.id
         )

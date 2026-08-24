@@ -1,7 +1,6 @@
 import SwiftUI
 import SwiftData
 import CloudKit
-import PhotosUI
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
@@ -23,9 +22,6 @@ struct SettingsView: View {
     @State private var showsDeleteConfirmation = false
     @State private var showsExport = false
     @State private var showsProfileEditor = false
-    @State private var profileNameDraft = ""
-    @State private var profilePhotoDraft: UIImage?
-    @State private var selectedProfilePhoto: PhotosPickerItem?
     @State private var profileError: String?
     @State private var exportURLs: [URL] = []
     @State private var exportError: String?
@@ -36,7 +32,7 @@ struct SettingsView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 24) {
                     Button {
-                        beginProfileEdit()
+                        showsProfileEditor = true
                     } label: {
                     HStack(spacing: 14) {
                         ZStack(alignment: .bottomTrailing) {
@@ -145,7 +141,7 @@ struct SettingsView: View {
 
                     DayplateSettingsGroup("ACCOUNT") {
                         Button {
-                            beginProfileEdit()
+                            showsProfileEditor = true
                         } label: { DayplateSettingsValueRow(title: "Name & photo", value: profileDisplayName) }
                         .buttonStyle(.plain)
                         Divider()
@@ -213,56 +209,12 @@ struct SettingsView: View {
                 .presentationDetents([.medium, .large])
             }
             .sheet(isPresented: $showsProfileEditor) {
-                NavigationStack {
-                    Form {
-                        Section("Profile") {
-                            TextField("Name", text: $profileNameDraft)
-                            HStack(spacing: 16) {
-                                Group {
-                                    if let profilePhotoDraft {
-                                        Image(uiImage: profilePhotoDraft).resizable().scaledToFill()
-                                    } else {
-                                        ProfileAvatar(name: profileNameDraft, photoPath: "", size: 68)
-                                    }
-                                }
-                                .frame(width: 68, height: 68).clipShape(Circle())
-                                VStack(alignment: .leading, spacing: 8) {
-                                    PhotosPicker(selection: $selectedProfilePhoto, matching: .images) {
-                                        Label(profilePhotoDraft == nil ? "Choose photo" : "Change photo", systemImage: "photo")
-                                    }
-                                    if profilePhotoDraft != nil {
-                                        Button("Remove photo", role: .destructive) { profilePhotoDraft = nil }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .scrollContentBackground(.hidden)
-                    .background(JournalTheme.paper)
-                    .navigationTitle("Name & photo")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) { Button("Cancel") { showsProfileEditor = false } }
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Save") {
-                                saveProfile()
-                            }
-                            .disabled(profileNameDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                        }
-                    }
-                }
-                .presentationDetents([.medium])
-                .onChange(of: selectedProfilePhoto) { _, item in
-                    guard let item else { return }
-                    Task {
-                        defer { selectedProfilePhoto = nil }
-                        guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
-                            profileError = "That photo couldn’t be opened."
-                            return
-                        }
-                        profilePhotoDraft = image
-                    }
-                }
+                ProfileEditorSheet(
+                    name: profileName,
+                    photoReference: profilePhotoPath,
+                    onSave: saveProfile,
+                    onCancel: { showsProfileEditor = false }
+                )
             }
             .confirmationDialog("Delete all meal and water logs?", isPresented: $showsDeleteConfirmation, titleVisibility: .visible) {
                 Button("Delete all data", role: .destructive, action: deleteAllData)
@@ -281,24 +233,16 @@ struct SettingsView: View {
 
     private var profileDisplayName: String { profileName.isEmpty ? "Your profile" : profileName }
 
-    private func beginProfileEdit() {
-        profileNameDraft = profileName
-        profilePhotoDraft = ProfilePhotoStore.image(at: profilePhotoPath)
-        selectedProfilePhoto = nil
-        showsProfileEditor = true
-    }
-
-    private func saveProfile() {
-        let trimmed = profileNameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
+    private func saveProfile(name: String, photo: UIImage?) {
+        guard !name.isEmpty else { return }
         do {
-            if let profilePhotoDraft {
-                profilePhotoPath = try ProfilePhotoStore.save(profilePhotoDraft, replacing: profilePhotoPath)
+            if let photo {
+                profilePhotoPath = try ProfilePhotoStore.save(photo, replacing: profilePhotoPath)
             } else {
                 ProfilePhotoStore.remove(profilePhotoPath)
                 profilePhotoPath = ""
             }
-            profileName = trimmed
+            profileName = name
             showsProfileEditor = false
         } catch {
             profileError = error.localizedDescription
@@ -398,72 +342,11 @@ struct SettingsView: View {
         }
     }
 
-    private func preferencePicker<PickerContent: View>(
-        title: String,
-        description: String,
-        @ViewBuilder picker: () -> PickerContent
-    ) -> some View {
-        HStack(alignment: .center, spacing: 16) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundStyle(JournalTheme.ink)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.84)
-                Text(description)
-                    .font(.caption)
-                    .foregroundStyle(JournalTheme.ink.opacity(0.58))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-            }
-            .layoutPriority(1)
-            Spacer(minLength: 8)
-            picker()
-                .foregroundStyle(JournalTheme.moss)
-        }
-    }
-
     private func deleteAllData() {
         meals.forEach(modelContext.delete)
         water.forEach(modelContext.delete)
         offlineMealQueue.deleteAll()
         try? modelContext.save()
-    }
-
-    private var healthButtonTitle: String {
-        switch healthStore.connectionState {
-        case .connected: "Refresh Health data"
-        case .loading: "Connecting…"
-        case .unavailable: "Apple Health unavailable"
-        case .notRequested, .failed: "Connect Apple Health"
-        }
-    }
-}
-
-private struct SettingsDisclosureButton: View {
-    let title: String
-    let icon: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(JournalTheme.moss)
-                    .frame(width: 34, height: 34)
-                    .background(JournalTheme.sage.opacity(0.24), in: Circle())
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(JournalTheme.ink)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(JournalTheme.ink.opacity(0.45))
-            }
-            .frame(maxWidth: .infinity, minHeight: 44)
-        }
-        .buttonStyle(.plain)
     }
 }
 
@@ -529,31 +412,6 @@ private struct DayplateSettingsPickerRow<PickerContent: View>: View {
             Spacer(minLength: 6)
             picker.foregroundStyle(JournalTheme.moss)
         }
-    }
-}
-
-private struct SettingsSection<Content: View>: View {
-    let title: String
-    @ViewBuilder let content: Content
-
-    init(_ title: String, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.content = content()
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 9) {
-            Text(title)
-                .font(.title3.bold())
-                .foregroundStyle(JournalTheme.ink)
-            JournalCard {
-                VStack(alignment: .leading, spacing: 14) {
-                    content
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-        }
-        .foregroundStyle(JournalTheme.ink)
     }
 }
 

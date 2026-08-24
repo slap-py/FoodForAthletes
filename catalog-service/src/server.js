@@ -1,5 +1,5 @@
 import http from "node:http";
-import { manufacturerNutrition, mealClarifications, nutritionPlausibilityIssue, NutritionSourceError, sourceIngredient, totals } from "./nutrition.js";
+import { labelNutritionSource, manufacturerNutrition, mealClarifications, nutritionPlausibilityIssue, NutritionSourceError, sourceIngredient, totals } from "./nutrition.js";
 import { namedMenuProducts, productIngredient } from "./menuProducts.js";
 
 const credentials = { foodDataCentralKey: process.env.USDA_FOODDATA_API_KEY, openAIKey: process.env.OPENAI_API_KEY };
@@ -76,7 +76,7 @@ async function analyzeMeal(input) {
   const interpretation = await structuredResponse({
     model: modelForMealAnalysis(input), reasoning: "low", content,
     timeoutMs: 30_000,
-    instructions: "Identify only foods at the level the person ordered or ate. Foods identified during photo review are explicit user-visible hints: use them together with the photos and description, correct them only when the image clearly contradicts them, and do not discard them silently. Treat consumer descriptions as approximate: resolve ordinary synonyms, abbreviated flavor names, and remembered marketing names to a searchable product name, but do not silently choose between materially different products. Apply any user clarification answers as authoritative and re-derive the whole estimate from them: when an answer names a product, copy that product name verbatim into the ingredient name including any size, weight, or flavor qualifier, and recompute grams from the product the user chose rather than from the earlier guess. A named branded restaurant/menu product or packaged product MUST be exactly one branded ingredient and must never be split into recipe components. grams MUST be the total estimated weight actually consumed, not the weight of one unit: multiply an explicit count by the per-item weight (for example, two 48 g pastries means grams=96). quantity is the number of discrete units eaten; use 1 when not applicable or unknown. quantityUnit is a singular food unit such as pastry, bar, slice, or sandwich, or null when not applicable. quantityWasExplicit is true only when the user supplied the count. amountConfidence is low when the amount or per-unit weight is materially uncertain. Keep the ingredient name as the searchable product or food name without putting the count into it. Only split an unbranded homemade/composed meal into familiar top-level components. When such a component is itself an assembly of distinct foods rather than a single food with a reliable composition record — a street taco, a burrito, a sandwich made to order, a salad — split it into the ingredients it is built from (for example three carne asada street tacos become corn tortillas, grilled beef, onion, and cilantro with per-ingredient grams). A packaged or restaurant-menu product with a real nutrition panel is never split this way. Infer brands only when visible, explicitly named, or unambiguous from a protected trademark such as Pop-Tarts. Return no duplicate, speculative, or unrelated ingredients.",
+    instructions: "Identify only foods at the level the person ordered or ate. Foods identified during photo review are explicit user-visible hints: use them together with the photos and description, correct them only when the image clearly contradicts them, and do not discard them silently. Treat consumer descriptions as approximate: resolve ordinary synonyms, abbreviated flavor names, and remembered marketing names to a searchable product name, but do not silently choose between materially different products. Apply any user clarification answers as authoritative and re-derive the whole estimate from them: when an answer names a product, copy that product name verbatim into the ingredient name including any size, weight, or flavor qualifier, and recompute grams from the product the user chose rather than from the earlier guess. A named branded restaurant/menu product or packaged product MUST be exactly one branded ingredient and must never be split into recipe components. grams MUST be the total estimated weight actually consumed, not the weight of one unit: multiply an explicit count by the per-item weight (for example, two 48 g pastries means grams=96). quantity is the number of discrete units eaten; use 1 when not applicable or unknown. quantityUnit is a singular food unit such as pastry, bar, slice, or sandwich, or null when not applicable. quantityWasExplicit is true only when the user supplied the count. amountConfidence is low when the amount or per-unit weight is materially uncertain. When a photo shows a nutrition facts panel for one of these foods, that panel is the final word on that food's nutrition: transcribe it into that ingredient's labelNutrition exactly as printed — servingLabel and servingGrams describe one labeled serving, servingsConsumed is how many of those servings the person ate, and the nutrient values are per one labeled serving with carbohydrates being Total Carbohydrate. Use null for a nutrient the panel does not list. Set labelNutrition to null for every food with no panel in the photos, and never transcribe a panel onto a food it does not belong to. Keep the ingredient name as the searchable product or food name without putting the count into it. Only split an unbranded homemade/composed meal into familiar top-level components. When such a component is itself an assembly of distinct foods rather than a single food with a reliable composition record — a street taco, a burrito, a sandwich made to order, a salad — split it into the ingredients it is built from (for example three carne asada street tacos become corn tortillas, grilled beef, onion, and cilantro with per-ingredient grams). A packaged or restaurant-menu product with a real nutrition panel is never split this way. Infer brands only when visible, explicitly named, or unambiguous from a protected trademark such as Pop-Tarts. Return no duplicate, speculative, or unrelated ingredients.",
     name: "meal_ingredients", schema: ingredientSchema
   });
   const mealIngredients = applyConfirmedIdentities(
@@ -85,11 +85,15 @@ async function analyzeMeal(input) {
   );
   if (!mealIngredients.length) throw new ServiceError("no_recognized_food");
   const limitedMealIngredients = mealIngredients.slice(0, 12);
-  let ingredients = await mapWithConcurrency(limitedMealIngredients, 3, ingredient => sourceIngredient(ingredient, credentials, manufacturerLookup));
+  let ingredients = await mapWithConcurrency(limitedMealIngredients, 3, ingredient =>
+    labelNutritionSource(ingredient) ?? sourceIngredient(ingredient, credentials, manufacturerLookup)
+  );
   let nutrients = totals(ingredients);
   let verification = await verifyNutrition(interpretation.title, ingredients, nutrients);
   if (!verification.isPlausible) {
-    const indexes = verificationIndexes(verification, ingredients.length);
+    // A photographed panel is the user's own evidence; never research over it.
+    const indexes = verificationIndexes(verification, ingredients.length)
+      .filter(index => ingredients[index]?.sourceTier !== "label");
     const replacements = await mapWithConcurrency(indexes, 2, async index => {
       try {
         return await manufacturerLookup(limitedMealIngredients[index], {
@@ -145,7 +149,7 @@ async function verifyNutrition(title, ingredients, nutrients, priorIssue = null)
     model: process.env.OPENAI_VERIFY_MODEL ?? "gpt-5.4-mini", reasoning: "medium",
     timeoutMs: 20_000,
     content: [{ type: "input_text", text: JSON.stringify({ title, ingredients, nutrients, priorIssue }) }],
-    instructions: "Perform a conservative nutrition sanity check after a food log. Flag clearly implausible source or unit errors, especially values copied per 100 g but presented as one smaller serving. Use the source and corroboration metadata as evidence. Do not invent or modify nutrients. When implausible, return the zero-based indexes of only the ingredients that need new source research; when plausible, return an empty array.",
+    instructions: "Perform a conservative nutrition sanity check after a food log. Flag clearly implausible source or unit errors, especially values copied per 100 g but presented as one smaller serving. Use the source and corroboration metadata as evidence. An ingredient whose sourceTier is \"label\" was read from a photograph of the product's own nutrition panel and is authoritative — never flag it. Do not invent or modify nutrients. When implausible, return the zero-based indexes of only the ingredients that need new source research; when plausible, return an empty array.",
     name: "nutrition_sanity_check", schema: verificationSchema
   });
 }
@@ -162,12 +166,12 @@ async function detectFoods(input) {
       { type: "input_text", text: "what foods do you see in the photo" },
       { type: "input_image", image_url: `data:image/jpeg;base64,${photo}`, detail: "high" }
     ],
-    instructions: "List visible edible foods and drinks. Use short, specific names and do not include plates, utensils, packaging, tables, or other non-food objects. Prefer a useful generic identification such as cooked steak over returning an empty list when the exact cut or preparation is uncertain. Return an empty list only when no edible item is visible.",
+    instructions: "List visible edible foods and drinks. Use short, specific names and do not include plates, utensils, packaging, tables, or other non-food objects. Prefer a useful generic identification such as cooked steak over returning an empty list when the exact cut or preparation is uncertain. Set isNutritionLabel true when the photo is mainly a printed nutrition facts panel rather than food; in that case list only the product the panel belongs to, and return an empty list when the product name is not legible. Return an empty list only when no edible item is visible.",
     name: "photo_foods",
     schema: photoFoodsSchema
   });
   const foods = [...new Set(asArray(result.foods).map(food => String(food).trim()).filter(Boolean))].slice(0, 12);
-  return { foods };
+  return { foods, isNutritionLabel: result.isNutritionLabel === true };
 }
 
 async function manufacturerLookup(ingredient, context = null) {
@@ -290,17 +294,49 @@ function normalizeForCache(value) {
   return String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
 }
 
+const labelNutritionProperties = {
+  servingLabel: { type: "string" },
+  servingGrams: { type: ["number", "null"] },
+  servingsConsumed: { type: "number", exclusiveMinimum: 0 },
+  calories: { type: "number" },
+  carbohydrates: { type: "number" },
+  protein: { type: "number" },
+  fat: { type: "number" },
+  fiber: { type: ["number", "null"] },
+  calcium: { type: ["number", "null"] },
+  iron: { type: ["number", "null"] },
+  magnesium: { type: ["number", "null"] },
+  potassium: { type: ["number", "null"] },
+  sodium: { type: ["number", "null"] },
+  vitaminD: { type: ["number", "null"] }
+};
+const ingredientProperties = {
+  name: { type: "string" },
+  brand: { type: ["string", "null"] },
+  kind: { type: "string", enum: ["generic", "branded"] },
+  grams: { type: "number", exclusiveMinimum: 0 },
+  quantity: { type: "number", minimum: 0 },
+  quantityUnit: { type: ["string", "null"] },
+  quantityWasExplicit: { type: "boolean" },
+  amountConfidence: { type: "string", enum: ["high", "medium", "low"] },
+  labelNutrition: {
+    type: ["object", "null"],
+    additionalProperties: false,
+    properties: labelNutritionProperties,
+    required: Object.keys(labelNutritionProperties)
+  }
+};
 const ingredientSchema = {
   type: "object", additionalProperties: false,
   properties: {
     title: { type: "string" },
     assumptions: { type: "string" },
-    ingredients: { type: "array", items: { type: "object", additionalProperties: false, properties: { name: { type: "string" }, brand: { type: ["string", "null"] }, kind: { type: "string", enum: ["generic", "branded"] }, grams: { type: "number", exclusiveMinimum: 0 }, quantity: { type: "number", minimum: 0 }, quantityUnit: { type: ["string", "null"] }, quantityWasExplicit: { type: "boolean" }, amountConfidence: { type: "string", enum: ["high", "medium", "low"] } }, required: ["name", "brand", "kind", "grams", "quantity", "quantityUnit", "quantityWasExplicit", "amountConfidence"] } }
+    ingredients: { type: "array", items: { type: "object", additionalProperties: false, properties: ingredientProperties, required: Object.keys(ingredientProperties) } }
   },
   required: ["title", "assumptions", "ingredients"]
 };
 const verificationSchema = { type: "object", additionalProperties: false, properties: { isPlausible: { type: "boolean" }, reason: { type: "string" }, ingredientIndexesToRecheck: { type: "array", items: { type: "integer" } } }, required: ["isPlausible", "reason", "ingredientIndexesToRecheck"] };
-const photoFoodsSchema = { type: "object", additionalProperties: false, properties: { foods: { type: "array", items: { type: "string" } } }, required: ["foods"] };
+const photoFoodsSchema = { type: "object", additionalProperties: false, properties: { foods: { type: "array", items: { type: "string" } }, isNutritionLabel: { type: "boolean" } }, required: ["foods", "isNutritionLabel"] };
 const coreNutrientKeys = new Set(["calories", "carbohydrates", "protein", "fat"]);
 const nutrientProperties = Object.fromEntries(["calories", "carbohydrates", "protein", "fat", "fiber", "calcium", "iron", "magnesium", "potassium", "sodium", "vitaminD"].map(key => [key, { type: coreNutrientKeys.has(key) ? "number" : ["number", "null"] }]));
 const manufacturerSchema = { type: "object", additionalProperties: false, properties: { found: { type: "boolean" }, name: { type: "string" }, sourceURL: { type: "string" }, sourceName: { type: "string" }, matchConfidence: { type: "number" }, identityNeedsConfirmation: { type: "boolean" }, servingLabel: { type: "string" }, servingGrams: { type: ["number", "null"] }, servingCount: { type: ["number", "null"] }, servingUnit: { type: ["string", "null"] }, nutritionBasis: { type: "string", enum: ["per_serving", "per_100g"] }, nutrients: { type: "object", additionalProperties: false, properties: nutrientProperties, required: Object.keys(nutrientProperties) }, evidence: { type: "array", items: { type: "object", additionalProperties: false, properties: { sourceName: { type: "string" }, sourceURL: { type: "string" } }, required: ["sourceName", "sourceURL"] } } }, required: ["found", "name", "sourceURL", "sourceName", "matchConfidence", "identityNeedsConfirmation", "servingLabel", "servingGrams", "servingCount", "servingUnit", "nutritionBasis", "nutrients", "evidence"] };

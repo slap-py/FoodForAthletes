@@ -237,15 +237,22 @@ private struct DayplateMealRow: View {
                     Label("Nutrition needs a retry", systemImage: "exclamationmark.circle")
                         .font(.caption2.weight(.semibold)).foregroundStyle(JournalTheme.clay)
                 } else {
-                    HStack(spacing: 6) {
-                        Text("\(Int(meal.calories.rounded())) kcal").foregroundStyle(JournalTheme.blue)
-                        Text("·")
-                        Text("\(Int(meal.protein.rounded()))p").foregroundStyle(JournalTheme.clay)
-                        Text("·")
-                        Text("\(Int(meal.carbohydrates.rounded()))c").foregroundStyle(Color(red: 0.69, green: 0.54, blue: 0.24))
-                        Text("·")
-                        Text("\(Int(meal.fat.rounded()))f").foregroundStyle(Color(red: 0.43, green: 0.55, blue: 0.35))
-                    }.font(.caption2.bold()).lineLimit(1)
+                    // Two short rows instead of one long one: the single row
+                    // truncated the calorie count on narrow screens.
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack(spacing: 6) {
+                            Text("\(Int(meal.calories.rounded())) kcal").foregroundStyle(JournalTheme.blue)
+                            Text("·")
+                            Text("\(Int(meal.protein.rounded()))p").foregroundStyle(JournalTheme.clay)
+                        }
+                        HStack(spacing: 6) {
+                            Text("\(Int(meal.carbohydrates.rounded()))c").foregroundStyle(Color(red: 0.69, green: 0.54, blue: 0.24))
+                            Text("·")
+                            Text("\(Int(meal.fat.rounded()))f").foregroundStyle(Color(red: 0.43, green: 0.55, blue: 0.35))
+                        }
+                    }
+                    .font(.caption2.bold())
+                    .lineLimit(1).minimumScaleFactor(0.75)
                 }
             }
             Spacer(minLength: 2)
@@ -266,6 +273,7 @@ struct DayplateMealDetailView: View {
     @State private var showsReestimate = false
     @State private var showsDeleteConfirmation = false
     @AppStorage("unitSystem") private var unitSystem = "us"
+    private var items: [MealItem] { meal.items ?? [] }
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
@@ -335,7 +343,7 @@ struct DayplateMealDetailView: View {
                     JournalCard {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Foods & portions").font(.headline)
-                            ForEach(meal.items ?? []) { item in
+                            ForEach(items) { item in
                                 NavigationLink { DayplateMealItemDetailView(item: item) } label: {
                                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                                         VStack(alignment: .leading, spacing: 3) {
@@ -355,7 +363,7 @@ struct DayplateMealDetailView: View {
                                 }
                                 .buttonStyle(.plain)
                                 .foregroundStyle(JournalTheme.ink)
-                                Divider().opacity(0.5)
+                                if item.id != items.last?.id { Divider().opacity(0.5) }
                             }
                         }
                     }
@@ -728,17 +736,17 @@ struct DayplateInsightsView: View {
                 JournalCard {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("MOST LOGGED THIS PERIOD").font(.caption.weight(.semibold)).tracking(1.4).foregroundStyle(JournalTheme.moss).padding(.bottom, 6)
-                        if topFoods.isEmpty {
-                            Text("Foods will appear as you build your history.").font(.subheadline).foregroundStyle(JournalTheme.ink.opacity(0.55)).padding(.vertical, 8)
+                        if topMeals.isEmpty {
+                            Text("Meals will appear as you build your history.").font(.subheadline).foregroundStyle(JournalTheme.ink.opacity(0.55)).padding(.vertical, 8)
                         } else {
-                            ForEach(topFoods, id: \.name) { food in
+                            ForEach(topMeals, id: \.name) { meal in
                                 HStack(spacing: 12) {
-                                    Text(MealEmoji.symbol(for: food.name)).frame(width: 28)
-                                    Text(food.name).font(.subheadline.weight(.medium))
+                                    Text(MealEmoji.symbol(for: meal.name)).frame(width: 28)
+                                    Text(meal.name).font(.subheadline.weight(.medium)).lineLimit(2)
                                     Spacer()
-                                    Text("\(food.count)×").font(.subheadline.weight(.semibold)).foregroundStyle(JournalTheme.ink.opacity(0.5))
+                                    Text("\(meal.count)×").font(.subheadline.weight(.semibold)).foregroundStyle(JournalTheme.ink.opacity(0.5))
                                 }.padding(.vertical, 9)
-                                if food.name != topFoods.last?.name { Divider().opacity(0.45) }
+                                if meal.name != topMeals.last?.name { Divider().opacity(0.45) }
                             }
                         }
                     }
@@ -757,11 +765,14 @@ struct DayplateInsightsView: View {
         let label = days[selectedBar].formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day().locale(locale))
         return dayMeals.isEmpty ? "\(label) · nothing logged yet" : "\(label) · \(Int(dayMeals.reduce(0) { $0 + $1.calories }.rounded())) kcal"
     }
-    private var topFoods: [(name: String, count: Int)] {
+    /// Counts whole meals, not their ingredients — "black beans" appearing in
+    /// three different dinners is not a meal the user logged three times.
+    private var topMeals: [(name: String, count: Int)] {
         var counts: [String: Int] = [:]
         for meal in logged.flatMap({ $0 }) {
-            let names = (meal.items ?? []).isEmpty ? [meal.title] : (meal.items ?? []).map(\.canonicalName)
-            names.forEach { counts[$0, default: 0] += 1 }
+            let name = meal.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { continue }
+            counts[name, default: 0] += 1
         }
         let rows: [(name: String, count: Int)] = counts.map { (name: $0.key, count: $0.value) }
         let sorted = rows.sorted { lhs, rhs in
